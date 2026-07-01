@@ -1,0 +1,139 @@
+# Entity-based wound prototypes for the Baystation medical system.
+# Each wound is a full entity with components determining its behavior.
+
+# --- Base wound entity ---
+
+- type: entity
+  id: WoundBase
+  abstract: true
+  description: A wound.
+  components:
+  - type: Wound
+    maximumDamage: 100
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-tiny
+      10.0: wound-small
+      20.0: wound-moderate
+      40.0: wound-large
+      60.0: wound-severe
+
+# --- Brute wounds (Blunt + Slash + Piercing) ---
+
+- type: entity
+  parent: WoundBase
+  id: WoundBruteSmall
+  name: small bruise
+  description: A minor bruise or cut.
+  components:
+  - type: Wound
+    maximumDamage: 10
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-brute-small
+  - type: BleedingWound
+    baseBleedAmount: 0.5
+    currentBleedAmount: 0.5
+  - type: TendableWound
+  - type: HealableWound
+    healPerTick: 0.1
+  - type: PainfulWound
+    painAmount: 1
+    freshPainAmount: 3
+
+- type: entity
+  parent: WoundBase
+  id: WoundBruteModerate
+  name: moderate bruise
+  description: A clear bruise or gash.
+  components:
+  - type: Wound
+    maximumDamage: 25
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-brute-moderate
+  - type: BleedingWound
+    baseBleedAmount: 1.5
+    currentBleedAmount: 1.5
+  - type: TendableWound
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.05
+  - type: PainfulWound
+    painAmount: 3
+    freshPainAmount: 8
+
+- type: entity
+  parent: WoundBase
+  id: WoundBruteSevere
+  name: severe bruise
+  description: A severe wound with heavy bruising and bleeding.
+  components:
+  - type: Wound
+    maximumDamage: 50
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-brute-severe
+  - type: BleedingWound
+    baseBleedAmount: 3.0
+    currentBleedAmount: 3.0
+  - type: TendableWound
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.02
+  - type: PainfulWound
+    painAmount: 8
+    freshPainAmount: 20
+
+# --- Burn wounds (Heat + Cold + Shock + Caustic) ---
+
+- type: entity
+  parent: WoundBase
+  id: WoundBurnSmall
+  name: minor burn
+  description: A small burn or scald.
+  components:
+  - type: Wound
+    maximumDamage: 10
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-burn-small
+  - type: HealableWound
+    healPerTick: 0.1
+  - type: PainfulWound
+    painAmount: 2
+    freshPainAmount: 5
+
+- type: entity
+  parent: WoundBase
+  id: WoundBurnModerate
+  name: moderate burn
+  description: A clear burn with blistering.
+  components:
+  - type: Wound
+    maximumDamage: 25
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-burn-moderate
+  - type: HealableWound
+    healPerTick: 0.05
+  - type: PainfulWound
+    painAmount: 5
+    freshPainAmount: 12
+
+- type: entity
+  parent: WoundBase
+  id: WoundBurnSevere
+  name: severe burn
+  description: A severe burn with extensive tissue damage.
+  components:
+  - type: Wound
+    maximumDamage: 50
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-burn-severe
+  - type: HealableWound
+    healPerTick: 0.02
+  - type: PainfulWound
+    painAmount: 12
+    freshPainAmount: 25

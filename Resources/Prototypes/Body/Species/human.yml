@@ -132,6 +132,7 @@
   - type: VisualOrganMarkings
     markingData:
       group: Human
+  - type: Woundable
 
 - type: entity
   parent: [ OrganBaseTorsoSexed, OrganBaseTorso, OrganHumanExternal ]
