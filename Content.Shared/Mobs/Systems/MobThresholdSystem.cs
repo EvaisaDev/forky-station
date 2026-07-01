@@ -1,6 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.Alert;
+using Content.Shared.Body;
+using Content.Shared.Body.Components;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
@@ -343,9 +345,32 @@ public sealed partial class MobThresholdSystem : EntitySystem
             if (_damageable.GetTotalDamage((target, damageableComponent)) < threshold)
                 continue;
 
+            // Player becomes dead if brain integrity reaches zero.
+            if (mobState == MobState.Dead && !IsBrainDead(target))
+            {
+                // If damage exceeds the dead threshold but brain is alive, cap at Critical
+                TriggerThreshold(target, MobState.Critical, mobStateComponent, thresholdsComponent, origin);
+                break;
+            }
+
             TriggerThreshold(target, mobState, mobStateComponent, thresholdsComponent, origin);
             break;
         }
+    }
+
+    private bool IsBrainDead(EntityUid target)
+    {
+        // Check brain in the body for brain death
+        if (!TryComp<BodyComponent>(target, out var body) || body.Organs == null)
+            return false;
+
+        foreach (var organ in body.Organs.ContainedEntities)
+        {
+            if (TryComp<BrainComponent>(organ, out var brain) && brain.Integrity <= brain.MinDeadIntegrity)
+                return true;
+        }
+
+        return false;
     }
 
     private void TriggerThreshold(

@@ -1,0 +1,142 @@
+# Baystation-style external organ (limb) definitions.
+# Adds ExternalOrganComponent to existing external organ entities.
+
+- type: entity
+  parent: OrganHumanExternal
+  id: OrganHumanExternalBay
+  abstract: true
+  suffix: bay_med
+  components:
+  - type: ExternalOrgan
+
+# --- Torso ---
+- type: entity
+  parent: [ OrganHumanTorso, OrganHumanExternalBay ]
+  id: OrganHumanTorsoBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 200
+    minBrokenDamage: 150
+    flags:
+    - HasTendon
+
+# --- Head ---
+- type: entity
+  parent: [ OrganHumanHead, OrganHumanExternalBay ]
+  id: OrganHumanHeadBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 100
+    minBrokenDamage: 40
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
+
+# --- Arms ---
+- type: entity
+  parent: [ OrganHumanArmLeft, OrganHumanExternalBay ]
+  id: OrganHumanArmLeftBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 80
+    minBrokenDamage: 50
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
+
+- type: entity
+  parent: [ OrganHumanArmRight, OrganHumanExternalBay ]
+  id: OrganHumanArmRightBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 80
+    minBrokenDamage: 50
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
+
+# --- Hands ---
+- type: entity
+  parent: [ OrganHumanHandLeft, OrganHumanExternalBay ]
+  id: OrganHumanHandLeftBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 50
+    minBrokenDamage: 30
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
+
+- type: entity
+  parent: [ OrganHumanHandRight, OrganHumanExternalBay ]
+  id: OrganHumanHandRightBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 50
+    minBrokenDamage: 30
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
+
+# --- Legs ---
+- type: entity
+  parent: [ OrganHumanLegLeft, OrganHumanExternalBay ]
+  id: OrganHumanLegLeftBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 80
+    minBrokenDamage: 50
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
+
+- type: entity
+  parent: [ OrganHumanLegRight, OrganHumanExternalBay ]
+  id: OrganHumanLegRightBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 80
+    minBrokenDamage: 50
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
+
+# --- Feet ---
+- type: entity
+  parent: [ OrganHumanFootLeft, OrganHumanExternalBay ]
+  id: OrganHumanFootLeftBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 50
+    minBrokenDamage: 30
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
+
+- type: entity
+  parent: [ OrganHumanFootRight, OrganHumanExternalBay ]
+  id: OrganHumanFootRightBay
+  components:
+  - type: ExternalOrgan
+    maxDamage: 50
+    minBrokenDamage: 30
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
