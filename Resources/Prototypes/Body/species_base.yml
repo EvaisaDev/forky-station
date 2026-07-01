@@ -187,6 +187,10 @@
         Slash: -0.05
   - type: Fingerprint
   - type: Blindable
+  - type: BloodOxygenation
+  - type: BloodType
+    group: O
+    rhPositive: true
   - type: Temperature
     currentTemperature: 310.15
     specificHeat: 42
