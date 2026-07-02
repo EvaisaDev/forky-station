@@ -1,0 +1,12 @@
+surgery-incision-made = You make an incision.
+surgery-bleeders-clamped = You clamp the bleeders.
+surgery-skin-retracted = You retract the skin.
+surgery-incision-cauterized = You cauterize the incision.
+surgery-limb-amputated = You amputate the limb.
+surgery-bone-repaired = You repair the bone.
+surgery-bone-not-broken = The bone is not broken.
+surgery-organ-repaired = You repair the damaged organ.
+surgery-step-not-valid = You cannot perform {$action} here.
+surgery-no-woundable-limb = There is no treatable limb there.
+surgery-cannot-reach = You cannot reach there with {$tool}.
+surgery-patient-not-ready = The patient must be unconscious or anesthetized for surgery.

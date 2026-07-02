@@ -30,6 +30,11 @@
         Heat: 5
     soundHit:
       path: /Audio/Effects/lightburn.ogg
+  - type: SurgeryTool
+    action: Cauterize
+    quality: 1.0
+    sterile: true
+    stepDuration: 2.0
 
 # Drill
 
@@ -86,6 +91,11 @@
         Slash: 8
     soundHit:
       path: /Audio/Weapons/bladeslice.ogg
+  - type: SurgeryTool
+    action: Incision
+    quality: 1.0
+    sterile: true
+    stepDuration: 3.0
 
 - type: entity
   name: shiv
@@ -149,6 +159,11 @@
   - type: Item
     sprite: Objects/Specific/Medical/Surgery/scissors.rsi
     storedRotation: 90
+  - type: SurgeryTool
+    action: Retract
+    quality: 1.0
+    sterile: true
+    stepDuration: 2.0
 
 - type: entity
   name: hemostat
@@ -161,13 +176,45 @@
   - type: Item
     heldPrefix: hemostat
     storedRotation: 90
+  - type: SurgeryTool
+    action: Clamp
+    quality: 1.0
+    sterile: true
+    stepDuration: 2.0
 
-  # - type: entity
-  #   name: bone setter
-  #   id: BoneSetter
-  #   parent: Retractor
-  #   description: A surgical tool used for setting bones.
-  #   components:
+- type: entity
+  name: bone setter
+  id: BoneSetter
+  parent: BaseToolSurgery
+  description: A surgical tool used for setting broken bones.
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/Surgery/scissors.rsi
+    state: retractor
+  - type: Item
+    storedRotation: 90
+  - type: SurgeryTool
+    action: BoneSet
+    quality: 1.0
+    sterile: true
+    stepDuration: 3.0
+
+- type: entity
+  name: bone gel
+  id: BoneGel
+  parent: BaseToolSurgery
+  description: A medical gel used to glue bone fragments together.
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/Surgery/scissors.rsi
+    state: retractor
+  - type: Item
+    storedRotation: 90
+  - type: SurgeryTool
+    action: BoneGlue
+    quality: 1.0
+    sterile: true
+    stepDuration: 2.0
 # Saws
 
 - type: entity
@@ -190,7 +237,11 @@
     qualities:
     - Sawing
     - Slicing
-# No melee for regular saw because have you ever seen someone use a band saw as a weapon? It's dumb.
+  - type: SurgeryTool
+    action: BoneSaw
+    quality: 0.7
+    sterile: false
+    stepDuration: 4.0
 
 - type: entity
   name: choppa
@@ -230,6 +281,11 @@
       path: /Audio/Items/drill_hit.ogg
   - type: Tool
     speedModifier: 1.5
+  - type: SurgeryTool
+    action: BoneSaw
+    quality: 0.9
+    sterile: true
+    stepDuration: 3.0
 
 - type: entity
   name: advanced circular saw
@@ -245,3 +301,44 @@
     attackRate: 1.5
   - type: Tool
     speedModifier: 2.0
+  - type: SurgeryTool
+    action: BoneSaw
+    quality: 1.0
+    sterile: true
+    stepDuration: 2.5
+
+# Organ repair tools
+
+- type: entity
+  name: advanced trauma kit
+  id: AdvancedTraumaKit
+  parent: BaseToolSurgery
+  description: A surgical kit used to repair damaged internal organs.
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/Surgery/scissors.rsi
+    state: retractor
+  - type: Item
+    storedRotation: 90
+  - type: SurgeryTool
+    action: OrganFix
+    quality: 1.0
+    sterile: true
+    stepDuration: 5.0
+
+- type: entity
+  name: nanopaste
+  id: Nanopaste
+  parent: BaseToolSurgery
+  description: A tube of nanite paste used to repair robotic organs.
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/Surgery/scissors.rsi
+    state: retractor
+  - type: Item
+    storedRotation: 90
+  - type: SurgeryTool
+    action: OrganFix
+    quality: 1.0
+    sterile: true
+    stepDuration: 4.0
