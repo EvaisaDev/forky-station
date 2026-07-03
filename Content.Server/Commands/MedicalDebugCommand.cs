@@ -68,7 +68,10 @@ public sealed partial class MedicalDebugCommand : IConsoleCommand
 
                 if (_entMan.TryGetComponent<ExternalOrganComponent>(organ, out var ext))
                 {
-                    shell.WriteLine($"  Limb [{organName}]: Brute={ext.BruteDamage}, Burn={ext.BurnDamage}, Status={ext.Status}");
+                    var limbInfo = $"  Limb [{organName}]: Brute={ext.BruteDamage}, Burn={ext.BurnDamage}, Stage={ext.SurgeryStage}, Status={ext.Status}";
+                    if (ext.Dislocated)
+                        limbInfo += ", DISLOCATED";
+                    shell.WriteLine(limbInfo);
                 }
 
                 if (_entMan.TryGetComponent<WoundableComponent>(organ, out var woundable))

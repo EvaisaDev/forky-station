@@ -1,10 +1,8 @@
+using Content.Shared.FixedPoint;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.MedicalScanner;
 
-/// <summary>
-/// On interacting with an entity retrieves the entity UID for use with getting the current damage of the mob.
-/// </summary>
 [Serializable, NetSerializable]
 public sealed class HealthAnalyzerScannedUserMessage : BoundUserInterfaceMessage
 {
@@ -16,9 +14,23 @@ public sealed class HealthAnalyzerScannedUserMessage : BoundUserInterfaceMessage
     }
 }
 
-/// <summary>
-/// Contains the current state of a health analyzer control. Used for the health analyzer and cryo pod.
-/// </summary>
+[Serializable, NetSerializable]
+public struct LimbScanData
+{
+    public string Name;
+    public FixedPoint2 BruteDamage;
+    public FixedPoint2 BurnDamage;
+    public bool Fractured;
+    public bool Bleeding;
+}
+
+[Serializable, NetSerializable]
+public struct ReagentScanData
+{
+    public string Name;
+    public FixedPoint2 Quantity;
+}
+
 [Serializable, NetSerializable]
 public struct HealthAnalyzerUiState
 {
@@ -29,9 +41,31 @@ public struct HealthAnalyzerUiState
     public bool? Bleeding;
     public bool? Unrevivable;
 
-    public HealthAnalyzerUiState() {}
+    // Baystation fields
+    public string BrainActivity; // "Normal", "Fading", "None"
+    public float PulseRate;
+    public float BloodOxygenation;
+    public int TotalDamage;
+    public List<LimbScanData> Limbs;
+    public List<ReagentScanData> Reagents;
+    public bool HasFractures;
+    public bool HasInternalBleeding;
+    public bool HasOrganFailure;
 
-    public HealthAnalyzerUiState(NetEntity? targetEntity, float temperature, float bloodLevel, bool? scanMode, bool? bleeding, bool? unrevivable)
+    public HealthAnalyzerUiState()
+    {
+        BrainActivity = "Normal";
+        Limbs = new();
+        Reagents = new();
+    }
+
+    public HealthAnalyzerUiState(
+        NetEntity? targetEntity,
+        float temperature,
+        float bloodLevel,
+        bool? scanMode,
+        bool? bleeding,
+        bool? unrevivable)
     {
         TargetEntity = targetEntity;
         Temperature = temperature;
@@ -39,5 +73,10 @@ public struct HealthAnalyzerUiState
         ScanMode = scanMode;
         Bleeding = bleeding;
         Unrevivable = unrevivable;
+        BrainActivity = "Normal";
+        PulseRate = 0;
+        BloodOxygenation = 0;
+        Limbs = new();
+        Reagents = new();
     }
 }

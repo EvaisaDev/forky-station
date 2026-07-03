@@ -1,5 +1,7 @@
 using Content.Server.Medical.Components;
+using Content.Shared.Body;
 using Content.Shared.Body.Components;
+using Content.Shared.Body.Organs;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Damage.Components;
 using Content.Shared.DoAfter;
@@ -248,13 +250,94 @@ public sealed partial class HealthAnalyzerSystem : EntitySystem
         if (TryComp<UnrevivableComponent>(entity, out var unrevivableComp) && unrevivableComp.Analyzable)
             unrevivable = true;
 
-        return new HealthAnalyzerUiState(
+        // Baystation fields
+        var brainActivity = "Normal";
+        var pulseRate = 0f;
+        var bloodOxygenation = 0f;
+        var limbs = new List<LimbScanData>();
+        var reagents = new List<ReagentScanData>();
+        var hasFractures = false;
+        var hasInternalBleeding = false;
+        var hasOrganFailure = false;
+
+        // Brain activity
+        if (TryComp<BodyComponent>(entity, out var body) && body.Organs != null)
+        {
+            foreach (var organ in body.Organs.ContainedEntities)
+            {
+                if (TryComp<BrainComponent>(organ, out var brain))
+                {
+                    var pct = (float)(brain.Integrity / brain.MaxIntegrity).Float();
+                    brainActivity = pct <= 0 ? "None" : pct < 0.5f ? "Fading" : "Normal";
+                }
+
+                // Per-limb damage
+                if (TryComp<ExternalOrganComponent>(organ, out var ext))
+                {
+                    var name = EntityManager.GetComponent<MetaDataComponent>(organ).EntityName;
+                    limbs.Add(new LimbScanData
+                    {
+                        Name = name,
+                        BruteDamage = ext.BruteDamage,
+                        BurnDamage = ext.BurnDamage,
+                        Fractured = (ext.Status & OrganStatusFlags.Broken) != 0,
+                        Bleeding = (ext.Status & OrganStatusFlags.Bleeding) != 0
+                    });
+
+                    if ((ext.Status & OrganStatusFlags.Broken) != 0)
+                        hasFractures = true;
+
+                    if ((ext.Status & OrganStatusFlags.ArteryCut) != 0)
+                        hasInternalBleeding = true;
+                }
+
+                // Heart condition
+                if (TryComp<HeartConditionComponent>(organ, out var heart))
+                {
+                    if (!heart.Beating)
+                        hasOrganFailure = true;
+                }
+            }
+        }
+
+        // Pulse and oxygenation
+        if (TryComp<BloodOxygenationComponent>(entity, out var oxy))
+        {
+            pulseRate = oxy.PulseRate;
+            bloodOxygenation = oxy.Oxygenation * 100f;
+        }
+
+        // Reagent scan from bloodstream
+        if (TryComp<BloodstreamComponent>(entity, out var bs))
+        {
+            if (_solutionContainerSystem.ResolveSolution(entity, bs.BloodSolutionName, ref bs.BloodSolution, out var bSol))
+            {
+                foreach (var (reagent, quantity) in bSol.Contents)
+                {
+                    if (reagent.Prototype is { } reagentId && quantity > 0)
+                        reagents.Add(new ReagentScanData { Name = reagentId, Quantity = quantity });
+                }
+            }
+        }
+
+        var state = new HealthAnalyzerUiState(
             GetNetEntity(entity),
             bodyTemperature,
             bloodAmount,
             null,
             bleeding,
-            unrevivable
-        );
+            unrevivable)
+        {
+            BrainActivity = brainActivity,
+            PulseRate = pulseRate,
+            BloodOxygenation = bloodOxygenation,
+            Limbs = limbs,
+            Reagents = reagents,
+            HasFractures = hasFractures,
+            HasInternalBleeding = hasInternalBleeding,
+            HasOrganFailure = hasOrganFailure
+        };
+
+        return state;
     }
 }
