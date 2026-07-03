@@ -23,3 +23,14 @@ health-analyzer-window-scan-mode-active = Active
 health-analyzer-window-scan-mode-inactive = Inactive
 
 health-analyzer-popup-scan-target = {CAPITALIZE(THE($user))} is trying to scan you!
+
+# Baystation medical fields
+health-analyzer-window-entity-brain-activity-text = Brain Activity:
+health-analyzer-window-entity-pulse-text = Pulse Rate:
+health-analyzer-window-entity-oxygenation-text = Oxygenation:
+health-analyzer-window-limb-damage-text = Limb Damage:
+health-analyzer-window-no-limb-data-text =   No limb data available.
+health-analyzer-window-condition-fractures-text = [color=red]Bone fractures detected![/color]
+health-analyzer-window-condition-internal-bleeding-text = [color=red]Internal bleeding detected![/color]
+health-analyzer-window-condition-organ-failure-text = [color=red]Organ failure detected![/color]
+health-analyzer-window-reagent-scan-text = Reagent Scan:
