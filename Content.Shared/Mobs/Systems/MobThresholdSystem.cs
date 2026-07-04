@@ -360,9 +360,9 @@ public sealed partial class MobThresholdSystem : EntitySystem
 
     private bool IsBrainDead(EntityUid target)
     {
-        // Check brain in the body for brain death
+        // No body or no organs = can't check brain = assume brain dead (allows normal death)
         if (!TryComp<BodyComponent>(target, out var body) || body.Organs == null)
-            return false;
+            return true;
 
         foreach (var organ in body.Organs.ContainedEntities)
         {
@@ -370,7 +370,8 @@ public sealed partial class MobThresholdSystem : EntitySystem
                 return true;
         }
 
-        return false;
+        // No brain found in body = treat as brain dead (allows normal death)
+        return true;
     }
 
     private void TriggerThreshold(

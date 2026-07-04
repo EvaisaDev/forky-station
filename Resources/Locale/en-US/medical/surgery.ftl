@@ -5,6 +5,7 @@ surgery-incision-cauterized = You cauterize the incision.
 surgery-limb-amputated = You amputate the limb.
 surgery-bone-repaired = You repair the bone.
 surgery-bone-not-broken = The bone is not broken.
+surgery-bone-opened = You saw through the bone, opening the cavity.
 surgery-organ-repaired = You repair the damaged organ.
 surgery-step-not-valid = You cannot perform {$action} here.
 surgery-no-woundable-limb = There is no treatable limb there.

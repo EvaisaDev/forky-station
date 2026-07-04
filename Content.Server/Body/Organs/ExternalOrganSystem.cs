@@ -22,12 +22,18 @@ public sealed partial class ExternalOrganSystem : EntitySystem
         base.Initialize();
 
         SubscribeLocalEvent<ExternalOrganComponent, LimbFractureCheckEvent>(OnFractureCheck);
+        SubscribeLocalEvent<ExternalOrganComponent, LimbAmputateEvent>(OnAmputate);
     }
 
     private void OnFractureCheck(Entity<ExternalOrganComponent> ent, ref LimbFractureCheckEvent args)
     {
         if (args.Damage > 0)
             Fracture(ent);
+    }
+
+    private void OnAmputate(Entity<ExternalOrganComponent> ent, ref LimbAmputateEvent args)
+    {
+        DropLimb(ent, args.Type);
     }
 
     /// <summary>

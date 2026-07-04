@@ -98,7 +98,7 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
 
         if (oxygenation.CardiacArrest)
         {
-            oxygenation.Oxygenation = Math.Max(0, oxygenation.Oxygenation - 0.15f);
+            oxygenation.Oxygenation = Math.Max(0, oxygenation.Oxygenation - 0.05f);
             oxygenation.PulseLevel = PULSE_NONE;
             ApplyOxygenEffects(uid, oxygenation);
             return;
@@ -404,7 +404,7 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
             return false;
 
         // Check underlying cause - if O2 is too low, heart will just stop again
-        if (oxygenation.Oxygenation < O2_THRESHOLD_BRAIN_DAMAGE)
+        if (oxygenation.Oxygenation < O2_THRESHOLD_LETHAL)
             return false;
 
         oxygenation.CardiacArrest = false;

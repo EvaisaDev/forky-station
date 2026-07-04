@@ -34,6 +34,12 @@ public readonly record struct LimbDismemberedEvent(EntityUid Body, Entity<Extern
 public readonly record struct LimbFractureCheckEvent(Entity<ExternalOrganComponent> Limb, FixedPoint2 Damage);
 
 /// <summary>
+///     Raised to amputate a limb. Handled by the server-side ExternalOrganSystem.
+/// </summary>
+[ByRefEvent]
+public readonly record struct LimbAmputateEvent(Entity<ExternalOrganComponent> Limb, DropLimbType Type);
+
+/// <summary>
 ///     Raised when an entity's brain has died (integrity reached 0).
 /// </summary>
 [ByRefEvent]

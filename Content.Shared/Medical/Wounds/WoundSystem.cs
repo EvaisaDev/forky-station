@@ -54,6 +54,10 @@ public sealed partial class WoundSystem : EntitySystem
         var query = EntityQueryEnumerator<WoundableComponent>();
         while (query.MoveNext(out var uid, out var woundable))
         {
+            // Clean up stale wound references
+            if (woundable.Wounds.RemoveAll(w => !Exists(w) || TerminatingOrDeleted(w)) > 0)
+                Dirty(uid, woundable);
+
             var ev = new GetWoundDamageEvent(new(), new());
             RaiseLocalEvent(uid, ref ev);
             woundable.TotalDamage = ev.Accumulator;

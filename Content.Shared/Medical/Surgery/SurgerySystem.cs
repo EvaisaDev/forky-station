@@ -117,7 +117,7 @@ public sealed partial class SurgerySystem : EntitySystem
 
         if (action == "Amputate")
         {
-            var ev = new LimbFractureCheckEvent((limb, external), Content.Shared.FixedPoint.FixedPoint2.New(999));
+            var ev = new LimbAmputateEvent((limb, external), DropLimbType.Edge);
             RaiseLocalEvent(limb, ref ev);
             return Loc.GetString("surgery-limb-amputated");
         }
@@ -135,14 +135,42 @@ public sealed partial class SurgerySystem : EntitySystem
 
         if (action == "OrganFix" && CanOperateOnOpen(external))
         {
+            // Heal damaged internal organs — find the body via the limb's parent
+            if (TryComp<OrganComponent>(limb, out var organComp) && organComp.Body is { } body)
+            {
+                if (TryComp<BodyComponent>(body, out var bodyComp) && bodyComp.Organs != null)
+                {
+                    foreach (var innerOrgan in bodyComp.Organs.ContainedEntities)
+                    {
+                        if (TryComp<HeartConditionComponent>(innerOrgan, out var heart))
+                        {
+                            heart.Efficiency = Math.Min(1.0f, heart.Efficiency + 0.2f);
+                            Dirty(innerOrgan, heart);
+                        }
+                        if (TryComp<LungConditionComponent>(innerOrgan, out var lung))
+                        {
+                            lung.Efficiency = Math.Min(1.0f, lung.Efficiency + 0.2f);
+                            Dirty(innerOrgan, lung);
+                        }
+                    }
+                }
+            }
             return Loc.GetString("surgery-organ-repaired");
         }
 
         if (action == "BoneSaw" && CanAmputate(external))
         {
-            var sawEv = new LimbFractureCheckEvent((limb, external), Content.Shared.FixedPoint.FixedPoint2.New(999));
+            var sawEv = new LimbAmputateEvent((limb, external), DropLimbType.Edge);
             RaiseLocalEvent(limb, ref sawEv);
             return Loc.GetString("surgery-limb-amputated");
+        }
+
+        // BoneSaw on opened limb = open encasement (ribcage/skull)
+        if (action == "BoneSaw" && external.SurgeryStage == SurgeryStage.Retracted)
+        {
+            external.SurgeryStage = SurgeryStage.Encased;
+            Dirty(limb, external);
+            return Loc.GetString("surgery-bone-opened");
         }
 
         return Loc.GetString("surgery-step-not-valid", ("action", action));
