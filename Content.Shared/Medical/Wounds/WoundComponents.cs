@@ -103,7 +103,7 @@ public sealed partial class PainfulWoundComponent : Component
 /// <summary>
 ///     Wound with text descriptions for examine/analyzer output.
 /// </summary>
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent]
 public sealed partial class WoundDescriptionComponent : Component
 {
     /// <summary>

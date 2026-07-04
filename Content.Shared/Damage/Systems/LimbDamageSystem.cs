@@ -8,6 +8,7 @@ using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
+using Robust.Shared.Network;
 
 namespace Content.Shared.Damage.Systems;
 
@@ -20,6 +21,7 @@ public sealed partial class LimbDamageSystem : EntitySystem
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private INetManager _net = default!;
 
     private readonly HashSet<ProtoId<DamageTypePrototype>> _bruteTypes = new()
     {
@@ -112,6 +114,9 @@ public sealed partial class LimbDamageSystem : EntitySystem
     /// </summary>
     private void OnDamageChanged(Entity<DamageableComponent> ent, ref DamageChangedEvent args)
     {
+        if (!_net.IsServer)
+            return;
+
         if (args.DamageDelta == null || !args.DamageIncreased)
             return;
 

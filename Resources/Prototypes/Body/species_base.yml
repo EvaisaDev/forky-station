@@ -187,6 +187,7 @@
         Slash: -0.05
   - type: Fingerprint
   - type: Blindable
+  - type: Pain
   - type: BloodOxygenation
   - type: BloodType
     group: O

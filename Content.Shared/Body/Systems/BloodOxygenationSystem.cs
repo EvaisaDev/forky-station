@@ -3,31 +3,41 @@ using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
+using Content.Shared.Medical.Pain;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
+using Robust.Shared.Random;
 using Robust.Shared.Timing;
+using Robust.Shared.Network;
 
 namespace Content.Shared.Body.Systems;
 
 /// <summary>
-/// Computes blood oxygenation and pulse rate each tick.
-/// Oxygenation is derived from blood volume × lung efficiency × heart efficiency + dexalin (for now, will replace with other airloss chems).
-/// Low O2 causes brain damage. High pulse damages the heart and can trigger cardiac arrest.
+///     Baystation-style blood oxygenation and pulse system.
+///     Pulse uses discrete levels (0-5) with probabilistic heart damage and cardiac arrest.
 /// </summary>
 public sealed partial class BloodOxygenationSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IRobustRandom _random = default!;
     [Dependency] private SharedSolutionContainerSystem _solution = default!;
     [Dependency] private DamageableSystem _damageable = default!;
     [Dependency] private MobStateSystem _mobState = default!;
     [Dependency] private MobThresholdSystem _mobThreshold = default!;
     [Dependency] private BrainSystem _brain = default!;
+    [Dependency] private INetManager _net = default!;
+
+    // Baystation pulse levels (PULSE_NONE=0 through PULSE_THREADY=5)
+    public const int PULSE_NONE = 0;     // cardiac arrest
+    public const int PULSE_SLOW = 1;     // ~50 BPM
+    public const int PULSE_NORM = 2;     // ~72 BPM (normal)
+    public const int PULSE_FAST = 3;     // ~100 BPM
+    public const int PULSE_2FAST = 4;    // ~150 BPM (1%/tick heart damage)
+    public const int PULSE_THREADY = 5;  // ~200+ BPM (5%/tick heart damage, 5%/tick cardiac arrest)
 
     public const float O2_THRESHOLD_BRAIN_DAMAGE = 0.85f;
     public const float O2_THRESHOLD_LETHAL = 0.30f;
-    public const float PULSE_THRESHOLD_HEART_DAMAGE = 150f;
-    public const float PULSE_THRESHOLD_ARREST = 250f;
     public const float DEXALIN_BONUS = 0.50f;
     public const float DEXALIN_PLUS_BONUS = 0.80f;
 
@@ -51,21 +61,29 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
+        if (!_net.IsServer)
+            return;
+
         base.Update(frameTime);
 
         var curTime = _timing.CurTime;
         var query = EntityQueryEnumerator<BloodOxygenationComponent>();
         while (query.MoveNext(out var uid, out var oxygenation))
         {
+            if (curTime < oxygenation.NextUpdate)
+                continue;
+
+            oxygenation.NextUpdate = curTime + UpdateInterval;
             ProcessOxygenation(uid, oxygenation);
         }
     }
 
     private void OnMapInit(Entity<BloodOxygenationComponent> ent, ref MapInitEvent args)
     {
-        // Initialize with healthy values
+        ent.Comp.NextUpdate = _timing.CurTime + UpdateInterval;
         ent.Comp.Oxygenation = 1.0f;
-        ent.Comp.PulseRate = ent.Comp.BasePulse;
+        ent.Comp.PulseLevel = PULSE_NORM;
+        ent.Comp.PulseRate = PulseLevelToBPM(PULSE_NORM);
         ent.Comp.CardiacArrest = false;
     }
 
@@ -78,47 +96,124 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
         if (_mobState.IsDead(uid))
             return;
 
-        // If in cardiac arrest, O2 rapidly drops
         if (oxygenation.CardiacArrest)
         {
             oxygenation.Oxygenation = Math.Max(0, oxygenation.Oxygenation - 0.15f);
-            oxygenation.PulseRate = 0;
+            oxygenation.PulseLevel = PULSE_NONE;
             ApplyOxygenEffects(uid, oxygenation);
             return;
         }
-        // Calculations to get oxygenation and its effects in order from top to bottom
 
-        // Get blood volume ratio
         var bloodVolume = GetBloodVolumeRatio(uid);
-
-        // Get lung efficiency
         var lungEff = GetLungEfficiency(uid);
-
-        // Get heart efficiency
         var heartEff = GetHeartEfficiency(uid);
-
-        // Check for dexalin
         var dexalinBonus = GetDexalinBonus(uid);
 
-        // Compute oxygenation
         oxygenation.Oxygenation = bloodVolume * lungEff * heartEff + dexalinBonus;
         oxygenation.Oxygenation = Math.Clamp(oxygenation.Oxygenation, 0, 1);
 
-        // Compute pulse rate (inversely proportional to O2)
-        var o2Safe = Math.Max(oxygenation.Oxygenation, 0.01f);
-        oxygenation.PulseRate = Math.Clamp(
-            oxygenation.BasePulse * (1.0f / o2Safe),
-            0, // minimum 0 (arrest)
-            300 // maximum 300
-        );
+        // Baystation pulse level calculation
+        oxygenation.PulseLevel = CalculatePulseLevel(uid, oxygenation);
 
-        // Apply effects
-        ApplyOxygenEffects(uid, oxygenation);
-
-        // Check for cardiac arrest from high pulse
-        if (oxygenation.PulseRate >= PULSE_THRESHOLD_ARREST)
+        // Apply probabilistic heart damage at high pulse (Baystation model)
+        if (oxygenation.PulseLevel >= PULSE_2FAST)
         {
-            SetCardiacArrest(uid, oxygenation, true);
+            // PULSE_2FAST: 1% chance/tick of heart damage
+            if (oxygenation.PulseLevel == PULSE_2FAST && _random.Prob(0.01f))
+                DamageHeart(uid);
+
+            // PULSE_THREADY: 5% chance/tick of heart damage
+            if (oxygenation.PulseLevel == PULSE_THREADY && _random.Prob(0.05f))
+                DamageHeart(uid);
+
+            // PULSE_THREADY: 5% chance/tick of cardiac arrest
+            if (oxygenation.PulseLevel == PULSE_THREADY && _random.Prob(0.05f))
+            {
+                SetCardiacArrest(uid, oxygenation, true);
+                return;
+            }
+        }
+
+        // Convert pulse level to display BPM
+        oxygenation.PulseRate = PulseLevelToBPM(oxygenation.PulseLevel);
+
+        ApplyOxygenEffects(uid, oxygenation);
+    }
+
+    /// <summary>
+    ///     Computes pulse level (0-5) using Baystation's model.
+    ///     Base = PULSE_NORM (2).
+    ///     +1 from low O2, +1/2 from shock, chemicals can modify.
+    ///     Inaprovaline (CE_STABLE) pulls toward PULSE_NORM.
+    /// </summary>
+    private int CalculatePulseLevel(EntityUid uid, BloodOxygenationComponent oxy)
+    {
+        // Start at normal
+        var pulseMod = 0;
+
+        // Shock contribution (Baystation: +1 at shock > 30, +1 at shock > 80)
+        if (TryComp<PainComponent>(uid, out var pain))
+        {
+            if (pain.ShockLevel > 80)
+                pulseMod += 2;
+            else if (pain.ShockLevel > 30)
+                pulseMod += 1;
+        }
+
+        // Low O2 contribution (Baystation: +1 at O2 < 70%, +1 at O2 < 60%)
+        if (oxy.Oxygenation < 0.60f)
+            pulseMod += 2;
+        else if (oxy.Oxygenation < 0.70f)
+            pulseMod += 1;
+
+        // Clamp to valid range (0-5, but 0 only if stopped)
+        var pulseLevel = Math.Clamp(PULSE_NORM + pulseMod, PULSE_SLOW, PULSE_THREADY);
+
+        // Inaprovaline stabilization: pull toward PULSE_NORM
+        if (HasInaprovaline(uid) && pulseLevel != PULSE_NORM)
+        {
+            if (pulseLevel > PULSE_NORM)
+                pulseLevel--;
+            else
+                pulseLevel++;
+        }
+
+        return pulseLevel;
+    }
+
+    /// <summary>
+    ///     Converts Baystation pulse level to approximate BPM for display.
+    /// </summary>
+    private static float PulseLevelToBPM(int level)
+    {
+        return level switch
+        {
+            PULSE_NONE => 0,
+            PULSE_SLOW => 50,
+            PULSE_NORM => 72,
+            PULSE_FAST => 100,
+            PULSE_2FAST => 150,
+            PULSE_THREADY => 200,
+            _ => 72
+        };
+    }
+
+    /// <summary>
+    ///     Directly damage the heart organ (from high pulse strain).
+    /// </summary>
+    private void DamageHeart(EntityUid uid)
+    {
+        if (!TryComp<BodyComponent>(uid, out var body) || body.Organs == null)
+            return;
+
+        foreach (var organ in body.Organs.ContainedEntities)
+        {
+            if (TryComp<HeartConditionComponent>(organ, out var heart))
+            {
+                heart.Efficiency = Math.Max(0, heart.Efficiency - 0.05f);
+                Dirty(organ, heart);
+                return;
+            }
         }
     }
 
@@ -192,15 +287,26 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
         if (!_solution.ResolveSolution(uid, bloodstream.BloodSolutionName, ref bloodstream.BloodSolution, out var bloodSolution))
             return 0f;
 
-        var dexalinAmount = bloodSolution.GetTotalPrototypeQuantity(DexalinPlus);
+        var dexalinAmount = bloodSolution.GetTotalPrototypeQuantity("DexalinPlus");
         if (dexalinAmount > 0)
             return DEXALIN_PLUS_BONUS;
 
-        dexalinAmount = bloodSolution.GetTotalPrototypeQuantity(Dexalin);
+        dexalinAmount = bloodSolution.GetTotalPrototypeQuantity("Dexalin");
         if (dexalinAmount > 0)
             return DEXALIN_BONUS;
 
         return 0f;
+    }
+
+    private bool HasInaprovaline(EntityUid uid)
+    {
+        if (!TryComp<BloodstreamComponent>(uid, out var stream))
+            return false;
+
+        if (!_solution.ResolveSolution(uid, stream.BloodSolutionName, ref stream.BloodSolution, out var blood))
+            return false;
+
+        return blood.GetTotalPrototypeQuantity("Inaprovaline") > 0;
     }
 
     private void ApplyOxygenEffects(EntityUid uid, BloodOxygenationComponent oxygenation)
@@ -267,6 +373,7 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
 
         if (arrest)
         {
+            oxygenation.PulseLevel = PULSE_NONE;
             oxygenation.PulseRate = 0;
             oxygenation.Oxygenation = Math.Min(oxygenation.Oxygenation, 0.5f);
 
@@ -283,8 +390,6 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
                 }
             }
         }
-
-        Dirty(uid, oxygenation);
     }
 
     /// <summary>
@@ -303,7 +408,8 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
             return false;
 
         oxygenation.CardiacArrest = false;
-        oxygenation.PulseRate = oxygenation.BasePulse;
+        oxygenation.PulseLevel = PULSE_SLOW;
+        oxygenation.PulseRate = PulseLevelToBPM(PULSE_SLOW);
 
         // Restart the heart organ
         if (TryComp<BodyComponent>(uid, out var body) && body.Organs != null)
@@ -318,7 +424,6 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
             }
         }
 
-        Dirty(uid, oxygenation);
         return true;
     }
 }

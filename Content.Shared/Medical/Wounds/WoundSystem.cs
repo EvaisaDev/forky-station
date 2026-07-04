@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Content.Shared.Body;
 using Content.Shared.Damage;
@@ -8,6 +9,7 @@ using Content.Shared.FixedPoint;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Network;
 
 namespace Content.Shared.Medical.Wounds;
 
@@ -18,9 +20,13 @@ namespace Content.Shared.Medical.Wounds;
 public sealed partial class WoundSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private INetManager _net = default!;
 
     private static readonly ProtoId<DamageTypePrototype>[] BruteTypes = { "Blunt", "Slash", "Piercing" };
     private static readonly ProtoId<DamageTypePrototype>[] BurnTypes = { "Heat", "Cold", "Shock", "Caustic" };
+
+    private TimeSpan _nextUpdate;
+    public TimeSpan UpdateInterval = TimeSpan.FromSeconds(2);
 
     public override void Initialize()
     {
@@ -34,7 +40,16 @@ public sealed partial class WoundSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
+        if (!_net.IsServer)
+            return;
+
         base.Update(frameTime);
+
+        var curTime = _timing.CurTime;
+        if (curTime < _nextUpdate)
+            return;
+
+        _nextUpdate = curTime + UpdateInterval;
 
         var query = EntityQueryEnumerator<WoundableComponent>();
         while (query.MoveNext(out var uid, out var woundable))
@@ -49,6 +64,9 @@ public sealed partial class WoundSystem : EntitySystem
 
     private void OnBodyDamageChanged(Entity<BodyComponent> ent, ref DamageChangedEvent args)
     {
+        if (!_net.IsServer)
+            return;
+
         if (args.DamageDelta == null || !args.DamageIncreased)
             return;
 
@@ -208,8 +226,25 @@ public sealed partial class WoundSystem : EntitySystem
 
     private bool IsCorrectWoundGroup(EntityUid woundUid, string groupName)
     {
-        return TryComp<WoundDescriptionComponent>(woundUid, out var desc)
-            && desc.Descriptions.Values.Any(d => d.Contains(groupName));
+        if (!TryComp<WoundDescriptionComponent>(woundUid, out var desc))
+            return false;
+
+        // Check by name first (fast path)
+        if (TryComp<MetaDataComponent>(woundUid, out var meta))
+        {
+            var name = meta.EntityName;
+            if (name.Contains(groupName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        // Fallback: check description text
+        foreach (var text in desc.Descriptions.Values)
+        {
+            if (text.Contains(groupName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     private static void TransferDamage(WoundComponent wound, DamageSpecifier source, FixedPoint2 sourceTotal, FixedPoint2 amount)

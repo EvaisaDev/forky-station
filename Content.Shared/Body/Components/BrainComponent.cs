@@ -9,7 +9,7 @@ namespace Content.Shared.Body.Components;
 ///     When brain integrity reaches 0%, the entity is considered brain-dead.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-[Access(typeof(BrainSystem))]
+[Access(typeof(BrainSystem), Other = AccessPermissions.Read)]
 public sealed partial class BrainComponent : Component
 {
     /// <summary>
