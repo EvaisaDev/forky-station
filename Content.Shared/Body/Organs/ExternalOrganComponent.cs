@@ -54,10 +54,16 @@ public sealed partial class ExternalOrganComponent : Component
     public bool Dislocated;
 
     /// <summary>
-    /// Surgery state: tracks incision/clamping/retraction/encasement progress.
+    ///     Surgery state: tracks incision/clamping/retraction/encasement progress.
     /// </summary>
     [DataField, AutoNetworkedField]
     public SurgeryStage SurgeryStage;
+
+    /// <summary>
+    ///     Bone repair progress (0-3, 0=none, 1=glued, 2=set, 3=finished).
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public int BoneRepairStage;
 }
 
 /// <summary>

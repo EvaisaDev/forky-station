@@ -8,6 +8,7 @@ using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Shared.Medical.Surgery;
@@ -39,12 +40,18 @@ public sealed partial class SurgerySystem : EntitySystem
 
         args.Handled = true;
 
-        // Check anesthesia requirement: patient must be unconscious for surgery
         if (!IsPatientReady(target))
         {
             _popup.PopupEntity(Loc.GetString("surgery-patient-not-ready"), args.User, args.User);
             return;
         }
+
+        // Find the target zone from the surgeon's SurgeryTargetComponent
+        var targetZone = GetSurgeryTargetZone(args.User);
+
+        // Find the matching limb
+        EntityUid? matchedLimb = null;
+        ExternalOrganComponent? matchedExt = null;
 
         foreach (var organ in body.Organs.ContainedEntities)
         {
@@ -54,13 +61,45 @@ public sealed partial class SurgerySystem : EntitySystem
             if (!TryComp<ExternalOrganComponent>(organ, out var external))
                 continue;
 
-            var result = ExecuteStep(tool, toolComp, organ, external);
-            if (result != null)
-                _popup.PopupEntity(result, args.User, args.User);
+            if (!TryComp<OrganComponent>(organ, out var organComp))
+                continue;
+
+            // Match by category
+            if (organComp.Category == targetZone)
+            {
+                matchedLimb = organ;
+                matchedExt = external;
+                break;
+            }
+
+            // Fallback: if no match, use torso
+            if (matchedLimb == null && organComp.Category == "Torso")
+            {
+                matchedLimb = organ;
+                matchedExt = external;
+            }
+        }
+
+        if (matchedLimb == null)
+        {
+            _popup.PopupEntity(Loc.GetString("surgery-no-woundable-limb"), args.User, args.User);
             return;
         }
 
-        _popup.PopupEntity(Loc.GetString("surgery-no-woundable-limb"), args.User, args.User);
+        var result = ExecuteStep(tool, toolComp, matchedLimb.Value, matchedExt!);
+        if (result != null)
+            _popup.PopupEntity(result, args.User, args.User);
+    }
+
+    /// <summary>
+    ///     Gets the surgeon's target zone, defaulting to "Torso" if not set.
+    /// </summary>
+    private ProtoId<OrganCategoryPrototype> GetSurgeryTargetZone(EntityUid surgeon)
+    {
+        if (TryComp<SurgeryTargetComponent>(surgeon, out var target))
+            return target.TargetZone;
+
+        return "Torso";
     }
 
     /// <summary>
@@ -126,9 +165,27 @@ public sealed partial class SurgerySystem : EntitySystem
         {
             if ((external.Status & OrganStatusFlags.Broken) != 0)
             {
-                external.Status &= ~OrganStatusFlags.Broken;
-                Dirty(limb, external);
-                return Loc.GetString("surgery-bone-repaired");
+                // 3-step bone repair: BoneGlue(1) -> BoneSet(2) -> BoneGlue(3) = complete
+                if (action == "BoneGlue" && external.BoneRepairStage == 2)
+                {
+                    external.BoneRepairStage = 3;
+                    external.Status &= ~OrganStatusFlags.Broken;
+                    Dirty(limb, external);
+                    return Loc.GetString("surgery-bone-repaired");
+                }
+                else if (action == "BoneGlue" && external.BoneRepairStage != 2)
+                {
+                    external.BoneRepairStage = 1;
+                    Dirty(limb, external);
+                    return Loc.GetString("surgery-bone-glued");
+                }
+                else if (action == "BoneSet" && external.BoneRepairStage == 1)
+                {
+                    external.BoneRepairStage = 2;
+                    Dirty(limb, external);
+                    return Loc.GetString("surgery-bone-set");
+                }
+                return Loc.GetString("surgery-step-not-valid", ("action", action));
             }
             return Loc.GetString("surgery-bone-not-broken");
         }

@@ -136,19 +136,18 @@ public sealed partial class MetabolizerSystem : EntitySystem
 
         LookupSolution(ent, solutionData, true, out var transferSolution, out var transferSolutionEntity, out _);
 
-        // Copy the solution do not edit the original solution list
         var list = solution.Contents.ToList();
 
-        // Collecting blood reagent for filtering
         var ev = new MetabolismExclusionEvent();
         RaiseLocalEvent(solutionOwner.Value, ref ev);
 
-        // randomize the reagent list so we don't have any weird quirks
-        // like alphabetical order or insertion order mattering for processing
         var rand = SharedRandomExtensions.PredictedRandom(_gameTiming, GetNetEntity(ent), GetNetEntity(solutionOwner));
         rand.Shuffle(list);
 
         var isDead = _mobStateSystem.IsDead(solutionOwner.Value);
+
+        // Stage name string for Bioavailability check
+        var stageName = stage.Id;
 
         int reagents = 0;
         foreach (var (reagent, quantity) in list)
@@ -156,7 +155,6 @@ public sealed partial class MetabolizerSystem : EntitySystem
             if (!_prototypeManager.TryIndex<ReagentPrototype>(reagent.Prototype, out var proto))
                 continue;
 
-            // Skip blood reagents
             if (ev.Reagents.Contains(reagent))
                 continue;
 
@@ -179,10 +177,14 @@ public sealed partial class MetabolizerSystem : EntitySystem
 
             var rate = solutionData.MetabolizeAll ? quantity : entry.MetabolismRate;
 
-            // Remove $rate, as long as there's enough reagent there to actually remove that much
             var mostToRemove = FixedPoint2.Clamp(rate, 0, quantity);
 
-            // we're done here entirely if this is true
+            // Baystation: Bioavailability scales oral dose in Digestion stage
+            if (stageName == "Digestion" && proto.Bioavailability < 1.0f)
+            {
+                mostToRemove *= FixedPoint2.New(proto.Bioavailability);
+            }
+
             if (reagents >= ent.Comp1.MaxReagentsProcessable)
                 return;
 
@@ -190,15 +192,11 @@ public sealed partial class MetabolizerSystem : EntitySystem
             if (!solutionData.MetabolizeAll)
                 scale /= (float) rate;
 
-            // if it's possible for them to be dead, and they are,
-            // then we shouldn't process any effects, but should probably
-            // still remove reagents
             if (isDead && !proto.WorksOnTheDead)
                 continue;
 
             var actualEntity = ent.Comp2?.Body ?? solutionOwner.Value;
 
-            // do all effects, if conditions apply
             foreach (var effect in entry.Effects)
             {
                 if (scale < effect.MinScale)
@@ -207,15 +205,12 @@ public sealed partial class MetabolizerSystem : EntitySystem
                 if (rand.NextFloat() >= effect.Probability)
                     continue;
 
-                // See if conditions apply
                 if (effect.Conditions != null && !CanMetabolizeEffect(actualEntity, ent, solutionEntity.Value, effect.Conditions))
                     continue;
 
                 ApplyEffect(effect);
-
             }
 
-            // TODO: We should have to do this with metabolism. ReagentEffect struct needs refactoring and so does metabolism!
             void ApplyEffect(EntityEffect effect)
             {
                 switch (effect)
@@ -232,12 +227,10 @@ public sealed partial class MetabolizerSystem : EntitySystem
                 }
             }
 
-            // remove a certain amount of reagent
             if (mostToRemove > FixedPoint2.Zero)
             {
                 solution.RemoveReagent(reagent, mostToRemove);
 
-                // We have processed a reagant, so count it towards the cap
                 reagents += 1;
 
                 if (transferSolution is not null && entry.Metabolites is not null)
@@ -246,6 +239,13 @@ public sealed partial class MetabolizerSystem : EntitySystem
                     {
                         transferSolution.AddReagent(metabolite, mostToRemove * ratio);
                     }
+                }
+
+                // Baystation: ActiveMetabolite generation (Bloodstream stage)
+                if (proto.ActiveMetabolite != null && stageName == "Bloodstream" && mostToRemove > 0)
+                {
+                    var metAmount = mostToRemove * FixedPoint2.New(proto.MetabolitePotency);
+                    solution.AddReagent(proto.ActiveMetabolite, metAmount);
                 }
             }
         }
