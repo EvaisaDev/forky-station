@@ -210,46 +210,133 @@
   components:
   - type: Sprite
     sprite: Mobs/Species/Diona/parts.rsi
+  - type: Woundable
 
 - type: entity
   parent: [ OrganBaseTorso, OrganDionaExternal ]
   id: OrganDionaTorso
+  components:
+  - type: ExternalOrgan
+    maxDamage: 180
+    minBrokenDamage: 120
+    flags:
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHead, OrganDionaExternal ]
   id: OrganDionaHead
+  components:
+  - type: ExternalOrgan
+    maxDamage: 90
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmLeft, OrganDionaExternal ]
   id: OrganDionaArmLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 40
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmRight, OrganDionaExternal ]
   id: OrganDionaArmRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 40
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandLeft, OrganDionaExternal ]
   id: OrganDionaHandLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandRight, OrganDionaExternal ]
   id: OrganDionaHandRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegLeft, OrganDionaExternal ]
   id: OrganDionaLegLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 40
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegRight, OrganDionaExternal ]
   id: OrganDionaLegRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 40
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootLeft, OrganDionaExternal ]
   id: OrganDionaFootLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootRight, OrganDionaExternal ]
   id: OrganDionaFootRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseBrain, OrganDionaInternal ]
@@ -271,6 +358,8 @@
   - type: Sprite
     layers:
     - state: lungs
+  - type: LungCondition
+    efficiency: 1.0
 
 - type: entity
   parent: [ OrganBaseStomach, OrganDionaInternal, OrganDionaMetabolizer ]

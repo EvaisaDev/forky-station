@@ -182,46 +182,133 @@
   components:
   - type: Sprite
     sprite: Mobs/Species/Arachnid/parts.rsi
+  - type: Woundable
 
 - type: entity
   parent: [ OrganBaseTorso, OrganArachnidExternal ]
   id: OrganArachnidTorso
+  components:
+  - type: ExternalOrgan
+    maxDamage: 170
+    minBrokenDamage: 120
+    flags:
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHead, OrganArachnidExternal ]
   id: OrganArachnidHead
+  components:
+  - type: ExternalOrgan
+    maxDamage: 85
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmLeft, OrganArachnidExternal ]
   id: OrganArachnidArmLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 65
+    minBrokenDamage: 40
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmRight, OrganArachnidExternal ]
   id: OrganArachnidArmRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 65
+    minBrokenDamage: 40
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandLeft, OrganArachnidExternal ]
   id: OrganArachnidHandLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 22
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandRight, OrganArachnidExternal ]
   id: OrganArachnidHandRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 22
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegLeft, OrganArachnidExternal ]
   id: OrganArachnidLegLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 65
+    minBrokenDamage: 40
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegRight, OrganArachnidExternal ]
   id: OrganArachnidLegRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 65
+    minBrokenDamage: 40
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootLeft, OrganArachnidExternal ]
   id: OrganArachnidFootLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 22
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootRight, OrganArachnidExternal ]
   id: OrganArachnidFootRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 22
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseBrain, OrganSpriteHumanInternal, OrganArachnidInternal ]
@@ -246,10 +333,17 @@
 - type: entity
   parent: [ OrganBaseLungs, OrganArachnidInternal, OrganArachnidMetabolizer ]
   id: OrganArachnidLungs
+  components:
+  - type: LungCondition
+    efficiency: 1.0
 
 - type: entity
   parent: [ OrganBaseHeart, OrganArachnidInternal, OrganArachnidMetabolizer ]
   id: OrganArachnidHeart
+  components:
+  - type: HeartCondition
+    efficiency: 1.0
+    beating: true
 
 - type: entity
   parent: [ OrganBaseStomach, OrganArachnidInternal, OrganAnimalMetabolizer ]

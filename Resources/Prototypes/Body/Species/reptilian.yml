@@ -205,11 +205,17 @@
   - type: VisualOrganMarkings
     markingData:
       group: Reptilian
+  - type: Woundable
 
 - type: entity
   parent: [ OrganBaseTorsoSexed, OrganBaseTorso, OrganReptilianExternal ]
   id: OrganReptilianTorso
   components:
+  - type: ExternalOrgan
+    maxDamage: 220
+    minBrokenDamage: 160
+    flags:
+    - HasTendon
   - type: VisualOrganMarkings
     hideableLayers:
     - enum.HumanoidVisualLayers.Tail
@@ -218,6 +224,13 @@
   parent: [ OrganBaseHeadSexed, OrganBaseHead, OrganReptilianExternal ]
   id: OrganReptilianHead
   components:
+  - type: ExternalOrgan
+    maxDamage: 110
+    minBrokenDamage: 45
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
   - type: VisualOrganMarkings
     hideableLayers:
     - enum.HumanoidVisualLayers.Snout
@@ -227,34 +240,106 @@
 - type: entity
   parent: [ OrganBaseArmLeft, OrganReptilianExternal ]
   id: OrganReptilianArmLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 90
+    minBrokenDamage: 55
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmRight, OrganReptilianExternal ]
   id: OrganReptilianArmRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 90
+    minBrokenDamage: 55
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandLeft, OrganReptilianExternal ]
   id: OrganReptilianHandLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 55
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandRight, OrganReptilianExternal ]
   id: OrganReptilianHandRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 55
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegLeft, OrganReptilianExternal ]
   id: OrganReptilianLegLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 90
+    minBrokenDamage: 55
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegRight, OrganReptilianExternal ]
   id: OrganReptilianLegRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 90
+    minBrokenDamage: 55
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootLeft, OrganReptilianExternal ]
   id: OrganReptilianFootLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 55
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootRight, OrganReptilianExternal ]
   id: OrganReptilianFootRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 55
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseBrain, OrganSpriteHumanInternal, OrganReptilianInternal ]
@@ -283,10 +368,17 @@
 - type: entity
   parent: [ OrganBaseLungs, OrganReptilianInternal, OrganReptilianMetabolizer ]
   id: OrganReptilianLungs
+  components:
+  - type: LungCondition
+    efficiency: 1.0
 
 - type: entity
   parent: [ OrganBaseHeart, OrganReptilianInternal, OrganReptilianMetabolizer ]
   id: OrganReptilianHeart
+  components:
+  - type: HeartCondition
+    efficiency: 1.0
+    beating: true
 
 - type: entity
   parent: [ OrganBaseStomach, OrganReptilianInternal, OrganReptilianMetabolizer ]
