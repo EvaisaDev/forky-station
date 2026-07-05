@@ -88,7 +88,7 @@ public sealed partial class MedicalDebugCommand : IConsoleCommand
 
                         var wName = _entMan.GetComponent<MetaDataComponent>(woundUid).EntityName;
                         var wDmg = wound.Damage.GetTotal();
-                        var woundInfo = $"      Wound [{wName}]: dmg={wDmg}, max={wound.MaximumDamage}";
+                        var woundInfo = $"      Wound [{wName}]: dmg={wDmg}, max={wound.MaximumDamage}, stage={wound.Stage}/{wound.MaxStages}, heal={wound.HealPerTick}, surgical={wound.IsSurgical}";
 
                         if (_entMan.TryGetComponent<BleedingWoundComponent>(woundUid, out var bleed))
                             woundInfo += $", bleed={bleed.CurrentBleedAmount:F1}";
@@ -101,6 +101,15 @@ public sealed partial class MedicalDebugCommand : IConsoleCommand
 
                         if (_entMan.TryGetComponent<PainfulWoundComponent>(woundUid, out var pain))
                             woundInfo += $", pain={pain.PainAmount}, fresh={pain.FreshPainAmount}";
+
+                        if (_entMan.TryGetComponent<WoundGermComponent>(woundUid, out var germ))
+                            woundInfo += $", germ={germ.GermLevel:F1}";
+
+                        if (_entMan.TryGetComponent<EmbeddedObjectComponent>(woundUid, out var emb))
+                            woundInfo += $", embedded={string.Join(",", emb.EmbeddedItems)}";
+
+                        if (_entMan.TryGetComponent<HealableWoundComponent>(woundUid, out var heal))
+                            woundInfo += $", healRate={heal.HealPerTick}";
 
                         shell.WriteLine(woundInfo);
                     }

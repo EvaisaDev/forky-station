@@ -89,7 +89,22 @@ public sealed partial class SurgerySystem : EntitySystem
 
         var result = ExecuteStep(tool, toolComp, matchedLimb.Value, matchedExt!);
         if (result != null)
+        {
             _popup.PopupEntity(result, args.User, args.User);
+
+            // Non-sterile tools increase wound infection risk
+            if (!toolComp.Sterile && TryComp<WoundableComponent>(matchedLimb.Value, out var wnd))
+            {
+                foreach (var wUid in wnd.Wounds)
+                {
+                    if (TryComp<WoundGermComponent>(wUid, out var germ))
+                    {
+                        germ.GermLevel += 5;
+                        Dirty(wUid, germ);
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -219,6 +234,30 @@ public sealed partial class SurgerySystem : EntitySystem
                 }
             }
             return Loc.GetString("surgery-organ-repaired");
+        }
+
+        // Remove embedded objects (shrapnel, bullets) from wounds
+        if (action == "RemoveEmbedded" && CanOperateOnOpen(external))
+        {
+            if (TryComp<WoundableComponent>(limb, out var wnd))
+            {
+                var removed = 0;
+                foreach (var wUid in wnd.Wounds)
+                {
+                    if (!TryComp<EmbeddedObjectComponent>(wUid, out var emb))
+                        continue;
+                    if (emb.EmbeddedItems.Count == 0)
+                        continue;
+
+                    emb.EmbeddedItems.RemoveAt(0);
+                    Dirty(wUid, emb);
+                    removed++;
+                }
+
+                if (removed > 0)
+                    return Loc.GetString("surgery-embedded-removed");
+            }
+            return Loc.GetString("surgery-no-embedded");
         }
 
         if (action == "BoneSaw" && CanAmputate(external))

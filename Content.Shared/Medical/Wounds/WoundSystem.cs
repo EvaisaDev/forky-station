@@ -96,14 +96,19 @@ public sealed partial class WoundSystem : EntitySystem
 
     private void ProcessDamageForLimb(Entity<WoundableComponent> limb, DamageSpecifier damage)
     {
-        var bruteTotal = SumTypes(damage, BruteTypes);
-        var burnTotal = SumTypes(damage, BurnTypes);
+        var blunt = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Blunt" });
+        var slash = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Slash" });
+        var pierce = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Piercing" });
+        var burn = SumTypes(damage, BurnTypes);
 
-        if (bruteTotal > 0)
-            AddDamageToWoundGroup(limb, damage, bruteTotal, "Brute");
-
-        if (burnTotal > 0)
-            AddDamageToWoundGroup(limb, damage, burnTotal, "Burn");
+        if (blunt > 0)
+            AddDamageToWoundGroup(limb, damage, blunt, "Brute");
+        if (slash > 0)
+            AddDamageToWoundGroup(limb, damage, slash, "Cut");
+        if (pierce > 0)
+            AddDamageToWoundGroup(limb, damage, pierce, "Puncture");
+        if (burn > 0)
+            AddDamageToWoundGroup(limb, damage, burn, "Burn");
     }
 
     private void OnGetWoundDamage(Entity<WoundableComponent> ent, ref GetWoundDamageEvent args)
@@ -201,6 +206,7 @@ public sealed partial class WoundSystem : EntitySystem
             Dirty(woundUid, wound);
             var refresh = new RefreshWoundsEvent();
             RaiseLocalEvent(woundUid, ref refresh);
+            MergeCompatibleWounds(limb);
         }
 
         if (groupTotal <= 0)
@@ -226,6 +232,100 @@ public sealed partial class WoundSystem : EntitySystem
 
         limb.Comp.Wounds.Add(woundEnt);
         Dirty(limb.Owner, limb.Comp);
+
+        // Try merging compatible wounds after adding damage
+        MergeCompatibleWounds(limb);
+    }
+
+    /// <summary>
+    ///     Merges compatible wounds on the same limb.
+    ///     Same type + same treatment state + combined damage ≤ MaxDamage of the larger wound.
+    /// </summary>
+    private void MergeCompatibleWounds(Entity<WoundableComponent> limb)
+    {
+        var wounds = limb.Comp.Wounds.ToList();
+        for (var i = 0; i < wounds.Count; i++)
+        {
+            var a = wounds[i];
+            if (TerminatingOrDeleted(a) || !TryComp<WoundComponent>(a, out var wa))
+                continue;
+
+            for (var j = i + 1; j < wounds.Count; j++)
+            {
+                var b = wounds[j];
+                if (TerminatingOrDeleted(b) || !TryComp<WoundComponent>(b, out var wb))
+                    continue;
+
+                // Check same wound group
+                if (!IsSameGroup(a, b))
+                    continue;
+
+                // Check same treatment state
+                var aTended = TryComp<TendableWoundComponent>(a, out var ta) && ta.Tended;
+                var bTended = TryComp<TendableWoundComponent>(b, out var tb) && tb.Tended;
+                if (aTended != bTended)
+                    continue;
+
+                // Merge: absorb the smaller wound into the larger one
+                EntityUid keep, remove;
+                WoundComponent wk, wr;
+
+                if (wa.MaximumDamage >= wb.MaximumDamage)
+                {
+                    keep = a; wk = wa; remove = b; wr = wb;
+                }
+                else
+                {
+                    keep = b; wk = wb; remove = a; wr = wa;
+                }
+
+                // Check combined doesn't exceed max
+                var combined = wk.Damage.GetTotal() + wr.Damage.GetTotal();
+                if (combined > wk.MaximumDamage)
+                    continue;
+
+                // Transfer damage
+                foreach (var (type, value) in wr.Damage.DamageDict)
+                {
+                    if (value <= 0)
+                        continue;
+                    if (wk.Damage.DamageDict.TryGetValue(type, out var existing))
+                        wk.Damage.DamageDict[type] = existing + value;
+                    else
+                        wk.Damage.DamageDict[type] = value;
+                }
+
+                Dirty(keep, wk);
+
+                // Remove the absorbed wound
+                limb.Comp.Wounds.Remove(remove);
+                Dirty(limb.Owner, limb.Comp);
+                Del(remove);
+            }
+        }
+    }
+
+    private bool IsSameGroup(EntityUid a, EntityUid b)
+    {
+        return GetWoundGroup(a) == GetWoundGroup(b);
+    }
+
+    private string GetWoundGroup(EntityUid wound)
+    {
+        // Determine group from the WoundDescription prototype ID
+        if (!TryComp<WoundDescriptionComponent>(wound, out var desc))
+            return "";
+
+        foreach (var text in desc.Descriptions.Values)
+        {
+            // description IDs are like "wound-brute-small", "wound-cut-moderate"
+            if (text.Contains("brute", StringComparison.OrdinalIgnoreCase)) return "brute";
+            if (text.Contains("cut", StringComparison.OrdinalIgnoreCase)) return "cut";
+            if (text.Contains("puncture", StringComparison.OrdinalIgnoreCase)) return "puncture";
+            if (text.Contains("burn", StringComparison.OrdinalIgnoreCase)) return "burn";
+            if (text.Contains("incision", StringComparison.OrdinalIgnoreCase)) return "incision";
+        }
+        return "";
     }
 
     private bool IsCorrectWoundGroup(EntityUid woundUid, string groupName)
@@ -274,16 +374,6 @@ public sealed partial class WoundSystem : EntitySystem
     private static string? PickWoundPrototype(string groupName, FixedPoint2 amount)
     {
         var severity = amount.Float();
-        var baseName = groupName switch
-        {
-            "Brute" => "WoundBrute",
-            "Burn" => "WoundBurn",
-            _ => null
-        };
-
-        if (baseName == null)
-            return null;
-
         var suffix = severity switch
         {
             >= 25 => "Severe",
@@ -291,6 +381,13 @@ public sealed partial class WoundSystem : EntitySystem
             _ => "Small"
         };
 
-        return $"{baseName}{suffix}";
+        return groupName switch
+        {
+            "Brute" => $"WoundBrute{suffix}",
+            "Burn" => $"WoundBurn{suffix}",
+            "Cut" => $"WoundCut{suffix}",
+            "Puncture" => $"WoundPuncture{suffix}",
+            _ => null
+        };
     }
 }

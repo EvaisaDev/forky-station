@@ -31,6 +31,7 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-small
+  - type: WoundGerm
   - type: BleedingWound
     baseBleedAmount: 0.5
     currentBleedAmount: 0.5
@@ -52,6 +53,7 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-moderate
+  - type: WoundGerm
   - type: BleedingWound
     baseBleedAmount: 1.5
     currentBleedAmount: 1.5
@@ -74,6 +76,7 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-severe
+  - type: WoundGerm
   - type: BleedingWound
     baseBleedAmount: 3.0
     currentBleedAmount: 3.0
@@ -98,6 +101,7 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-small
+  - type: WoundGerm
   - type: HealableWound
     healPerTick: 0.1
   - type: PainfulWound
@@ -115,6 +119,7 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-moderate
+  - type: WoundGerm
   - type: HealableWound
     healPerTick: 0.05
   - type: PainfulWound
@@ -132,8 +137,170 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-severe
+  - type: WoundGerm
   - type: HealableWound
     healPerTick: 0.02
   - type: PainfulWound
     painAmount: 12
     freshPainAmount: 25
+
+# --- Cut wounds (Slash) ---
+
+- type: entity
+  parent: WoundBase
+  id: WoundCutSmall
+  name: small cut
+  description: A small cut on the skin.
+  components:
+  - type: Wound
+    maximumDamage: 10
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-cut-small
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 1.0
+    currentBleedAmount: 1.0
+  - type: TendableWound
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.08
+  - type: PainfulWound
+    painAmount: 2
+    freshPainAmount: 5
+
+- type: entity
+  parent: WoundBase
+  id: WoundCutModerate
+  name: moderate cut
+  description: A deep cut with significant bleeding.
+  components:
+  - type: Wound
+    maximumDamage: 25
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-cut-moderate
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 2.0
+    currentBleedAmount: 2.0
+  - type: TendableWound
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.04
+  - type: PainfulWound
+    painAmount: 4
+    freshPainAmount: 10
+
+- type: entity
+  parent: WoundBase
+  id: WoundCutSevere
+  name: severe cut
+  description: A massive gash with profuse bleeding.
+  components:
+  - type: Wound
+    maximumDamage: 50
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-cut-severe
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 4.0
+    currentBleedAmount: 4.0
+  - type: TendableWound
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.02
+  - type: PainfulWound
+    painAmount: 8
+    freshPainAmount: 18
+
+# --- Puncture wounds (Piercing) ---
+
+- type: entity
+  parent: WoundBase
+  id: WoundPunctureSmall
+  name: small puncture
+  description: A small puncture wound.
+  components:
+  - type: Wound
+    maximumDamage: 10
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-puncture-small
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 1.5
+    currentBleedAmount: 1.5
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.06
+  - type: PainfulWound
+    painAmount: 3
+    freshPainAmount: 7
+
+- type: entity
+  parent: WoundBase
+  id: WoundPunctureModerate
+  name: moderate puncture
+  description: A deep puncture wound.
+  components:
+  - type: Wound
+    maximumDamage: 25
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-puncture-moderate
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 2.5
+    currentBleedAmount: 2.5
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.03
+  - type: PainfulWound
+    painAmount: 6
+    freshPainAmount: 14
+
+- type: entity
+  parent: WoundBase
+  id: WoundPunctureSevere
+  name: severe puncture
+  description: A severe penetrating wound.
+  components:
+  - type: Wound
+    maximumDamage: 50
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-puncture-severe
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 4.5
+    currentBleedAmount: 4.5
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.015
+  - type: PainfulWound
+    painAmount: 10
+    freshPainAmount: 22
+
+# --- Surgical incision (does not heal naturally) ---
+
+- type: entity
+  parent: WoundBase
+  id: WoundSurgicalIncision
+  name: surgical incision
+  description: A clean surgical incision.
+  components:
+  - type: Wound
+    maximumDamage: 10
+    isSurgical: true
+    healPerTick: 0
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-incision
+  - type: WoundGerm
+  - type: HealableWound
+    healPerTick: 0
+  - type: PainfulWound
+    painAmount: 1
+    freshPainAmount: 2

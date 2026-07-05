@@ -215,6 +215,23 @@
     quality: 1.0
     sterile: true
     stepDuration: 2.0
+
+- type: entity
+  name: forceps
+  id: Forceps
+  parent: BaseToolSurgery
+  description: A surgical tool used to remove embedded objects like shrapnel and bullets.
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/Surgery/scissors.rsi
+    state: retractor
+  - type: Item
+    storedRotation: 90
+  - type: SurgeryTool
+    action: RemoveEmbedded
+    quality: 1.0
+    sterile: true
+    stepDuration: 3.0
 # Saws
 
 - type: entity

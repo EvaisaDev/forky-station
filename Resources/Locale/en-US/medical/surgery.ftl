@@ -13,3 +13,5 @@ surgery-step-not-valid = You cannot perform {$action} here.
 surgery-no-woundable-limb = There is no treatable limb there.
 surgery-cannot-reach = You cannot reach there with {$tool}.
 surgery-patient-not-ready = The patient must be unconscious or anesthetized for surgery.
+surgery-embedded-removed = You remove the embedded object from the wound.
+surgery-no-embedded = There are no embedded objects in this wound.
