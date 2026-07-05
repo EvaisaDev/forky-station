@@ -192,6 +192,7 @@
   - type: BloodType
     group: O
     rhPositive: true
+  - type: Targeting
   - type: Temperature
     currentTemperature: 310.15
     specificHeat: 42

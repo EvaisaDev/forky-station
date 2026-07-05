@@ -6,7 +6,7 @@ namespace Content.Server.Medical.Surgery;
 
 public sealed partial class SurgeryTargetSystem : EntitySystem
 {
-    [Dependency] private readonly UserInterfaceSystem _ui = default!;
+    [Dependency] private UserInterfaceSystem _ui = default!;
 
     public override void Initialize()
     {

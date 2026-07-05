@@ -1,3 +1,4 @@
+using Content.Shared._Medical.Targeting;
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
@@ -92,10 +93,15 @@ public sealed partial class SurgerySystem : EntitySystem
     }
 
     /// <summary>
-    ///     Gets the surgeon's target zone, defaulting to "Torso" if not set.
+    ///     Gets the surgeon's target zone from their TargetingComponent.
+    ///     Defaults to "Torso" if not set.
     /// </summary>
     private ProtoId<OrganCategoryPrototype> GetSurgeryTargetZone(EntityUid surgeon)
     {
+        if (TryComp<TargetingComponent>(surgeon, out var targeting))
+            return BodyPartHelper.ToOrganCategory(targeting.ActivePart);
+
+        // Fallback to old SurgeryTargetComponent if available
         if (TryComp<SurgeryTargetComponent>(surgeon, out var target))
             return target.TargetZone;
 

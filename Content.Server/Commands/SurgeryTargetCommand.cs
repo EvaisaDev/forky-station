@@ -1,3 +1,4 @@
+using Content.Shared._Medical.Targeting;
 using Content.Shared.Body;
 using Content.Shared.Medical.Surgery;
 using Robust.Server.GameObjects;
@@ -51,6 +52,13 @@ public sealed partial class SurgeryTargetCommand : IConsoleCommand
         var targetComp = _entMan.EnsureComponent<SurgeryTargetComponent>(attachedEntity.Value);
         targetComp.TargetZone = zone;
         _entMan.Dirty(attachedEntity.Value, targetComp);
+
+        // Also set TargetingComponent for the new targeting system
+        if (_entMan.TryGetComponent<TargetingComponent>(attachedEntity.Value, out var targetingComp))
+        {
+            targetingComp.ActivePart = BodyPartHelper.FromOrganCategory(zone);
+            _entMan.Dirty(attachedEntity.Value, targetingComp);
+        }
 
         shell.WriteLine($"Surgery target zone set to: {zone}");
     }
