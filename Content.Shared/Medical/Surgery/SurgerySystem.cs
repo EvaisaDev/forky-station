@@ -8,18 +8,19 @@ using Content.Shared.Medical.Wounds;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
 namespace Content.Shared.Medical.Surgery;
 
-/// <summary>
-///     Core surgery system. Handles tool interaction on woundable body parts.
-/// </summary>
 public sealed partial class SurgerySystem : EntitySystem
 {
     [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
 
     public override void Initialize()
     {
@@ -41,16 +42,21 @@ public sealed partial class SurgerySystem : EntitySystem
 
         args.Handled = true;
 
+        // Quality check for improvised tools
+        if (toolComp.Quality < 1.0f && !_random.Prob(toolComp.Quality))
+        {
+            _popup.PopupEntity(Loc.GetString("surgery-tool-slipped"), args.User, args.User);
+            return;
+        }
+
         if (!IsPatientReady(target))
         {
             _popup.PopupEntity(Loc.GetString("surgery-patient-not-ready"), args.User, args.User);
             return;
         }
 
-        // Find the target zone from the surgeon's SurgeryTargetComponent
         var targetZone = GetSurgeryTargetZone(args.User);
 
-        // Find the matching limb
         EntityUid? matchedLimb = null;
         ExternalOrganComponent? matchedExt = null;
 
@@ -65,7 +71,6 @@ public sealed partial class SurgerySystem : EntitySystem
             if (!TryComp<OrganComponent>(organ, out var organComp))
                 continue;
 
-            // Match by category
             if (organComp.Category == targetZone)
             {
                 matchedLimb = organ;
@@ -73,7 +78,6 @@ public sealed partial class SurgerySystem : EntitySystem
                 break;
             }
 
-            // Fallback: if no match, use torso
             if (matchedLimb == null && organComp.Category == "Torso")
             {
                 matchedLimb = organ;
@@ -87,12 +91,11 @@ public sealed partial class SurgerySystem : EntitySystem
             return;
         }
 
-        var result = ExecuteStep(tool, toolComp, matchedLimb.Value, matchedExt!);
+        var result = ExecuteStep(tool, toolComp, matchedLimb.Value, matchedExt!, body, target);
         if (result != null)
         {
             _popup.PopupEntity(result, args.User, args.User);
 
-            // Non-sterile tools increase wound infection risk
             if (!toolComp.Sterile && TryComp<WoundableComponent>(matchedLimb.Value, out var wnd))
             {
                 foreach (var wUid in wnd.Wounds)
@@ -107,43 +110,26 @@ public sealed partial class SurgerySystem : EntitySystem
         }
     }
 
-    /// <summary>
-    ///     Gets the surgeon's target zone from their TargetingComponent.
-    ///     Defaults to "Torso" if not set.
-    /// </summary>
     private ProtoId<OrganCategoryPrototype> GetSurgeryTargetZone(EntityUid surgeon)
     {
         if (TryComp<TargetingComponent>(surgeon, out var targeting))
             return BodyPartHelper.ToOrganCategory(targeting.ActivePart);
 
-        // Fallback to old SurgeryTargetComponent if available
         if (TryComp<SurgeryTargetComponent>(surgeon, out var target))
             return target.TargetZone;
 
         return "Torso";
     }
 
-    /// <summary>
-    ///     Check if the patient is ready for surgery.
-    ///     Baystation requires: patient is unconscious (anesthetized or in crit/dead).
-    /// </summary>
     private bool IsPatientReady(EntityUid target)
     {
-        // Patient is ready if: unconscious, in critical state, or dead
         if (TryComp<MobStateComponent>(target, out var mobState))
-        {
             return mobState.CurrentState != MobState.Alive;
-        }
 
-        // If no mob state, allow surgery anyway (for testing/debug)
         return true;
     }
 
-    /// <summary>
-    ///     Executes the appropriate surgery step based on tool and limb state.
-    ///     Public for testing.
-    /// </summary>
-    public string? ExecuteStep(EntityUid tool, SurgeryToolComponent toolComp, EntityUid limb, ExternalOrganComponent external)
+    public string? ExecuteStep(EntityUid tool, SurgeryToolComponent toolComp, EntityUid limb, ExternalOrganComponent external, BodyComponent? body = null, EntityUid bodyEnt = default)
     {
         var action = toolComp.Action;
 
@@ -186,7 +172,6 @@ public sealed partial class SurgerySystem : EntitySystem
         {
             if ((external.Status & OrganStatusFlags.Broken) != 0)
             {
-                // 3-step bone repair: BoneGlue(1) -> BoneSet(2) -> BoneGlue(3) = complete
                 if (action == "BoneGlue" && external.BoneRepairStage == 2)
                 {
                     external.BoneRepairStage = 3;
@@ -213,10 +198,9 @@ public sealed partial class SurgerySystem : EntitySystem
 
         if (action == "OrganFix" && CanOperateOnOpen(external))
         {
-            // Heal damaged internal organs — find the body via the limb's parent
-            if (TryComp<OrganComponent>(limb, out var organComp) && organComp.Body is { } body)
+            if (TryComp<OrganComponent>(limb, out var organComp) && organComp.Body is { } orgBody)
             {
-                if (TryComp<BodyComponent>(body, out var bodyComp) && bodyComp.Organs != null)
+                if (TryComp<BodyComponent>(orgBody, out var bodyComp) && bodyComp.Organs != null)
                 {
                     foreach (var innerOrgan in bodyComp.Organs.ContainedEntities)
                     {
@@ -236,7 +220,6 @@ public sealed partial class SurgerySystem : EntitySystem
             return Loc.GetString("surgery-organ-repaired");
         }
 
-        // Remove embedded objects (shrapnel, bullets) from wounds
         if (action == "RemoveEmbedded" && CanOperateOnOpen(external))
         {
             if (TryComp<WoundableComponent>(limb, out var wnd))
@@ -267,7 +250,6 @@ public sealed partial class SurgerySystem : EntitySystem
             return Loc.GetString("surgery-limb-amputated");
         }
 
-        // BoneSaw on opened limb = open encasement (ribcage/skull)
         if (action == "BoneSaw" && external.SurgeryStage == SurgeryStage.Retracted)
         {
             external.SurgeryStage = SurgeryStage.Encased;
@@ -275,7 +257,104 @@ public sealed partial class SurgerySystem : EntitySystem
             return Loc.GetString("surgery-bone-opened");
         }
 
+        // Organ Transplant: Detach an internal organ for removal
+        if (action == "OrganDetach" && CanOperateOnOpen(external) && body != null)
+        {
+            return DetachOrgan(limb, body, bodyEnt);
+        }
+
+        // Organ Transplant: Remove a detached organ from the body entirely
+        if (action == "OrganRemove" && CanOperateOnOpen(external) && body != null)
+        {
+            return RemoveOrgan(limb, body, bodyEnt);
+        }
+
+        // Organ Transplant: Insert an organ from the surgeon's hand into the body
+        if (action == "OrganReplace" && CanOperateOnOpen(external) && body != null)
+        {
+            return ReplaceOrgan(tool, body, bodyEnt);
+        }
+
+        // Organ Transplant: Attach an organ to the blood supply
+        if (action == "OrganAttach" && CanOperateOnOpen(external))
+        {
+            return AttachOrgan(limb);
+        }
+
         return Loc.GetString("surgery-step-not-valid", ("action", action));
+    }
+
+    private string? DetachOrgan(EntityUid limb, BodyComponent body, EntityUid bodyEnt)
+    {
+        if (body.Organs == null)
+            return Loc.GetString("surgery-no-organs");
+
+        // Find first internal organ in this limb's body that isn't the limb itself
+        foreach (var innerOrgan in body.Organs.ContainedEntities)
+        {
+            if (innerOrgan == limb)
+                continue;
+
+            if (HasComp<HeartConditionComponent>(innerOrgan)
+                || HasComp<LungConditionComponent>(innerOrgan)
+                || HasComp<BrainComponent>(innerOrgan))
+            {
+                // Mark as detached by setting a component or flag
+                // For now, just return success message; actual removal happens in OrganRemove
+                return Loc.GetString("surgery-organ-detached", ("organ", Name(innerOrgan)));
+            }
+        }
+
+        return Loc.GetString("surgery-no-organs-in-limb");
+    }
+
+    private string? RemoveOrgan(EntityUid limb, BodyComponent body, EntityUid bodyEnt)
+    {
+        if (body.Organs == null)
+            return Loc.GetString("surgery-no-organs");
+
+        foreach (var innerOrgan in body.Organs.ContainedEntities)
+        {
+            if (innerOrgan == limb)
+                continue;
+
+            if (!HasComp<HeartConditionComponent>(innerOrgan)
+                && !HasComp<LungConditionComponent>(innerOrgan)
+                && !HasComp<BrainComponent>(innerOrgan))
+                continue;
+
+            _container.Remove(innerOrgan, body.Organs);
+            var xform = Transform(innerOrgan);
+            xform.Coordinates = Transform(bodyEnt).Coordinates;
+
+            return Loc.GetString("surgery-organ-removed", ("organ", Name(innerOrgan)));
+        }
+
+        return Loc.GetString("surgery-no-organs-in-limb");
+    }
+
+    private string? ReplaceOrgan(EntityUid heldOrgan, BodyComponent body, EntityUid bodyEnt)
+    {
+        if (body.Organs == null)
+            return Loc.GetString("surgery-no-organs");
+
+        if (!TryComp<OrganComponent>(heldOrgan, out var organComp))
+            return Loc.GetString("surgery-not-an-organ");
+
+        if (organComp.Body != null)
+            return Loc.GetString("surgery-organ-still-attached");
+
+        // Insert the organ into the body container
+        _container.Insert(heldOrgan, body.Organs);
+
+        return Loc.GetString("surgery-organ-replaced", ("organ", Name(heldOrgan)));
+    }
+
+    private string? AttachOrgan(EntityUid limb)
+    {
+        // Organ is now connected to blood supply - this happens automatically
+        // when inserted into the body container via BodySystem events
+        return Loc.GetString("surgery-organ-attached");
     }
 
     private static bool CanIncise(ExternalOrganComponent limb)

@@ -4,27 +4,25 @@ using Content.Shared.Body.Organs;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Medical.Wounds;
+using Content.Shared.Popups;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Content.Shared.Medical.Pain;
 
-/// <summary>
-///     Calculates shock level from wounds + limb damage - painkillers.
-///     Shock is consumed by BloodOxygenationSystem to affect pulse rate.
-///     Fresh pain from new wounds decays at 0.05/sec.
-/// </summary>
 public sealed partial class PainSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedSolutionContainerSystem _solution = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private INetManager _net = default!;
 
-    private const float PARACETAMOL_PAINKILL = 35f;
-    private const float TRAMADOL_PAINKILL = 50f;
-    private const float OXYCODONE_PAINKILL = 80f;
+    // Painkiller effectiveness per unit of drug in the bloodstream
+    private const float PARACETAMOL_PER_UNIT = 2.5f;  // 35 at 14u (full therapeutic dose)
+    private const float TRAMADOL_PER_UNIT = 3.5f;     // 50 at ~14u
+    private const float OXYCODONE_PER_UNIT = 5.5f;    // 80 at ~14.5u
 
-    public TimeSpan UpdateInterval = TimeSpan.FromSeconds(2);
+    public TimeSpan UpdateInterval = TimeSpan.FromSeconds(1);
 
     public override void Initialize()
     {
@@ -34,9 +32,6 @@ public sealed partial class PainSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
-        if (!_net.IsServer)
-            return;
-
         base.Update(frameTime);
 
         var curTime = _timing.CurTime;
@@ -51,22 +46,26 @@ public sealed partial class PainSystem : EntitySystem
             if (!TryComp<BodyComponent>(uid, out var body) || body.Organs == null)
                 continue;
 
-            // 1. Decay fresh pain
-            pain.FreshPain = Math.Max(0, pain.FreshPain - pain.FreshPainDecay * frameTime);
+            pain.FreshPain = Math.Max(0, pain.FreshPain - pain.FreshPainDecay * (float)UpdateInterval.TotalSeconds);
 
-            // 2. Collect wound pain (including fresh)
             var woundPain = GetWoundPain(body);
-
-            // 3. Collect limb damage pain
             var limbPain = GetLimbDamagePain(body);
-
-            // 4. Check painkiller level from chems
             var painkillerLevel = GetPainkillerLevel(uid);
 
-            // 5. Calculate shock
             var rawPain = woundPain + limbPain + pain.FreshPain;
             pain.PainkillerLevel = painkillerLevel;
+            var prevShock = pain.ShockLevel;
             pain.ShockLevel = Math.Max(0, rawPain - painkillerLevel);
+
+            if (!_net.IsServer)
+                continue;
+
+            if (pain.ShockLevel > 80 && prevShock <= 80)
+                _popup.PopupEntity(Loc.GetString("pain-extreme", ("target", uid)), uid, PopupType.MediumCaution);
+            else if (pain.ShockLevel > 50 && prevShock <= 50)
+                _popup.PopupEntity(Loc.GetString("pain-severe", ("target", uid)), uid, PopupType.MediumCaution);
+            else if (pain.ShockLevel > 30 && prevShock <= 30)
+                _popup.PopupEntity(Loc.GetString("pain-moderate", ("target", uid)), uid, PopupType.MediumCaution);
         }
     }
 
@@ -140,14 +139,14 @@ public sealed partial class PainSystem : EntitySystem
 
         float level = 0;
 
-        if (blood.GetTotalPrototypeQuantity("Paracetamol") > 0)
-            level += PARACETAMOL_PAINKILL;
+        var paraQty = (float)blood.GetTotalPrototypeQuantity("Paracetamol").Float();
+        level += paraQty * PARACETAMOL_PER_UNIT;
 
-        if (blood.GetTotalPrototypeQuantity("Tramadol") > 0)
-            level += TRAMADOL_PAINKILL;
+        var tramQty = (float)blood.GetTotalPrototypeQuantity("Tramadol").Float();
+        level += tramQty * TRAMADOL_PER_UNIT;
 
-        if (blood.GetTotalPrototypeQuantity("Oxycodone") > 0)
-            level += OXYCODONE_PAINKILL;
+        var oxyQty = (float)blood.GetTotalPrototypeQuantity("Oxycodone").Float();
+        level += oxyQty * OXYCODONE_PER_UNIT;
 
         return level;
     }

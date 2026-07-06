@@ -2,6 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.Body.Events;
 using Content.Shared.Body;
+using Content.Shared.Damage;
+using Content.Shared.EntityEffects.Effects.Damage;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Components.SolutionManager;
 using Content.Shared.Chemistry.EntitySystems;
@@ -175,7 +177,12 @@ public sealed partial class MetabolizerSystem : EntitySystem
                 continue;
             }
 
-            var rate = solutionData.MetabolizeAll ? quantity : entry.MetabolismRate;
+            // Use prototype-level MetabolismRate if set, otherwise use per-stage entry rate
+            var rate = solutionData.MetabolizeAll
+                ? quantity
+                : proto.MetabolismRate != 0.2f
+                    ? FixedPoint2.New(proto.MetabolismRate)
+                    : entry.MetabolismRate;
 
             var mostToRemove = FixedPoint2.Clamp(rate, 0, quantity);
 
@@ -265,6 +272,47 @@ public sealed partial class MetabolizerSystem : EntitySystem
         foreach (var stage in ent.Comp1.Stages)
         {
             TryMetabolizeStage(ent, stage);
+        }
+
+        // Baystation: Overdose threshold check — scan bloodstream for reagents exceeding threshold
+        CheckOverdose(ent);
+    }
+
+    private void CheckOverdose(Entity<MetabolizerComponent, OrganComponent?, SolutionManagerComponent?> ent)
+    {
+        if (!ent.Comp1.Solutions.TryGetValue("Bloodstream", out var solutionData))
+            return;
+
+        if (!LookupSolution(ent, solutionData, false, out var solution, out var solutionEntity, out var solutionOwner))
+            return;
+
+        if (solution.Contents.Count == 0)
+            return;
+
+        var actualEntity = ent.Comp2?.Body ?? solutionOwner.Value;
+
+        foreach (var (reagent, quantity) in solution.Contents)
+        {
+            if (!_prototypeManager.TryIndex<ReagentPrototype>(reagent.Prototype, out var proto))
+                continue;
+
+            if (proto.OverdoseThreshold <= 0)
+                continue;
+
+            if (quantity <= proto.OverdoseThreshold)
+                continue;
+
+            var excess = (float)(quantity - FixedPoint2.New(proto.OverdoseThreshold));
+            var damageAmount = FixedPoint2.New(excess * 0.5f);
+            if (damageAmount <= 0)
+                continue;
+
+            var damage = new DamageSpecifier
+            {
+                DamageDict = new() { { "Poison", damageAmount } }
+            };
+            var healthEffect = new HealthChange { Damage = damage };
+            _entityEffects.ApplyEffect(actualEntity, healthEffect, 1f);
         }
     }
 
