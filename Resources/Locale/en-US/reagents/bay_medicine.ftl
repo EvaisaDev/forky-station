@@ -21,3 +21,30 @@ reagent-physical-desc-peridaxon = A milky-white suspension.
 reagent-physical-desc-alkysine = A purple-tinted solution.
 reagent-physical-desc-spaceacillin = A pale blue liquid.
 reagent-physical-desc-opiates = A clear, colorless fluid.
+
+reagent-name-rezadone = Rezadone
+reagent-name-clonexadone = Clonexadone
+reagent-name-imidazoline = Imidazoline
+reagent-name-ryetalyn = Ryetalyn
+reagent-name-venaxilin = Venaxilin
+reagent-name-noexcutite = Noexcutite
+reagent-name-antidexafen = Antidexafen
+reagent-name-coagulant = Coagulant
+
+reagent-desc-rezadone = A powerful regenerative drug that repairs all tissue types. Overdose causes disfigurement.
+reagent-desc-clonexadone = An extremely potent cryogenic healing agent. Requires temperatures below 170K.
+reagent-desc-imidazoline = Treats eye damage and restores vision.
+reagent-desc-ryetalyn = Cures genetic abnormalities and cellular damage.
+reagent-desc-venaxilin = A broad-spectrum antivenom. Neutralizes most toxins.
+reagent-desc-noexcutite = Prevents convulsions and stabilizes neural activity.
+reagent-desc-antidexafen = Treats bacterial infections and boosts the immune system.
+reagent-desc-coagulant = A dangerous clotting agent that causes cellular damage. Use with extreme caution.
+
+reagent-physical-desc-rezadone = A bright pink, translucent fluid.
+reagent-physical-desc-clonexadone = A pale blue, almost clear liquid.
+reagent-physical-desc-imidazoline = A light purple, viscous solution.
+reagent-physical-desc-ryetalyn = A milky white suspension.
+reagent-physical-desc-venaxilin = A pale green, watery fluid.
+reagent-physical-desc-noexcutite = An orange-tinted liquid.
+reagent-physical-desc-antidexafen = A light blue, clear fluid.
+reagent-physical-desc-coagulant = A dark red, syrupy liquid.

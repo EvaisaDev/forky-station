@@ -105,6 +105,11 @@
   components:
   - type: Sprite
     sprite: Objects/Tools/welder.rsi
+  - type: SurgeryTool
+    action: Cauterize
+    quality: 0.25
+    sterile: false
+    stepDuration: 5.0
 
 - type: entity
   parent: [SolutionWelder, SolutionSmall]

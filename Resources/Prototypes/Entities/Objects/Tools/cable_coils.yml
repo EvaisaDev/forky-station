@@ -177,6 +177,11 @@
     - coillv-10
     - coillv-20
     - coillv-30
+  - type: SurgeryTool
+    action: Clamp
+    quality: 0.75
+    sterile: false
+    stepDuration: 3.0
   - type: CablePlacer
     cablePrototypeID: CableApcExtension
     blockingWireType: Apc

@@ -52,6 +52,11 @@
     storedSprite:
       sprite: Objects/Tools/crowbar.rsi
       state: storage
+  - type: SurgeryTool
+    action: Retract
+    quality: 0.75
+    sterile: false
+    stepDuration: 4.0
 
 # Emergency (red) Crowbar
 - type: entity

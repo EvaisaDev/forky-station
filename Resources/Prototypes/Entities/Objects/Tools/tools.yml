@@ -109,6 +109,11 @@
     storedSprite:
       sprite: Objects/Tools/wrench.rsi
       state: storage
+  - type: SurgeryTool
+    action: BoneSet
+    quality: 0.75
+    sterile: false
+    stepDuration: 4.0
   - type: MeleeWeapon
     wideAnimationRotation: 135
     attackRate: 1.5
