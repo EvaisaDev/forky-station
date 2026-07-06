@@ -189,6 +189,7 @@
   - type: Blindable
   - type: Pain
   - type: BloodOxygenation
+  - type: CPR
   - type: BloodType
     group: O
     rhPositive: true

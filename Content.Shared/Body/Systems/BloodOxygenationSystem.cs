@@ -3,6 +3,7 @@ using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
+using Content.Shared.Medical.CPR;
 using Content.Shared.Medical.Pain;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -98,9 +99,24 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
 
         if (oxygenation.CardiacArrest)
         {
-            oxygenation.Oxygenation = Math.Max(0, oxygenation.Oxygenation - 0.05f);
-            oxygenation.PulseLevel = PULSE_NONE;
-            ApplyOxygenEffects(uid, oxygenation);
+            if (TryComp<CPRComponent>(uid, out var cpr) && cpr.Active)
+            {
+                var cprOutput = cpr.CardiacOutputModifier;
+                var cprBloodVolume = GetBloodVolumeRatio(uid);
+                var cprLungEff = GetLungEfficiency(uid);
+                oxygenation.Oxygenation = cprBloodVolume * cprLungEff * cprOutput + GetDexalinBonus(uid);
+                oxygenation.Oxygenation = Math.Clamp(oxygenation.Oxygenation, 0, 1);
+                oxygenation.PulseLevel = PULSE_SLOW;
+                oxygenation.PulseRate = PulseLevelToBPM(PULSE_SLOW);
+                ApplyOxygenEffects(uid, oxygenation);
+            }
+            else
+            {
+                oxygenation.Oxygenation = Math.Max(0, oxygenation.Oxygenation - 0.05f);
+                oxygenation.PulseLevel = PULSE_NONE;
+                oxygenation.PulseRate = 0;
+                ApplyOxygenEffects(uid, oxygenation);
+            }
             return;
         }
 

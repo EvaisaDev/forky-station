@@ -1,0 +1,92 @@
+- type: entity
+  parent: [BaseStructure, ConstructibleMachine]
+  id: Sleeper
+  name: sleeper
+  description: A fancy bed with built-in injectors, a dialysis machine, and a limited health scanner.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/Medical/sleeper.rsi
+    layers:
+    - state: sleeper
+      map: ["enum.SleeperVisualLayers.Base"]
+    - state: sleeper_panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+      visible: false
+  - type: InteractionOutline
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        density: 200
+        mask:
+          - MachineMask
+        layer:
+          - MachineLayer
+  - type: ContainerContainer
+    containers:
+      scanner-body:
+        !type:ContainerSlot
+      beakerSlot: !type:ContainerSlot {}
+      injectionBuffer: !type:ContainerSlot {}
+      dialysisBuffer: !type:ContainerSlot {}
+      stomachBuffer: !type:ContainerSlot {}
+      machine_board: !type:Container
+      machine_parts: !type:Container
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.SleeperVisuals.ContainsEntity:
+        enum.SleeperVisualLayers.Base:
+          True: { state: sleeper_working }
+          False: { state: sleeper }
+  - type: Machine
+    board: SleeperMachineCircuitboard
+  - type: WiresVisuals
+  - type: WiresPanel
+  - type: Damageable
+    damageModifierSet: StructuralMetallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:EmptyAllContainersBehaviour
+      - !type:PlaySoundBehavior
+        sound:
+          collection: WindowShatter
+      - !type:ChangeConstructionNodeBehavior
+        node: machineFrame
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: ApcPowerReceiver
+    powerLoad: 1000
+  - type: ExtensionCableReceiver
+  - type: Sleeper
+  - type: UserInterface
+    interfaces:
+      enum.SleeperUiKey.Key:
+        type: SleeperBoundUserInterface
+  - type: ActivatableUI
+    singleUser: false
+    key: enum.SleeperUiKey.Key
+  - type: ItemSlots
+    slots:
+      beakerSlot:
+        name: Sleeper
+        insertOnInteract: false
+        whitelist:
+          components:
+          - FitsInDispenser
+  - type: SolutionContainerManager
+    solutions:
+      injectionBuffer:
+        maxVol: 100
+      dialysisBuffer:
+        maxVol: 200
+      stomachBuffer:
+        maxVol: 200

@@ -1,0 +1,47 @@
+- type: entity
+  parent: BaseStructure
+  id: IVDrip
+  name: IV drip
+  description: An IV drip stand that can transfer blood and chemicals to or from a patient.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/Medical/iv_drip.rsi
+    layers:
+    - state: unhooked
+      map: ["base"]
+    - state: reagent0
+      map: ["reagent"]
+      visible: false
+  - type: InteractionOutline
+  - type: Physics
+    bodyType: Dynamic
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.3,-0.3,0.3,0.3"
+        density: 50
+        mask:
+          - MachineMask
+        layer:
+          - MachineLayer
+  - type: ContainerContainer
+    containers:
+      beakerSlot: !type:ContainerSlot {}
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.IVDripVisuals.Connected:
+        base:
+          True: { state: hooked }
+          False: { state: unhooked }
+  - type: IVDrip
+  - type: ItemSlots
+    slots:
+      beakerSlot:
+        name: IVDrip
+        insertOnInteract: false
+        whitelist:
+          components:
+          - FitsInDispenser

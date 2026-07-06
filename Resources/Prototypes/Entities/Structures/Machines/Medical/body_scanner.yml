@@ -1,0 +1,76 @@
+- type: entity
+  parent: [BaseStructure, ConstructibleMachine]
+  id: BodyScanner
+  name: body scanner
+  description: A large full-body scanning machine that provides a complete physical assessment of a patient placed inside.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/Medical/bodyscanner.rsi
+    layers:
+    - state: body_scanner
+      map: ["enum.BodyScannerVisualLayers.Base"]
+    - state: body_scanner_panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+      visible: false
+  - type: InteractionOutline
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        density: 200
+        mask:
+          - MachineMask
+        layer:
+          - MachineLayer
+  - type: ContainerContainer
+    containers:
+      scanner-body:
+        !type:ContainerSlot
+      machine_board: !type:Container
+      machine_parts: !type:Container
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.BodyScannerVisuals.Status:
+        enum.BodyScannerVisualLayers.Base:
+          Off: { state: body_scanner_closed }
+          Open: { state: body_scanner }
+          Green: { state: body_scanner_working }
+          Red: { state: body_scanner_working }
+          Death: { state: body_scanner_closed }
+          Yellow: { state: body_scanner_working }
+  - type: Machine
+    board: BodyScannerBedCircuitboard
+  - type: WiresVisuals
+  - type: WiresPanel
+  - type: Damageable
+    damageModifierSet: StructuralMetallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:EmptyAllContainersBehaviour
+      - !type:PlaySoundBehavior
+        sound:
+          collection: WindowShatter
+      - !type:ChangeConstructionNodeBehavior
+        node: machineFrame
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: ApcPowerReceiver
+    powerLoad: 10000
+  - type: ExtensionCableReceiver
+  - type: BodyScanner
+  - type: ActivatableUI
+    singleUser: false
+    key: enum.BodyScannerUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.BodyScannerUiKey.Key:
+        type: BodyScannerBoundUserInterface

@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "license": "AGPL-3.0",
+    "copyright": "Baystation12 (https://baystation.xyz)",
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "unhooked"
+        },
+        {
+            "name": "hooked"
+        },
+        {
+            "name": "reagent100"
+        },
+        {
+            "name": "reagent80"
+        },
+        {
+            "name": "reagent75"
+        },
+        {
+            "name": "reagent50"
+        },
+        {
+            "name": "reagent25"
+        },
+        {
+            "name": "reagent10"
+        },
+        {
+            "name": "reagent0"
+        },
+        {
+            "name": "light_low",
+            "delays": [
+                [
+                    0.30000000000000004,
+                    0.30000000000000004
+                ]
+            ]
+        },
+        {
+            "name": "light_full"
+        },
+        {
+            "name": "light_mid"
+        }
+    ]
+}

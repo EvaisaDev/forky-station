@@ -1,0 +1,13 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                MinSize="500 600" Resizable="False">
+    <BoxContainer Orientation="Vertical" Margin="8">
+        <BoxContainer Orientation="Horizontal">
+            <Button Name="ScanButton" Access="Public" Text="{Loc 'body-scanner-scan'}" MinSize="100 24" />
+            <Button Name="EjectButton" Access="Public" Text="{Loc 'body-scanner-eject'}" MinSize="100 24" Margin="8 0" />
+        </BoxContainer>
+        <ScrollContainer VerticalExpand="True" Margin="0 8 0 0">
+            <BoxContainer Name="ScanResults" Access="Public" Orientation="Vertical" />
+        </ScrollContainer>
+    </BoxContainer>
+</controls:FancyWindow>

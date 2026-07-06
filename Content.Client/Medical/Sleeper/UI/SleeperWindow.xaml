@@ -1,0 +1,53 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                MinSize="600 500" Resizable="False">
+    <BoxContainer Orientation="Vertical" Margin="8">
+        <BoxContainer Orientation="Horizontal">
+            <BoxContainer Orientation="Vertical" MinSize="280 200" Margin="4">
+                <Label Text="{Loc 'sleeper-patient-status'}" StyleClasses="LabelHeadingText" />
+                <RichTextLabel Name="PatientStatus" Access="Public" MinSize="260 180" />
+            </BoxContainer>
+            <BoxContainer Orientation="Vertical" MinSize="280 200" Margin="4">
+                <Label Text="{Loc 'sleeper-controls'}" StyleClasses="LabelHeadingText" />
+                <BoxContainer Orientation="Horizontal" Margin="0 4">
+                    <Label Text="{Loc 'sleeper-dialysis'}" MinSize="100 0" />
+                    <Button Name="DialysisToggle" Access="Public" MinSize="80 24" ToggleMode="True" />
+                </BoxContainer>
+                <BoxContainer Orientation="Horizontal" Margin="0 4">
+                    <Label Text="{Loc 'sleeper-stomach-pump'}" MinSize="100 0" />
+                    <Button Name="PumpToggle" Access="Public" MinSize="80 24" ToggleMode="True" />
+                </BoxContainer>
+                <BoxContainer Orientation="Horizontal" Margin="0 4">
+                    <Label Text="{Loc 'sleeper-stasis'}" MinSize="100 0" />
+                    <OptionButton Name="StasisSelector" Access="Public" MinSize="80 24" />
+                </BoxContainer>
+            </BoxContainer>
+        </BoxContainer>
+        <BoxContainer Orientation="Vertical" Margin="4 8">
+            <Label Text="{Loc 'sleeper-chemicals'}" StyleClasses="LabelHeadingText" Margin="0 0 0 4" />
+            <BoxContainer Orientation="Horizontal">
+                <BoxContainer Orientation="Vertical" MinSize="280 120" Margin="0 0 4 0">
+                    <ScrollContainer VerticalExpand="True">
+                        <BoxContainer Name="ChemicalList" Access="Public" Orientation="Vertical" />
+                    </ScrollContainer>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical" MinSize="280 120" Margin="4 0 0 0">
+                    <BoxContainer Orientation="Horizontal" Margin="0 0 0 4">
+                        <Label Text="{Loc 'sleeper-inject-amount'}" MinSize="100 0" />
+                        <SpinBox Name="InjectAmount" Access="Public" Value="5" MinSize="60 24" />
+                        <Button Name="InjectButton" Access="Public" Text="{Loc 'sleeper-inject'}" MinSize="80 24" />
+                    </BoxContainer>
+                </BoxContainer>
+            </BoxContainer>
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal" Margin="0 4">
+            <Label Text="{Loc 'sleeper-beaker'}" MinSize="100 0" />
+            <Label Name="BeakerStatus" Access="Public" MinSize="200 0" />
+            <Button Name="EjectBeakerButton" Access="Public" Text="{Loc 'sleeper-eject-beaker'}" MinSize="120 24" />
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal" Margin="0 4">
+            <Button Name="EjectPatientButton" Access="Public" Text="{Loc 'sleeper-eject-patient'}" MinSize="120 24" />
+            <Label Name="LockedWarning" Access="Public" Text="{Loc 'sleeper-locked-warning'}" Visible="False" FontColorOverride="Red" Margin="8 0" />
+        </BoxContainer>
+    </BoxContainer>
+</controls:FancyWindow>

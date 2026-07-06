@@ -1,0 +1,69 @@
+{
+    "version": 1,
+    "license": "AGPL-3.0",
+    "copyright": "Baystation12 (https://baystation.xyz)",
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "body_scanner_console",
+            "directions": 4
+        },
+        {
+            "name": "body_scanner_console_lights",
+            "directions": 4,
+            "delays": [
+                [
+                    1.0,
+                    1.0
+                ],
+                [
+                    1.0,
+                    1.0
+                ],
+                [
+                    1.0,
+                    1.0
+                ],
+                [
+                    1.0,
+                    1.0
+                ]
+            ]
+        },
+        {
+            "name": "body_scanner_console_panel",
+            "directions": 4
+        },
+        {
+            "name": "body_scanner",
+            "directions": 4
+        },
+        {
+            "name": "body_scanner_closed",
+            "directions": 4
+        },
+        {
+            "name": "body_scanner_working",
+            "directions": 1,
+            "delays": [
+                [
+                    0.22000000000000003,
+                    0.22000000000000003,
+                    0.22000000000000003,
+                    0.22000000000000003,
+                    0.22000000000000003,
+                    0.22000000000000003,
+                    0.22000000000000003,
+                    0.22000000000000003
+                ]
+            ]
+        },
+        {
+            "name": "body_scanner_panel",
+            "directions": 4
+        }
+    ]
+}

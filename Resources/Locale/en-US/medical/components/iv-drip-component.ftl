@@ -1,0 +1,13 @@
+iv-drip-switch-inject = Switch to Inject
+iv-drip-switch-draw = Switch to Draw
+iv-drip-set-rate = Set Rate: {$rate}u/tick
+iv-drip-rate-set = Transfer rate set to {$rate}u/tick.
+iv-drip-connected = Connected IV drip to {$patient}.
+iv-drip-disconnected = Disconnected IV drip from {$patient}.
+iv-drip-mode-changed = Mode changed to {$mode}.
+iv-drip-examine-connected = Connected to {$patient}.
+iv-drip-examine-mode = Mode: {$mode}
+iv-drip-examine-rate = Transfer rate: {$rate}u/tick
+iv-drip-examine-not-connected = Not connected to a patient.
+iv-drip-examine-has-beaker = Has an IV bag attached.
+iv-drip-examine-no-beaker = No IV bag attached.
