@@ -7,8 +7,7 @@ public static class BodyPartHelper
     private static readonly Dictionary<TargetBodyPart, string> OrganMap = new()
     {
         { TargetBodyPart.Head, "Head" },
-        { TargetBodyPart.Chest, "Torso" },
-        { TargetBodyPart.Groin, "Groin" },
+        { TargetBodyPart.Torso, "Torso" },
         { TargetBodyPart.LeftArm, "ArmLeft" },
         { TargetBodyPart.LeftHand, "HandLeft" },
         { TargetBodyPart.RightArm, "ArmRight" },

@@ -32,7 +32,7 @@ public sealed partial class SurgeryTargetSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Opens the surgery target selector UI for a player.
+    /// Opens the surgery target selector UI for a player.
     /// </summary>
     public void OpenUi(EntityUid player)
     {

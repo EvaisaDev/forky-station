@@ -8,8 +8,8 @@ using Robust.Shared.Timing;
 namespace Content.Server.Medical.Stasis;
 
 /// <summary>
-///     A stasis bag that slows the occupant's metabolism to 20x initial factor,
-///     degrading over 40 minutes. Allows injection through the bag.
+/// A stasis bag that slows the occupant's metabolism by 20x
+/// degrading over 40 minutes. Allows injection through the bag.
 /// </summary>
 public sealed partial class StasisBagSystem : EntitySystem
 {

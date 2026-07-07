@@ -19,8 +19,7 @@ public sealed partial class TargetingControl : UIWidget
         _bodyPartControls = new()
         {
             { TargetBodyPart.Head, HeadButton },
-            { TargetBodyPart.Chest, ChestButton },
-            { TargetBodyPart.Groin, GroinButton },
+            { TargetBodyPart.Torso, TorsoButton },
             { TargetBodyPart.LeftArm, LeftArmButton },
             { TargetBodyPart.LeftHand, LeftHandButton },
             { TargetBodyPart.RightArm, RightArmButton },

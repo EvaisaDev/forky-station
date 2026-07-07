@@ -6,5 +6,5 @@ namespace Content.Shared._Medical.Targeting;
 public sealed partial class TargetingComponent : Component
 {
     [DataField, AutoNetworkedField]
-    public TargetBodyPart ActivePart = TargetBodyPart.Chest;
+    public TargetBodyPart ActivePart = TargetBodyPart.Torso;
 }

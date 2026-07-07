@@ -7,9 +7,9 @@ using Robust.Shared.Timing;
 namespace Content.Server.Medical.Wounds;
 
 /// <summary>
-///     Tracks wound infection (germ_level). Untended wounds in dirty environments
-///     accumulate germs. High germ_level causes toxin damage and organ damage.
-///     Spaceacillin reduces germ_level. Ointment/Sterilizine treats infection.
+/// Tracks wound infection (germ_level). Untended wounds in dirty environments
+/// accumulate germs. High germ_level causes toxin damage and organ damage.
+/// Spaceacillin reduces germ_level. Ointment/Sterilizine treats infection.
 /// </summary>
 public sealed partial class InfectionSystem : EntitySystem
 {

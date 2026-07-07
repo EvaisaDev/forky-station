@@ -250,7 +250,7 @@ public sealed partial class HealthAnalyzerSystem : EntitySystem
         if (TryComp<UnrevivableComponent>(entity, out var unrevivableComp) && unrevivableComp.Analyzable)
             unrevivable = true;
 
-        // Baystation fields
+        // Baystation start
         var brainActivity = "Normal";
         var pulseRate = 0f;
         var bloodOxygenation = 0f;

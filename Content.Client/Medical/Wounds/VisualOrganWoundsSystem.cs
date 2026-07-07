@@ -12,8 +12,8 @@ using Robust.Shared.Timing;
 namespace Content.Client.Medical.Wounds;
 
 /// <summary>
-///     Reads wound data from the local player's body and renders damage indicators
-///     on the targeting doll (health doll) UI for each body part.
+/// Reads damage stored in wounds for each limb
+/// Displays as a coloured overlay over the TargetingDoll
 /// </summary>
 public sealed partial class VisualOrganWoundsSystem : EntitySystem
 {

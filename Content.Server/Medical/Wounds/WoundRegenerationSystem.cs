@@ -5,10 +5,10 @@ using Robust.Shared.Timing;
 namespace Content.Server.Medical.Wounds;
 
 /// <summary>
-///     Advances wound stages over time as wounds heal.
-///     Surgical wounds don't heal naturally — must be cauterized.
-///     Tended (bandaged) wounds heal faster.
-///     Fully healed wounds are removed.
+/// Advances wound stages over time as wounds heal.
+/// Surgical wounds don't heal naturally — must be cauterized.
+/// Tended (bandaged) wounds heal faster.
+/// Fully healed wounds are removed.
 /// </summary>
 public sealed partial class WoundRegenerationSystem : EntitySystem
 {

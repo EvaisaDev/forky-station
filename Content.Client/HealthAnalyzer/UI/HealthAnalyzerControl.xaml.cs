@@ -106,7 +106,7 @@ public sealed partial class HealthAnalyzerControl : BoxContainer
 
         DamageLabel.Text = _damageable.GetTotalDamage(target.Value).ToString();
 
-        // Baystation fields
+        // Baystation Start
 
         BrainActivityLabel.Text = state.BrainActivity ?? Loc.GetString("health-analyzer-window-entity-unknown-value-text");
 

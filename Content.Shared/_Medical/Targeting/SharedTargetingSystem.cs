@@ -7,8 +7,7 @@ public abstract class SharedTargetingSystem : EntitySystem
         return new[]
         {
             TargetBodyPart.Head,
-            TargetBodyPart.Chest,
-            TargetBodyPart.Groin,
+            TargetBodyPart.Torso,
             TargetBodyPart.LeftArm,
             TargetBodyPart.LeftHand,
             TargetBodyPart.LeftLeg,
