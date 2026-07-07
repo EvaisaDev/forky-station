@@ -409,20 +409,36 @@ public sealed partial class WoundSystem : EntitySystem
     private static string? PickWoundPrototype(string groupName, FixedPoint2 amount)
     {
         var severity = amount.Float();
-        var suffix = severity switch
+        var suffix = (groupName, severity) switch
         {
-            >= 25 => "Severe",
-            >= 12 => "Moderate",
-            _ => "Small"
-        };
+            ("Brute", >= 80) => "Monumental",
+            ("Brute", >= 50) => "Huge",
+            ("Brute", >= 30) => "Large",
+            ("Brute", >= 20) => "Moderate",
+            ("Brute", >= 10) => "Small",
+            ("Brute", _) => "Tiny",
 
-        return groupName switch
-        {
-            "Brute" => $"WoundBrute{suffix}",
-            "Burn" => $"WoundBurn{suffix}",
-            "Cut" => $"WoundCut{suffix}",
-            "Puncture" => $"WoundPuncture{suffix}",
+            ("Burn", >= 50) => "Carbonised",
+            ("Burn", >= 40) => "Deep",
+            ("Burn", >= 30) => "Severe",
+            ("Burn", >= 15) => "Large",
+            ("Burn", >= 10) => "Moderate",
+            ("Burn", _) => "Small",
+
+            ("Cut", >= 50) => "Massive",
+            ("Cut", >= 25) => "Gaping",
+            ("Cut", >= 15) => "Flesh",
+            ("Cut", >= 10) => "Deep",
+            ("Cut", _) => "Small",
+
+            ("Puncture", >= 30) => "Massive",
+            ("Puncture", >= 15) => "Gaping",
+            ("Puncture", >= 10) => "Flesh",
+            ("Puncture", _) => "Small",
+
             _ => null
         };
+
+        return suffix != null ? $"Wound{groupName}{suffix}" : null;
     }
 }

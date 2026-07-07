@@ -18,13 +18,31 @@
       40.0: wound-large
       60.0: wound-severe
 
-# --- Brute wounds (Blunt + Slash + Piercing) ---
+# --- Brute / Bruise wounds ---
+
+- type: entity
+  parent: WoundBase
+  id: WoundBruteTiny
+  name: tiny bruise
+  description: A barely visible bruise.
+  components:
+  - type: Wound
+    maximumDamage: 5
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-brute-tiny
+  - type: WoundGerm
+  - type: HealableWound
+    healPerTick: 0.15
+  - type: PainfulWound
+    painAmount: 0.5
+    freshPainAmount: 1
 
 - type: entity
   parent: WoundBase
   id: WoundBruteSmall
   name: small bruise
-  description: A minor bruise or cut.
+  description: A minor bruise.
   components:
   - type: Wound
     maximumDamage: 10
@@ -46,10 +64,10 @@
   parent: WoundBase
   id: WoundBruteModerate
   name: moderate bruise
-  description: A clear bruise or gash.
+  description: A clear bruise.
   components:
   - type: Wound
-    maximumDamage: 25
+    maximumDamage: 20
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-moderate
@@ -60,35 +78,81 @@
   - type: TendableWound
   - type: ClampableWound
   - type: HealableWound
-    healPerTick: 0.05
+    healPerTick: 0.08
   - type: PainfulWound
     painAmount: 3
     freshPainAmount: 8
 
 - type: entity
   parent: WoundBase
-  id: WoundBruteSevere
-  name: severe bruise
-  description: A severe wound with heavy bruising and bleeding.
+  id: WoundBruteLarge
+  name: large bruise
+  description: A large, dark bruise with swelling.
+  components:
+  - type: Wound
+    maximumDamage: 30
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-brute-large
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 2.5
+    currentBleedAmount: 2.5
+  - type: TendableWound
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.05
+  - type: PainfulWound
+    painAmount: 5
+    freshPainAmount: 12
+
+- type: entity
+  parent: WoundBase
+  id: WoundBruteHuge
+  name: huge bruise
+  description: A massive bruise covering a large area.
   components:
   - type: Wound
     maximumDamage: 50
   - type: WoundDescription
     descriptions:
-      0.0: wound-brute-severe
+      0.0: wound-brute-huge
   - type: WoundGerm
   - type: BleedingWound
-    baseBleedAmount: 3.0
-    currentBleedAmount: 3.0
+    baseBleedAmount: 4.0
+    currentBleedAmount: 4.0
   - type: TendableWound
   - type: ClampableWound
   - type: HealableWound
-    healPerTick: 0.02
+    healPerTick: 0.03
   - type: PainfulWound
     painAmount: 8
-    freshPainAmount: 20
+    freshPainAmount: 18
 
-# --- Burn wounds (Heat + Cold + Shock + Caustic) ---
+- type: entity
+  parent: WoundBase
+  id: WoundBruteMonumental
+  name: monumental bruise
+  description: An enormous, devastating bruise.
+  components:
+  - type: Wound
+    maximumDamage: 80
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-brute-monumental
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 6.0
+    currentBleedAmount: 6.0
+  - type: TendableWound
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.01
+  - type: PainfulWound
+    painAmount: 15
+    freshPainAmount: 30
+
+# --- Burn wounds ---
 
 - type: entity
   parent: WoundBase
@@ -115,16 +179,34 @@
   description: A clear burn with blistering.
   components:
   - type: Wound
-    maximumDamage: 25
+    maximumDamage: 15
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-moderate
   - type: WoundGerm
   - type: HealableWound
+    healPerTick: 0.08
+  - type: PainfulWound
+    painAmount: 4
+    freshPainAmount: 10
+
+- type: entity
+  parent: WoundBase
+  id: WoundBurnLarge
+  name: large burn
+  description: A large burn with charred edges.
+  components:
+  - type: Wound
+    maximumDamage: 30
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-burn-large
+  - type: WoundGerm
+  - type: HealableWound
     healPerTick: 0.05
   - type: PainfulWound
-    painAmount: 5
-    freshPainAmount: 12
+    painAmount: 6
+    freshPainAmount: 14
 
 - type: entity
   parent: WoundBase
@@ -133,18 +215,54 @@
   description: A severe burn with extensive tissue damage.
   components:
   - type: Wound
-    maximumDamage: 50
+    maximumDamage: 40
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-severe
   - type: WoundGerm
   - type: HealableWound
+    healPerTick: 0.03
+  - type: PainfulWound
+    painAmount: 10
+    freshPainAmount: 22
+
+- type: entity
+  parent: WoundBase
+  id: WoundBurnDeep
+  name: deep burn
+  description: A deep burn reaching underlying tissue.
+  components:
+  - type: Wound
+    maximumDamage: 50
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-burn-deep
+  - type: WoundGerm
+  - type: HealableWound
     healPerTick: 0.02
   - type: PainfulWound
-    painAmount: 12
-    freshPainAmount: 25
+    painAmount: 14
+    freshPainAmount: 28
 
-# --- Cut wounds (Slash) ---
+- type: entity
+  parent: WoundBase
+  id: WoundBurnCarbonised
+  name: carbonised burn
+  description: A deep burn with carbonised flesh.
+  components:
+  - type: Wound
+    maximumDamage: 80
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-burn-carbonised
+  - type: WoundGerm
+  - type: HealableWound
+    healPerTick: 0.01
+  - type: PainfulWound
+    painAmount: 20
+    freshPainAmount: 40
+
+# --- Cut wounds ---
 
 - type: entity
   parent: WoundBase
@@ -162,7 +280,6 @@
     baseBleedAmount: 1.0
     currentBleedAmount: 1.0
   - type: TendableWound
-  - type: ClampableWound
   - type: HealableWound
     healPerTick: 0.08
   - type: PainfulWound
@@ -171,15 +288,15 @@
 
 - type: entity
   parent: WoundBase
-  id: WoundCutModerate
-  name: moderate cut
-  description: A deep cut with significant bleeding.
+  id: WoundCutDeep
+  name: deep cut
+  description: A deep cut reaching into the flesh.
   components:
   - type: Wound
-    maximumDamage: 25
+    maximumDamage: 15
   - type: WoundDescription
     descriptions:
-      0.0: wound-cut-moderate
+      0.0: wound-cut-deep
   - type: WoundGerm
   - type: BleedingWound
     baseBleedAmount: 2.0
@@ -187,35 +304,81 @@
   - type: TendableWound
   - type: ClampableWound
   - type: HealableWound
-    healPerTick: 0.04
+    healPerTick: 0.06
   - type: PainfulWound
     painAmount: 4
-    freshPainAmount: 10
+    freshPainAmount: 8
 
 - type: entity
   parent: WoundBase
-  id: WoundCutSevere
-  name: severe cut
-  description: A massive gash with profuse bleeding.
+  id: WoundCutFlesh
+  name: flesh wound
+  description: A wound cutting into the flesh.
+  components:
+  - type: Wound
+    maximumDamage: 25
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-cut-flesh
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 3.0
+    currentBleedAmount: 3.0
+  - type: TendableWound
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.04
+  - type: PainfulWound
+    painAmount: 6
+    freshPainAmount: 14
+
+- type: entity
+  parent: WoundBase
+  id: WoundCutGaping
+  name: gaping wound
+  description: A wide, gaping wound.
   components:
   - type: Wound
     maximumDamage: 50
   - type: WoundDescription
     descriptions:
-      0.0: wound-cut-severe
+      0.0: wound-cut-gaping
   - type: WoundGerm
   - type: BleedingWound
-    baseBleedAmount: 4.0
-    currentBleedAmount: 4.0
+    baseBleedAmount: 5.0
+    currentBleedAmount: 5.0
   - type: TendableWound
   - type: ClampableWound
   - type: HealableWound
-    healPerTick: 0.02
+    healPerTick: 0.03
   - type: PainfulWound
-    painAmount: 8
-    freshPainAmount: 18
+    painAmount: 10
+    freshPainAmount: 22
 
-# --- Puncture wounds (Piercing) ---
+- type: entity
+  parent: WoundBase
+  id: WoundCutMassive
+  name: massive wound
+  description: A massive, devastating wound.
+  components:
+  - type: Wound
+    maximumDamage: 80
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-cut-massive
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 8.0
+    currentBleedAmount: 8.0
+  - type: TendableWound
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.01
+  - type: PainfulWound
+    painAmount: 18
+    freshPainAmount: 35
+
+# --- Puncture wounds ---
 
 - type: entity
   parent: WoundBase
@@ -241,47 +404,111 @@
 
 - type: entity
   parent: WoundBase
-  id: WoundPunctureModerate
-  name: moderate puncture
-  description: A deep puncture wound.
+  id: WoundPunctureFlesh
+  name: puncture wound
+  description: A puncture wound into the flesh.
   components:
   - type: Wound
-    maximumDamage: 25
+    maximumDamage: 15
   - type: WoundDescription
     descriptions:
-      0.0: wound-puncture-moderate
+      0.0: wound-puncture-flesh
   - type: WoundGerm
   - type: BleedingWound
     baseBleedAmount: 2.5
     currentBleedAmount: 2.5
   - type: ClampableWound
   - type: HealableWound
-    healPerTick: 0.03
+    healPerTick: 0.04
   - type: PainfulWound
-    painAmount: 6
-    freshPainAmount: 14
+    painAmount: 5
+    freshPainAmount: 12
 
 - type: entity
   parent: WoundBase
-  id: WoundPunctureSevere
-  name: severe puncture
-  description: A severe penetrating wound.
+  id: WoundPunctureGaping
+  name: gaping puncture
+  description: A gaping puncture hole.
   components:
   - type: Wound
-    maximumDamage: 50
+    maximumDamage: 30
   - type: WoundDescription
     descriptions:
-      0.0: wound-puncture-severe
+      0.0: wound-puncture-gaping
   - type: WoundGerm
   - type: BleedingWound
-    baseBleedAmount: 4.5
-    currentBleedAmount: 4.5
+    baseBleedAmount: 4.0
+    currentBleedAmount: 4.0
+  - type: ClampableWound
+  - type: HealableWound
+    healPerTick: 0.03
+  - type: PainfulWound
+    painAmount: 8
+    freshPainAmount: 18
+
+- type: entity
+  parent: WoundBase
+  id: WoundPunctureMassive
+  name: massive puncture
+  description: A massive penetrating wound.
+  components:
+  - type: Wound
+    maximumDamage: 60
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-puncture-massive
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 6.0
+    currentBleedAmount: 6.0
   - type: ClampableWound
   - type: HealableWound
     healPerTick: 0.015
   - type: PainfulWound
-    painAmount: 10
-    freshPainAmount: 22
+    painAmount: 14
+    freshPainAmount: 28
+
+# --- Lost limb / Stump wounds ---
+
+- type: entity
+  parent: WoundBase
+  id: WoundStumpEdge
+  name: ripped stump
+  description: A bloody stump where a limb was torn off.
+  components:
+  - type: Wound
+    maximumDamage: 80
+    isSurgical: true
+    healPerTick: 0
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-stump-edge
+  - type: WoundGerm
+  - type: BleedingWound
+    baseBleedAmount: 3.0
+    currentBleedAmount: 3.0
+  - type: TendableWound
+  - type: PainfulWound
+    painAmount: 15
+    freshPainAmount: 30
+
+- type: entity
+  parent: WoundBase
+  id: WoundStumpBurn
+  name: charred stump
+  description: A charred stump where a limb was burned off.
+  components:
+  - type: Wound
+    maximumDamage: 80
+    isSurgical: true
+    healPerTick: 0
+  - type: WoundDescription
+    descriptions:
+      0.0: wound-stump-burn
+  - type: WoundGerm
+  - type: PainfulWound
+    painAmount: 12
+    freshPainAmount: 25
 
 # --- Surgical incision (does not heal naturally) ---
 
