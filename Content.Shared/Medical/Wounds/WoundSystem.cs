@@ -1,6 +1,9 @@
 using System;
 using System.Linq;
+using System.Linq;
 using Content.Shared.Body;
+using Content.Shared.Body.Components;
+using Content.Shared.Body.Organs;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
@@ -8,6 +11,7 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using Robust.Shared.Network;
 
@@ -21,6 +25,7 @@ public sealed partial class WoundSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _net = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     private static readonly ProtoId<DamageTypePrototype>[] BruteTypes = { "Blunt", "Slash", "Piercing" };
     private static readonly ProtoId<DamageTypePrototype>[] BurnTypes = { "Heat", "Cold", "Shock", "Caustic" };
@@ -81,14 +86,44 @@ public sealed partial class WoundSystem : EntitySystem
         if (damage.Empty)
             return;
 
-        // Distribute wounds to all woundable limbs on this body
+        // Distribute wounds only to limbs that actually received this damage.
+        // For melee: LimbDamageSystem applies all damage to one random limb before
+        // calling TryChangeDamage, so only that limb has matching ExternalOrganComponent damage.
+        // For untargeted damage: OnDamageChanged distributes across all limbs first,
+        // so all woundable limbs will have matching damage.
         if (ent.Comp.Organs == null)
             return;
+
+        var wBlunt = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Blunt" });
+        var wSlash = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Slash" });
+        var wPierce = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Piercing" });
+        var wBurn = SumTypes(damage, BurnTypes);
 
         foreach (var organ in ent.Comp.Organs.ContainedEntities)
         {
             if (!TryComp<WoundableComponent>(organ, out var woundable))
                 continue;
+
+            // Only create wounds on limbs that actually received this damage.
+            // Check if this limb has matching ExternalOrganComponent damage values.
+            if (TryComp<ExternalOrganComponent>(organ, out var ext))
+            {
+                var needsBruteWound = (wBlunt > 0 || wSlash > 0 || wPierce > 0);
+                var needsBurnWound = wBurn > 0;
+                var hasLimbBrute = ext.BruteDamage > 0;
+                var hasLimbBurn = ext.BurnDamage > 0;
+
+                // Skip if the limb doesn't have the type of damage being applied
+                if ((needsBruteWound && !hasLimbBrute) && (needsBurnWound && !hasLimbBurn))
+                    continue;
+
+                // For melee: only one limb has damage, so only that limb gets wounds
+                // For explosions: all limbs have damage, so all get wounds
+                if (needsBruteWound && !hasLimbBrute)
+                    continue;
+                if (needsBurnWound && !hasLimbBurn)
+                    continue;
+            }
 
             ProcessDamageForLimb((organ, woundable), damage);
         }

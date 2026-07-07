@@ -1,0 +1,15 @@
+- type: reagent
+  id: Sterilizine
+  name: reagent-name-sterilizine
+  group: Medicine
+  desc: reagent-desc-sterilizine
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#c8e6c9"
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: -0.5

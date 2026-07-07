@@ -1,0 +1,27 @@
+- type: entity
+  name: sterilizine spray
+  id: SterilizineSpray
+  parent: BaseItem
+  description: A spray bottle containing sterilizine, used to disinfect wounds and surgical sites.
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/sterilizine.rsi
+    state: icon
+  - type: Item
+    size: Small
+  - type: Sterilizine
+  - type: SolutionContainerManager
+    solutions:
+      spray:
+        maxVol: 30
+        reagents:
+        - ReagentId: Sterilizine
+          Quantity: 30
+  - type: RefillableSolution
+    solution: spray
+  - type: ExaminableSolution
+    solution: spray
+  - type: SolutionTransfer
+    transferAmount: 5
+  - type: Spillable
+    solution: spray
