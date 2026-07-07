@@ -48,6 +48,11 @@
     guides:
     - Chef
     - FoodRecipes
+  - type: SurgeryTool
+    action: Incision
+    quality: 0.75
+    sterile: false
+    stepDuration: 4.0
   - type: Fixtures
     fixtures:
       fix1:

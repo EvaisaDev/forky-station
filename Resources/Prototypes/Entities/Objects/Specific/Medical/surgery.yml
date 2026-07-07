@@ -359,3 +359,55 @@
     quality: 1.0
     sterile: true
     stepDuration: 4.0
+
+# Organ transplant tools
+
+- type: entity
+  name: organ detaching scalpel
+  id: ScalpelOrganDetach
+  parent: Scalpel
+  description: A scalpel modified for carefully severing the connections holding an internal organ in place.
+  components:
+  - type: SurgeryTool
+    action: OrganDetach
+    quality: 1.0
+    sterile: true
+    stepDuration: 4.0
+
+- type: entity
+  name: organ extraction hemostat
+  id: HemostatOrganRemove
+  parent: Hemostat
+  description: A hemostat with specially shaped tips for grasping and removing detached organs.
+  components:
+  - type: Sprite
+    state: hemostat
+  - type: Item
+    heldPrefix: hemostat
+    storedRotation: 90
+  - type: SurgeryTool
+    action: OrganRemove
+    quality: 1.0
+    sterile: true
+    stepDuration: 3.0
+  - type: MeleeWeapon
+    damage:
+      types:
+        Blunt: 2
+
+- type: entity
+  name: vascular recoupler
+  id: VascularRecoupler
+  parent: BaseToolSurgery
+  description: A delicate surgical tool used to reconnect blood vessels and attach transplanted organs to the circulatory system.
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/Surgery/scissors.rsi
+    state: retractor
+  - type: Item
+    storedRotation: 90
+  - type: SurgeryTool
+    action: OrganAttach
+    quality: 1.0
+    sterile: true
+    stepDuration: 5.0
