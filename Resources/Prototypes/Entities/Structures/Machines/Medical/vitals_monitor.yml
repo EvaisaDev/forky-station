@@ -16,37 +16,10 @@
     - state: pulse_normal
       map: ["pulse"]
       visible: false
-    - state: pulse_flatline
-      map: ["pulse"]
-      visible: false
-    - state: pulse_veryfast
-      map: ["pulse"]
-      visible: false
-    - state: pulse_thready
-      map: ["pulse"]
-      visible: false
-    - state: pulse_warning
-      map: ["pulse"]
-      visible: false
     - state: brain_ok
       map: ["brain"]
       visible: false
-    - state: brain_bad
-      map: ["brain"]
-      visible: false
-    - state: brain_verybad
-      map: ["brain"]
-      visible: false
-    - state: brain_warning
-      map: ["brain"]
-      visible: false
     - state: breathing_normal
-      map: ["breathing"]
-      visible: false
-    - state: breathing_shallow
-      map: ["breathing"]
-      visible: false
-    - state: breathing_warning
       map: ["breathing"]
       visible: false
   - type: InteractionOutline
