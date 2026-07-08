@@ -118,11 +118,6 @@ public abstract partial class SharedSleeperSystem : EntitySystem
             var ev = new ApplyMetabolicMultiplierEvent(1f / entity.Comp.StasisSetting);
             RaiseLocalEvent(patient.Value, ref ev);
         }
-        else
-        {
-            var ev = new ApplyMetabolicMultiplierEvent(1f);
-            RaiseLocalEvent(patient.Value, ref ev);
-        }
 
         UpdateUi(entity);
     }

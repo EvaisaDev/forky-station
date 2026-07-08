@@ -28,6 +28,7 @@
   components:
   - type: Wound
     maximumDamage: 5
+    group: Brute
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-tiny
@@ -46,6 +47,7 @@
   components:
   - type: Wound
     maximumDamage: 10
+    group: Brute
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-small
@@ -68,6 +70,7 @@
   components:
   - type: Wound
     maximumDamage: 20
+    group: Brute
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-moderate
@@ -91,6 +94,7 @@
   components:
   - type: Wound
     maximumDamage: 30
+    group: Brute
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-large
@@ -114,6 +118,7 @@
   components:
   - type: Wound
     maximumDamage: 50
+    group: Brute
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-huge
@@ -137,6 +142,7 @@
   components:
   - type: Wound
     maximumDamage: 80
+    group: Brute
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-monumental
@@ -162,6 +168,7 @@
   components:
   - type: Wound
     maximumDamage: 10
+    group: Burn
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-small
@@ -180,6 +187,7 @@
   components:
   - type: Wound
     maximumDamage: 15
+    group: Burn
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-moderate
@@ -198,6 +206,7 @@
   components:
   - type: Wound
     maximumDamage: 30
+    group: Burn
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-large
@@ -216,6 +225,7 @@
   components:
   - type: Wound
     maximumDamage: 40
+    group: Burn
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-severe
@@ -234,6 +244,7 @@
   components:
   - type: Wound
     maximumDamage: 50
+    group: Burn
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-deep
@@ -252,6 +263,7 @@
   components:
   - type: Wound
     maximumDamage: 80
+    group: Burn
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-carbonised
@@ -272,6 +284,7 @@
   components:
   - type: Wound
     maximumDamage: 10
+    group: Cut
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-small
@@ -294,6 +307,7 @@
   components:
   - type: Wound
     maximumDamage: 15
+    group: Cut
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-deep
@@ -317,6 +331,7 @@
   components:
   - type: Wound
     maximumDamage: 25
+    group: Cut
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-flesh
@@ -340,6 +355,7 @@
   components:
   - type: Wound
     maximumDamage: 50
+    group: Cut
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-gaping
@@ -363,6 +379,7 @@
   components:
   - type: Wound
     maximumDamage: 80
+    group: Cut
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-massive
@@ -388,6 +405,7 @@
   components:
   - type: Wound
     maximumDamage: 10
+    group: Puncture
   - type: WoundDescription
     descriptions:
       0.0: wound-puncture-small
@@ -410,6 +428,7 @@
   components:
   - type: Wound
     maximumDamage: 15
+    group: Puncture
   - type: WoundDescription
     descriptions:
       0.0: wound-puncture-flesh
@@ -432,6 +451,7 @@
   components:
   - type: Wound
     maximumDamage: 30
+    group: Puncture
   - type: WoundDescription
     descriptions:
       0.0: wound-puncture-gaping
@@ -454,6 +474,7 @@
   components:
   - type: Wound
     maximumDamage: 60
+    group: Puncture
   - type: WoundDescription
     descriptions:
       0.0: wound-puncture-massive
@@ -478,6 +499,7 @@
   components:
   - type: Wound
     maximumDamage: 80
+    group: Stump
     isSurgical: true
     healPerTick: 0
   - type: WoundDescription
@@ -500,6 +522,7 @@
   components:
   - type: Wound
     maximumDamage: 80
+    group: Stump
     isSurgical: true
     healPerTick: 0
   - type: WoundDescription
@@ -520,6 +543,7 @@
   components:
   - type: Wound
     maximumDamage: 10
+    group: Incision
     isSurgical: true
     healPerTick: 0
   - type: WoundDescription

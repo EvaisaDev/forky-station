@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Linq;
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Organs;
@@ -37,7 +36,7 @@ public sealed partial class WoundSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<BodyComponent, DamageChangedEvent>(OnBodyDamageChanged);
+        SubscribeLocalEvent<BodyComponent, DamageChangedEvent>(OnBodyDamageChanged, after: new[] { typeof(LimbDamageSystem) });
         SubscribeLocalEvent<WoundableComponent, GetWoundDamageEvent>(OnGetWoundDamage);
         SubscribeLocalEvent<WoundComponent, GetBleedLevelEvent>(OnWoundGetBleed);
         SubscribeLocalEvent<WoundComponent, GetPainEvent>(OnWoundGetPain);
@@ -317,7 +316,53 @@ public sealed partial class WoundSystem : EntitySystem
                 // Check combined doesn't exceed max
                 var combined = wk.Damage.GetTotal() + wr.Damage.GetTotal();
                 if (combined > wk.MaximumDamage)
-                    continue;
+                {
+                    // Combined damage exceeds larger wound's max — replace both with a bigger wound type
+                    var groupName = GetWoundGroup(keep);
+                    if (string.IsNullOrEmpty(groupName))
+                        continue;
+
+                    var newProto = PickWoundPrototype(groupName, combined);
+                    if (newProto == null)
+                        continue;
+
+                    var entCoords = Transform(limb.Owner).Coordinates;
+                    var newWoundEnt = Spawn(newProto, entCoords);
+                    if (!TryComp<WoundComponent>(newWoundEnt, out var newWc))
+                    {
+                        Del(newWoundEnt);
+                        continue;
+                    }
+
+                    newWc.ParentWoundable = limb.Owner;
+                    newWc.CreatedAt = _timing.CurTime;
+                    foreach (var (type, value) in wk.Damage.DamageDict)
+                    {
+                        if (value > 0)
+                            newWc.Damage.DamageDict[type] = value;
+                    }
+                    foreach (var (type, value) in wr.Damage.DamageDict)
+                    {
+                        if (value <= 0)
+                            continue;
+                        if (newWc.Damage.DamageDict.TryGetValue(type, out var existing))
+                            newWc.Damage.DamageDict[type] = existing + value;
+                        else
+                            newWc.Damage.DamageDict[type] = value;
+                    }
+                    Dirty(newWoundEnt, newWc);
+
+                    limb.Comp.Wounds.Remove(keep);
+                    limb.Comp.Wounds.Remove(remove);
+                    limb.Comp.Wounds.Add(newWoundEnt);
+                    Dirty(limb.Owner, limb.Comp);
+                    Del(keep);
+                    Del(remove);
+
+                    // Break both loops since we modified the list
+                    // (return since only one merge per call is needed)
+                    return;
+                }
 
                 // Transfer damage
                 foreach (var (type, value) in wr.Damage.DamageDict)
@@ -347,40 +392,41 @@ public sealed partial class WoundSystem : EntitySystem
 
     private string GetWoundGroup(EntityUid wound)
     {
-        // Determine group from the WoundDescription prototype ID
-        if (!TryComp<WoundDescriptionComponent>(wound, out var desc))
-            return "";
+        // Use the explicit Group field from WoundComponent (fast, deterministic)
+        if (TryComp<WoundComponent>(wound, out var wc) && !string.IsNullOrEmpty(wc.Group))
+            return wc.Group;
 
-        foreach (var text in desc.Descriptions.Values)
+        // Fallback: determine group from the WoundDescription prototype ID
+        if (TryComp<WoundDescriptionComponent>(wound, out var desc))
         {
-            // description IDs are like "wound-brute-small", "wound-cut-moderate"
-            if (text.Contains("brute", StringComparison.OrdinalIgnoreCase)) return "brute";
-            if (text.Contains("cut", StringComparison.OrdinalIgnoreCase)) return "cut";
-            if (text.Contains("puncture", StringComparison.OrdinalIgnoreCase)) return "puncture";
-            if (text.Contains("burn", StringComparison.OrdinalIgnoreCase)) return "burn";
-            if (text.Contains("incision", StringComparison.OrdinalIgnoreCase)) return "incision";
+            foreach (var text in desc.Descriptions.Values)
+            {
+                if (text.Contains("brute", StringComparison.OrdinalIgnoreCase)) return "brute";
+                if (text.Contains("cut", StringComparison.OrdinalIgnoreCase)) return "cut";
+                if (text.Contains("puncture", StringComparison.OrdinalIgnoreCase)) return "puncture";
+                if (text.Contains("burn", StringComparison.OrdinalIgnoreCase)) return "burn";
+                if (text.Contains("incision", StringComparison.OrdinalIgnoreCase)) return "incision";
+            }
         }
         return "";
     }
 
     private bool IsCorrectWoundGroup(EntityUid woundUid, string groupName)
     {
-        if (!TryComp<WoundDescriptionComponent>(woundUid, out var desc))
-            return false;
+        // Primary: use the explicit Group field from WoundComponent
+        if (TryComp<WoundComponent>(woundUid, out var wc) &&
+            !string.IsNullOrEmpty(wc.Group) &&
+            wc.Group.Equals(groupName, StringComparison.OrdinalIgnoreCase))
+            return true;
 
-        // Check by name first (fast path)
-        if (TryComp<MetaDataComponent>(woundUid, out var meta))
+        // Secondary: check description text
+        if (TryComp<WoundDescriptionComponent>(woundUid, out var desc))
         {
-            var name = meta.EntityName;
-            if (name.Contains(groupName, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-
-        // Fallback: check description text
-        foreach (var text in desc.Descriptions.Values)
-        {
-            if (text.Contains(groupName, StringComparison.OrdinalIgnoreCase))
-                return true;
+            foreach (var text in desc.Descriptions.Values)
+            {
+                if (text.Contains(groupName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
         }
 
         return false;

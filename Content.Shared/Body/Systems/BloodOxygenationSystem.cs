@@ -57,7 +57,6 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
         base.Initialize();
 
         SubscribeLocalEvent<BloodOxygenationComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<BloodOxygenationComponent, EntityTerminatingEvent>(OnTerminating);
     }
 
     public override void Update(float frameTime)
@@ -86,10 +85,6 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
         ent.Comp.PulseLevel = PULSE_NORM;
         ent.Comp.PulseRate = PulseLevelToBPM(PULSE_NORM);
         ent.Comp.CardiacArrest = false;
-    }
-
-    private void OnTerminating(Entity<BloodOxygenationComponent> ent, ref EntityTerminatingEvent args)
-    {
     }
 
     private void ProcessOxygenation(EntityUid uid, BloodOxygenationComponent oxygenation)
@@ -241,7 +236,7 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
         // BloodstreamComponent doesn't expose total volume easily
         // so we calculate it from the solution
         if (!_solution.ResolveSolution(uid, bloodstream.BloodSolutionName, ref bloodstream.BloodSolution, out var bloodSolution))
-            return 0.5f; // default to half if we can't resolve
+            return 1.0f; // default to full if we can't resolve (less harmful than 0.5)
 
         var refVol = bloodstream.BloodReferenceSolution.Volume;
         if (refVol == 0)

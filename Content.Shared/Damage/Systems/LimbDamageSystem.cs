@@ -7,6 +7,10 @@ using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
+using Content.Shared.Projectiles;
+using Content.Shared.Weapons.Hitscan.Components;
+using Content.Shared.Weapons.Hitscan.Events;
+using Content.Shared.Weapons.Hitscan.Systems;
 using Content.Shared.Weapons.Melee;
 using Content.Shared.Weapons.Melee.Events;
 using Robust.Shared.Prototypes;
@@ -33,12 +37,16 @@ public sealed partial class LimbDamageSystem : EntitySystem
     };
 
     private bool _processingMelee;
+    private bool _processingProjectile;
+    private bool _processingHitscan;
 
     public override void Initialize()
     {
         base.Initialize();
 
         SubscribeLocalEvent<MeleeWeaponComponent, MeleeHitEvent>(OnMeleeHit, before: new[] { typeof(DamageableSystem) });
+        SubscribeLocalEvent<ProjectileComponent, ProjectileHitEvent>(OnProjectileHit, before: new[] { typeof(DamageableSystem) });
+        SubscribeLocalEvent<HitscanBasicRaycastComponent, HitscanRaycastFiredEvent>(OnHitscanHit, before: new[] { typeof(HitscanBasicDamageSystem) });
         SubscribeLocalEvent<DamageableComponent, DamageChangedEvent>(OnDamageChanged);
     }
 
@@ -50,31 +58,64 @@ public sealed partial class LimbDamageSystem : EntitySystem
         if (!_net.IsServer)
             return;
 
-        _processingMelee = true;
-
-        foreach (var target in ev.HitEntities)
+        try
         {
-            if (!TryComp<BodyComponent>(target, out var body) || body.Organs == null)
-                continue;
+            _processingMelee = true;
 
-            var limbs = GetLimbs(target);
-            if (limbs.Count == 0)
-                continue;
+            foreach (var target in ev.HitEntities)
+            {
+                if (!TryComp<BodyComponent>(target, out var body) || body.Organs == null)
+                    continue;
 
-            var (brute, burn) = SplitDamage(ev.BaseDamage);
-            var limb = limbs[_random.Next(limbs.Count)];
-            ApplyToLimbComponent(limb, brute, burn);
+                var limbs = GetLimbs(target);
+                if (limbs.Count == 0)
+                    continue;
 
-            // Also apply to the global damage pool so death thresholds and wound systems work
-            _damageable.TryChangeDamage(target, ev.BaseDamage, origin: ev.User);
+                var (brute, burn) = SplitDamage(ev.BaseDamage);
+                var limb = limbs[_random.Next(limbs.Count)];
+                ApplyToLimbComponent(limb, brute, burn);
+
+                _damageable.TryChangeDamage(target, ev.BaseDamage, origin: ev.User);
+            }
+
+            ev.Handled = true;
         }
+        finally
+        {
+            _processingMelee = false;
+        }
+    }
 
-        _processingMelee = false;
-        ev.Handled = true;
+    /// <summary>
+    ///     Projectile hits should hit a single random limb (like melee).
+    ///     Fires before TryChangeDamage, so we just set a flag.
+    /// </summary>
+    private void OnProjectileHit(Entity<ProjectileComponent> projectile, ref ProjectileHitEvent args)
+    {
+        if (!_net.IsServer)
+            return;
+
+        _processingProjectile = true;
+    }
+
+    /// <summary>
+    ///     Hitscan (laser) hits should also hit a single random limb.
+    ///     Fires before TryChangeDamage, so we set a flag.
+    /// </summary>
+    private void OnHitscanHit(Entity<HitscanBasicRaycastComponent> gun, ref HitscanRaycastFiredEvent args)
+    {
+        if (!_net.IsServer)
+            return;
+
+        if (args.Data.HitEntity == null)
+            return;
+
+        _processingHitscan = true;
     }
 
     /// <summary>
     ///     Untargeted damage (explosions, fire, environment) distributes across all limbs.
+    ///     Melee, projectile, and hitscan damage go to a single random limb.
     /// </summary>
     private void OnDamageChanged(Entity<DamageableComponent> ent, ref DamageChangedEvent args)
     {
@@ -89,17 +130,48 @@ public sealed partial class LimbDamageSystem : EntitySystem
             return;
 
         if (!TryComp<BodyComponent>(ent, out var body) || body.Organs == null)
+        {
+            _processingProjectile = false;
+            _processingHitscan = false;
             return;
+        }
 
         var limbs = GetLimbs(ent);
         if (limbs.Count == 0)
+        {
+            _processingProjectile = false;
+            _processingHitscan = false;
             return;
+        }
 
         var (totalBrute, totalBurn) = SplitDamage(args.DamageDelta);
 
         if (totalBrute <= 0 && totalBurn <= 0)
+        {
+            _processingProjectile = false;
+            _processingHitscan = false;
             return;
+        }
 
+        // Projectile or hitscan: single random limb
+        if (_processingProjectile || _processingHitscan)
+        {
+            _processingProjectile = false;
+            _processingHitscan = false;
+            if (totalBrute > 0)
+            {
+                var bruteLimb = limbs[_random.Next(limbs.Count)];
+                ApplyToLimbComponent(bruteLimb, totalBrute, FixedPoint2.Zero);
+            }
+            if (totalBurn > 0)
+            {
+                var burnLimb = limbs[_random.Next(limbs.Count)];
+                ApplyToLimbComponent(burnLimb, FixedPoint2.Zero, totalBurn);
+            }
+            return;
+        }
+
+        // Untargeted damage: distribute across all limbs
         var brutePerLimb = totalBrute / limbs.Count;
         var burnPerLimb = totalBurn / limbs.Count;
         var bruteRemainder = totalBrute - brutePerLimb * limbs.Count;

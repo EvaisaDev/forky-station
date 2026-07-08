@@ -5,8 +5,8 @@
   description: A thick, insulated body bag with built-in stasis technology. Slows the occupant's metabolism by a factor of 20x, degrading over 40 minutes.
   components:
   - type: Sprite
-    sprite: Objects/Specific/Medical/body_bag.rsi
-    state: body_bag_closed
+    sprite: Objects/Specific/Medical/Morgue/bodybags.rsi
+    state: bag
   - type: Item
     size: Normal
   - type: Foldable

@@ -31,4 +31,7 @@ public sealed partial class WoundComponent : Component
 
     [DataField, AutoNetworkedField]
     public bool IsSurgical;
+
+    [DataField, AutoNetworkedField]
+    public string Group = string.Empty;
 }

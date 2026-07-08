@@ -61,11 +61,11 @@ public sealed partial class PainSystem : EntitySystem
                 continue;
 
             if (pain.ShockLevel > 80 && prevShock <= 80)
-                _popup.PopupEntity(Loc.GetString("pain-extreme", ("target", uid)), uid, PopupType.MediumCaution);
+                _popup.PopupEntity(Loc.GetString("pain-extreme", ("target", uid)), uid, uid, PopupType.MediumCaution);
             else if (pain.ShockLevel > 50 && prevShock <= 50)
-                _popup.PopupEntity(Loc.GetString("pain-severe", ("target", uid)), uid, PopupType.MediumCaution);
+                _popup.PopupEntity(Loc.GetString("pain-severe", ("target", uid)), uid, uid, PopupType.MediumCaution);
             else if (pain.ShockLevel > 30 && prevShock <= 30)
-                _popup.PopupEntity(Loc.GetString("pain-moderate", ("target", uid)), uid, PopupType.MediumCaution);
+                _popup.PopupEntity(Loc.GetString("pain-moderate", ("target", uid)), uid, uid, PopupType.MediumCaution);
         }
     }
 

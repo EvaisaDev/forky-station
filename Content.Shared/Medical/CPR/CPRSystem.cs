@@ -41,12 +41,16 @@ public sealed partial class CPRSystem : EntitySystem
             if (curTime < cpr.ExpiryTime)
                 continue;
 
+            var oldPerformer = cpr.Performer;
             cpr.Active = false;
             cpr.Performer = null;
             Dirty(uid, cpr);
 
             if (TryComp<BloodOxygenationComponent>(uid, out var oxygenation) && oxygenation.CardiacArrest)
-                _popup.PopupEntity(Loc.GetString("cpr-expired", ("target", uid)), uid, PopupType.Medium);
+            {
+                if (oldPerformer != null)
+                    _popup.PopupEntity(Loc.GetString("cpr-expired", ("target", uid)), uid, oldPerformer.Value, PopupType.Medium);
+            }
         }
     }
 
@@ -64,10 +68,7 @@ public sealed partial class CPRSystem : EntitySystem
             return;
 
         if (!oxygenation.CardiacArrest)
-        {
-            _popup.PopupEntity(Loc.GetString("cpr-not-needed", ("target", ent)), ent, args.User);
             return;
-        }
 
         args.Handled = true;
 

@@ -259,7 +259,7 @@ public sealed partial class IVDripSystem : EntitySystem
         }
         else
         {
-            if (!_solutionContainer.ResolveSolution(patient, bloodstream.BloodSolutionName, ref bloodstream.BloodSolution, out var _))
+            if (!_solutionContainer.ResolveSolution(patient, bloodstream.BloodSolutionName, ref bloodstream.BloodSolution, out var bloodSolution))
                 return;
 
             var bloodEnt = bloodstream.BloodSolution;
@@ -270,13 +270,17 @@ public sealed partial class IVDripSystem : EntitySystem
             if (availableSpace <= 0)
                 return;
 
+            // Don't draw blood below safe threshold
+            if (bloodSolution.Volume <= bloodstream.BloodReferenceSolution.Volume * 0.5f)
+                return;
+
             var bloodVol = _solutionContainer.SplitSolution(bloodEnt.Value, iv.TransferRate);
             _solutionContainer.TryAddSolution(beakerSolution.Value, bloodVol);
             UpdateAppearance(uid, iv);
         }
     }
 
-    private void ConnectDrip(EntityUid uid, EntityUid patient, IVDripComponent iv)
+    public void ConnectDrip(EntityUid uid, EntityUid patient, IVDripComponent iv)
     {
         iv.ConnectedPatient = patient;
         iv.Connected = true;
@@ -287,7 +291,7 @@ public sealed partial class IVDripSystem : EntitySystem
         _popup.PopupClient(Loc.GetString("iv-drip-connected", ("patient", patient)), uid, uid);
     }
 
-    private void DisconnectDrip(EntityUid uid, IVDripComponent iv)
+    public void DisconnectDrip(EntityUid uid, IVDripComponent iv)
     {
         if (!iv.Connected || iv.ConnectedPatient == null)
             return;
@@ -301,7 +305,7 @@ public sealed partial class IVDripSystem : EntitySystem
         _popup.PopupClient(Loc.GetString("iv-drip-disconnected", ("patient", patient)), uid, uid);
     }
 
-    private void ToggleMode(EntityUid uid, IVDripComponent iv)
+    public void ToggleMode(EntityUid uid, IVDripComponent iv)
     {
         iv.Mode = iv.Mode == IVDripMode.Inject ? IVDripMode.Draw : IVDripMode.Inject;
         Dirty(uid, iv);
