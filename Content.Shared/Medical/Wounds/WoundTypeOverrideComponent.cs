@@ -7,5 +7,5 @@ namespace Content.Shared.Medical.Wounds;
 public sealed partial class WoundTypeOverrideComponent : Component
 {
     [DataField, AutoNetworkedField]
-    public ProtoId<WoundComponent>? WoundType;
+    public EntProtoId? WoundType;
 }

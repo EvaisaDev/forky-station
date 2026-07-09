@@ -87,7 +87,7 @@ public sealed partial class MedicalDebugCommand : IConsoleCommand
                         var wDmg = wound.Damage.GetTotal();
                         var woundInfo = $"      Wound [{wName}]: dmg={wDmg}, max={wound.MaximumDamage}, stage={wound.Stage}/{wound.MaxStages}, heal={wound.HealPerTick}, surgical={wound.IsSurgical}";
 
-                        if (_entMan.TryComp<WoundEffectsComponent>(woundUid, out var effects))
+                        if (_entMan.TryGetComponent<WoundEffectsComponent>(woundUid, out var effects))
                         {
                             foreach (var instance in effects.Effects)
                             {
@@ -96,8 +96,8 @@ public sealed partial class MedicalDebugCommand : IConsoleCommand
 
                                 if (instance.FloatParams.Count > 0)
                                 {
-                                    foreach (var (k, v) in instance.FloatParams)
-                                        woundInfo += $" {k}={v:F1}";
+                                    foreach (var kvp in instance.FloatParams)
+                                        woundInfo += $" {kvp.Key}={kvp.Value:F1}";
                                 }
 
                                 if (instance.StringListParams.Count > 0)

@@ -61,7 +61,7 @@ public sealed partial class InfectionSystem : EntitySystem
                 _damageable.TryChangeDamage(parent, damage, interruptsDoAfters: false);
             }
 
-            Dirty(uid, germInstance);
+            Dirty(uid, effects);
         }
     }
 }

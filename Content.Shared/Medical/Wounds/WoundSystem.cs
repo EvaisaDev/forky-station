@@ -84,7 +84,7 @@ public sealed partial class WoundSystem : EntitySystem
             return;
 
         // Check for weapon-specific wound type override
-        ProtoId<WoundComponent>? weaponWoundType = null;
+        EntProtoId? weaponWoundType = null;
         if (args.Origin is { } origin && TryComp<WoundTypeOverrideComponent>(origin, out var overrideComp))
             weaponWoundType = overrideComp.WoundType;
 
@@ -119,7 +119,7 @@ public sealed partial class WoundSystem : EntitySystem
     }
 
     private void ProcessDamageForLimb(Entity<WoundableComponent> limb, EntityUid bodyUid, DamageSpecifier damage,
-        ProtoId<WoundComponent>? weaponWoundType = null)
+        EntProtoId? weaponWoundType = null)
     {
         var blunt = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Blunt" });
         var slash = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Slash" });
@@ -143,7 +143,7 @@ public sealed partial class WoundSystem : EntitySystem
     }
 
     private void AddWeaponSpecificWound(Entity<WoundableComponent> limb, EntityUid bodyUid,
-        DamageSpecifier damage, ProtoId<WoundComponent> woundProtoId)
+        DamageSpecifier damage, EntProtoId woundProtoId)
     {
         var entCoords = Transform(limb.Owner).Coordinates;
         var woundEnt = Spawn(woundProtoId, entCoords);

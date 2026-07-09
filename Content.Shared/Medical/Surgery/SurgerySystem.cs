@@ -113,7 +113,7 @@ public sealed partial class SurgerySystem : EntitySystem
                         if (germInstance != null)
                         {
                             germInstance.SetFloat("germLevel", germInstance.GetFloat("germLevel") + 5);
-                            Dirty(wUid, germInstance);
+                            Dirty(wUid, effects);
                         }
                     }
                 }
@@ -256,7 +256,7 @@ public sealed partial class SurgerySystem : EntitySystem
                         continue;
 
                     embedded.StringListParams.RemoveAt(0);
-                    Dirty(wUid, embedded);
+                    Dirty(wUid, effects);
                     removed++;
                 }
 
