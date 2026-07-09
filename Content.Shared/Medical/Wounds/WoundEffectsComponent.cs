@@ -1,5 +1,6 @@
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared.Medical.Wounds;
 
@@ -10,8 +11,8 @@ public sealed partial class WoundEffectsComponent : Component
     public List<WoundEffectInstance> Effects = new();
 }
 
-[DataDefinition]
-public partial class WoundEffectInstance
+[DataDefinition, Serializable, NetSerializable]
+public sealed partial class WoundEffectInstance
 {
     [DataField(required: true)]
     public ProtoId<WoundEffectPrototype> Id;
