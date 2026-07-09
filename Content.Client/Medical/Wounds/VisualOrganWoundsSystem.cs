@@ -7,19 +7,17 @@ using Content.Shared.Medical.Wounds;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Client.Medical.Wounds;
 
-/// <summary>
-/// Reads damage stored in wounds for each limb
-/// Displays as a coloured overlay over the TargetingDoll
-/// </summary>
 public sealed partial class VisualOrganWoundsSystem : EntitySystem
 {
     [Dependency] private IUserInterfaceManager _uiManager = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private Robust.Client.Player.IPlayerManager _playerManager = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     private TimeSpan _nextUpdate;
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1);
@@ -54,7 +52,6 @@ public sealed partial class VisualOrganWoundsSystem : EntitySystem
             var category = BodyPartHelper.ToOrganCategory(part);
             var (brute, burn, woundCount, hasEmbedded) = GetLimbWoundData(body, category);
 
-            // Find or create overlay
             var overlay = FindOrCreateOverlay(btn);
 
             if (brute <= 0 && burn <= 0 && woundCount == 0)
@@ -95,14 +92,12 @@ public sealed partial class VisualOrganWoundsSystem : EntitySystem
             if (organComp.Category != category)
                 continue;
 
-            // Brute/burn damage from ExternalOrganComponent
             if (TryComp<ExternalOrganComponent>(organ, out var ext))
             {
                 brute += (float)ext.BruteDamage.Float();
                 burn += (float)ext.BurnDamage.Float();
             }
 
-            // Wound count from WoundableComponent
             if (TryComp<WoundableComponent>(organ, out var wnd))
             {
                 woundCount += wnd.Wounds.Count;
@@ -111,8 +106,12 @@ public sealed partial class VisualOrganWoundsSystem : EntitySystem
                     if (TerminatingOrDeleted(wUid))
                         continue;
 
-                    if (TryComp<EmbeddedObjectComponent>(wUid, out var emb) && emb.EmbeddedItems.Count > 0)
-                        hasEmbedded = true;
+                    if (TryComp<WoundEffectsComponent>(wUid, out var effects))
+                    {
+                        var embedded = effects.GetEffect("Embedded", _prototype);
+                        if (embedded is { StringListParams: { Count: > 0 } })
+                            hasEmbedded = true;
+                    }
                 }
             }
         }

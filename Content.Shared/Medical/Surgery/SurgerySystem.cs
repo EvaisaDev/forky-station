@@ -25,6 +25,7 @@ public sealed partial class SurgerySystem : EntitySystem
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     public override void Initialize()
     {
@@ -106,10 +107,14 @@ public sealed partial class SurgerySystem : EntitySystem
             {
                 foreach (var wUid in wnd.Wounds)
                 {
-                    if (TryComp<WoundGermComponent>(wUid, out var germ))
+                    if (TryComp<WoundEffectsComponent>(wUid, out var effects))
                     {
-                        germ.GermLevel += 5;
-                        Dirty(wUid, germ);
+                        var germInstance = effects.GetEffect("Germ", _prototype);
+                        if (germInstance != null)
+                        {
+                            germInstance.SetFloat("germLevel", germInstance.GetFloat("germLevel") + 5);
+                            Dirty(wUid, germInstance);
+                        }
                     }
                 }
             }
@@ -244,13 +249,14 @@ public sealed partial class SurgerySystem : EntitySystem
                 var removed = 0;
                 foreach (var wUid in wnd.Wounds)
                 {
-                    if (!TryComp<EmbeddedObjectComponent>(wUid, out var emb))
+                    if (!TryComp<WoundEffectsComponent>(wUid, out var effects))
                         continue;
-                    if (emb.EmbeddedItems.Count == 0)
+                    var embedded = effects.GetEffect("Embedded", _prototype);
+                    if (embedded == null || embedded.StringListParams.Count == 0)
                         continue;
 
-                    emb.EmbeddedItems.RemoveAt(0);
-                    Dirty(wUid, emb);
+                    embedded.StringListParams.RemoveAt(0);
+                    Dirty(wUid, embedded);
                     removed++;
                 }
 

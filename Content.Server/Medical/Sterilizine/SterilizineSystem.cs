@@ -4,16 +4,14 @@ using Content.Shared.Interaction;
 using Content.Shared.Medical.Sterilizine;
 using Content.Shared.Medical.Wounds;
 using Content.Shared.Popups;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server.Medical.Sterilizine;
 
-/// <summary>
-///     When sprayed or applied to a wound, reduces germ_level by 10 and sets Disinfected flag.
-///     Prevents infection during surgery.
-/// </summary>
 public sealed partial class SterilizineSystem : EntitySystem
 {
     [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     public override void Initialize()
     {
@@ -43,11 +41,16 @@ public sealed partial class SterilizineSystem : EntitySystem
                 if (TerminatingOrDeleted(woundUid))
                     continue;
 
-                if (!TryComp<WoundGermComponent>(woundUid, out var germ))
+                if (!TryComp<WoundEffectsComponent>(woundUid, out var effects))
                     continue;
 
-                germ.GermLevel = Math.Max(0, germ.GermLevel - 10);
-                Dirty(woundUid, germ);
+                var germInstance = effects.GetEffect("Germ", _prototype);
+                if (germInstance == null)
+                    continue;
+
+                var newLevel = Math.Max(0, germInstance.GetFloat("germLevel") - 10);
+                germInstance.SetFloat("germLevel", newLevel);
+                Dirty(woundUid, germInstance);
                 cleaned++;
             }
         }

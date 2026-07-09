@@ -6,6 +6,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Medical.Wounds;
 using Content.Shared.Popups;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Shared.Medical.Pain;
@@ -16,11 +17,11 @@ public sealed partial class PainSystem : EntitySystem
     [Dependency] private SharedSolutionContainerSystem _solution = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private INetManager _net = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
-    // Painkiller effectiveness per unit of drug in the bloodstream
-    private const float PARACETAMOL_PER_UNIT = 2.5f;  // 35 at 14u (full therapeutic dose)
-    private const float TRAMADOL_PER_UNIT = 3.5f;     // 50 at ~14u
-    private const float OXYCODONE_PER_UNIT = 5.5f;    // 80 at ~14.5u
+    private const float PARACETAMOL_PER_UNIT = 2.5f;
+    private const float TRAMADOL_PER_UNIT = 3.5f;
+    private const float OXYCODONE_PER_UNIT = 5.5f;
 
     public TimeSpan UpdateInterval = TimeSpan.FromSeconds(1);
 
@@ -93,9 +94,17 @@ public sealed partial class PainSystem : EntitySystem
                 if (TerminatingOrDeleted(woundUid))
                     continue;
 
-                var ev = new GetPainEvent(FixedPoint2.Zero, FixedPoint2.Zero);
-                RaiseLocalEvent(woundUid, ref ev);
-                total += (float)(ev.PainAmount + ev.FreshPainAmount).Float();
+                if (!TryComp<WoundEffectsComponent>(woundUid, out var effects))
+                    continue;
+
+                var painInstance = effects.GetEffect("Pain", _prototype);
+                if (painInstance == null)
+                    continue;
+
+                var painAmount = painInstance.GetFloatOrConfig("painAmount", _prototype);
+                var freshPain = painInstance.GetFloatOrConfig("freshPainAmount", _prototype);
+
+                total += painAmount + freshPain;
             }
         }
 

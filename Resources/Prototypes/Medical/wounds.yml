@@ -1,5 +1,6 @@
 # Entity-based wound prototypes for the Baystation medical system.
-# Each wound is a full entity with components determining its behavior.
+# Each wound is a full entity with a WoundEffects component
+# that references YAML-defined effect prototypes.
 
 # --- Base wound entity ---
 
@@ -10,6 +11,7 @@
   components:
   - type: Wound
     maximumDamage: 100
+  - type: WoundEffects
   - type: WoundDescription
     descriptions:
       0.0: wound-tiny
@@ -32,12 +34,11 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-tiny
-  - type: WoundGerm
-  - type: HealableWound
-    healPerTick: 0.15
-  - type: PainfulWound
-    painAmount: 0.5
-    freshPainAmount: 1
+  - type: WoundEffects
+    effects:
+    - id: PainMinute
+    - id: HealableVeryFast
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -51,16 +52,13 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-small
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 0.5
-    currentBleedAmount: 0.5
-  - type: TendableWound
-  - type: HealableWound
-    healPerTick: 0.1
-  - type: PainfulWound
-    painAmount: 1
-    freshPainAmount: 3
+  - type: WoundEffects
+    effects:
+    - id: BleedingTiny
+    - id: Tendable
+    - id: HealableFast
+    - id: PainMild
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -74,17 +72,14 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-moderate
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 1.5
-    currentBleedAmount: 1.5
-  - type: TendableWound
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.08
-  - type: PainfulWound
-    painAmount: 3
-    freshPainAmount: 8
+  - type: WoundEffects
+    effects:
+    - id: BleedingLight
+    - id: Tendable
+    - id: Clampable
+    - id: HealableMedium
+    - id: PainModerate
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -98,17 +93,14 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-large
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 2.5
-    currentBleedAmount: 2.5
-  - type: TendableWound
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.05
-  - type: PainfulWound
-    painAmount: 5
-    freshPainAmount: 12
+  - type: WoundEffects
+    effects:
+    - id: BleedingFair
+    - id: Tendable
+    - id: Clampable
+    - id: HealableSlow
+    - id: PainNasty
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -122,17 +114,14 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-huge
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 4.0
-    currentBleedAmount: 4.0
-  - type: TendableWound
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.03
-  - type: PainfulWound
-    painAmount: 8
-    freshPainAmount: 18
+  - type: WoundEffects
+    effects:
+    - id: BleedingHeavy
+    - id: Tendable
+    - id: Clampable
+    - id: HealableExtremelySlow
+    - id: PainSevere
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -146,17 +135,14 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-monumental
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 6.0
-    currentBleedAmount: 6.0
-  - type: TendableWound
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.01
-  - type: PainfulWound
-    painAmount: 15
-    freshPainAmount: 30
+  - type: WoundEffects
+    effects:
+    - id: BleedingCritical
+    - id: Tendable
+    - id: Clampable
+    - id: HealableGlacialest
+    - id: PainHellish
+    - id: GermTracking
 
 # --- Burn wounds ---
 
@@ -172,12 +158,11 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-small
-  - type: WoundGerm
-  - type: HealableWound
-    healPerTick: 0.1
-  - type: PainfulWound
-    painAmount: 2
-    freshPainAmount: 5
+  - type: WoundEffects
+    effects:
+    - id: HealableFast
+    - id: PainUncomfortable
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -191,12 +176,11 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-moderate
-  - type: WoundGerm
-  - type: HealableWound
-    healPerTick: 0.08
-  - type: PainfulWound
-    painAmount: 4
-    freshPainAmount: 10
+  - type: WoundEffects
+    effects:
+    - id: HealableMedium
+    - id: PainBothersome
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -210,12 +194,11 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-large
-  - type: WoundGerm
-  - type: HealableWound
-    healPerTick: 0.05
-  - type: PainfulWound
-    painAmount: 6
-    freshPainAmount: 14
+  - type: WoundEffects
+    effects:
+    - id: HealableSlow
+    - id: PainPainful
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -229,12 +212,11 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-severe
-  - type: WoundGerm
-  - type: HealableWound
-    healPerTick: 0.03
-  - type: PainfulWound
-    painAmount: 10
-    freshPainAmount: 22
+  - type: WoundEffects
+    effects:
+    - id: HealableExtremelySlow
+    - id: PainAgonizing
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -248,12 +230,11 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-deep
-  - type: WoundGerm
-  - type: HealableWound
-    healPerTick: 0.02
-  - type: PainfulWound
-    painAmount: 14
-    freshPainAmount: 28
+  - type: WoundEffects
+    effects:
+    - id: HealableGlacial
+    - id: PainUnbearable
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -267,12 +248,11 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-burn-carbonised
-  - type: WoundGerm
-  - type: HealableWound
-    healPerTick: 0.01
-  - type: PainfulWound
-    painAmount: 20
-    freshPainAmount: 40
+  - type: WoundEffects
+    effects:
+    - id: HealableGlacialest
+    - id: PainMortal
+    - id: GermTracking
 
 # --- Cut wounds ---
 
@@ -288,16 +268,13 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-small
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 1.0
-    currentBleedAmount: 1.0
-  - type: TendableWound
-  - type: HealableWound
-    healPerTick: 0.08
-  - type: PainfulWound
-    painAmount: 2
-    freshPainAmount: 5
+  - type: WoundEffects
+    effects:
+    - id: BleedingSmall
+    - id: Tendable
+    - id: HealableMedium
+    - id: PainUncomfortable
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -311,17 +288,14 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-deep
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 2.0
-    currentBleedAmount: 2.0
-  - type: TendableWound
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.06
-  - type: PainfulWound
-    painAmount: 4
-    freshPainAmount: 8
+  - type: WoundEffects
+    effects:
+    - id: BleedingModerate
+    - id: Tendable
+    - id: Clampable
+    - id: HealableModerate
+    - id: PainCutDeep
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -335,17 +309,14 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-flesh
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 3.0
-    currentBleedAmount: 3.0
-  - type: TendableWound
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.04
-  - type: PainfulWound
-    painAmount: 6
-    freshPainAmount: 14
+  - type: WoundEffects
+    effects:
+    - id: BleedingLarge
+    - id: Tendable
+    - id: Clampable
+    - id: HealableVerySlow
+    - id: PainPainful
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -359,17 +330,14 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-gaping
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 5.0
-    currentBleedAmount: 5.0
-  - type: TendableWound
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.03
-  - type: PainfulWound
-    painAmount: 10
-    freshPainAmount: 22
+  - type: WoundEffects
+    effects:
+    - id: BleedingSevere
+    - id: Tendable
+    - id: Clampable
+    - id: HealableExtremelySlow
+    - id: PainAgonizing
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -383,17 +351,14 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-cut-massive
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 8.0
-    currentBleedAmount: 8.0
-  - type: TendableWound
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.01
-  - type: PainfulWound
-    painAmount: 18
-    freshPainAmount: 35
+  - type: WoundEffects
+    effects:
+    - id: BleedingMassive
+    - id: Tendable
+    - id: Clampable
+    - id: HealableGlacialest
+    - id: PainTorment
+    - id: GermTracking
 
 # --- Puncture wounds ---
 
@@ -409,16 +374,13 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-puncture-small
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 1.5
-    currentBleedAmount: 1.5
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.06
-  - type: PainfulWound
-    painAmount: 3
-    freshPainAmount: 7
+  - type: WoundEffects
+    effects:
+    - id: BleedingLight
+    - id: Clampable
+    - id: HealableModerate
+    - id: PainPunctureSmall
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -432,16 +394,13 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-puncture-flesh
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 2.5
-    currentBleedAmount: 2.5
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.04
-  - type: PainfulWound
-    painAmount: 5
-    freshPainAmount: 12
+  - type: WoundEffects
+    effects:
+    - id: BleedingFair
+    - id: Clampable
+    - id: HealableVerySlow
+    - id: PainNasty
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -455,16 +414,13 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-puncture-gaping
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 4.0
-    currentBleedAmount: 4.0
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.03
-  - type: PainfulWound
-    painAmount: 8
-    freshPainAmount: 18
+  - type: WoundEffects
+    effects:
+    - id: BleedingHeavy
+    - id: Clampable
+    - id: HealableExtremelySlow
+    - id: PainSevere
+    - id: GermTracking
 
 - type: entity
   parent: WoundBase
@@ -478,16 +434,13 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-puncture-massive
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 6.0
-    currentBleedAmount: 6.0
-  - type: ClampableWound
-  - type: HealableWound
-    healPerTick: 0.015
-  - type: PainfulWound
-    painAmount: 14
-    freshPainAmount: 28
+  - type: WoundEffects
+    effects:
+    - id: BleedingCritical
+    - id: Clampable
+    - id: HealableMolasses
+    - id: PainUnbearable
+    - id: GermTracking
 
 # --- Lost limb / Stump wounds ---
 
@@ -505,14 +458,14 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-stump-edge
-  - type: WoundGerm
-  - type: BleedingWound
-    baseBleedAmount: 3.0
-    currentBleedAmount: 3.0
-  - type: TendableWound
-  - type: PainfulWound
-    painAmount: 15
-    freshPainAmount: 30
+  - type: WoundEffects
+    effects:
+    - id: BleedingLarge
+    - id: Tendable
+    - id: HealableNone
+    - id: PainHellish
+    - id: GermTracking
+    - id: Surgical
 
 - type: entity
   parent: WoundBase
@@ -528,10 +481,12 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-stump-burn
-  - type: WoundGerm
-  - type: PainfulWound
-    painAmount: 12
-    freshPainAmount: 25
+  - type: WoundEffects
+    effects:
+    - id: HealableNone
+    - id: PainExcruciating
+    - id: GermTracking
+    - id: Surgical
 
 # --- Surgical incision (does not heal naturally) ---
 
@@ -549,9 +504,9 @@
   - type: WoundDescription
     descriptions:
       0.0: wound-incision
-  - type: WoundGerm
-  - type: HealableWound
-    healPerTick: 0
-  - type: PainfulWound
-    painAmount: 1
-    freshPainAmount: 2
+  - type: WoundEffects
+    effects:
+    - id: HealableNone
+    - id: PainSurgical
+    - id: GermTracking
+    - id: Surgical

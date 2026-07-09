@@ -1,0 +1,281 @@
+# Wound effect prototypes for the entity-based wound system.
+# Each effect defines a behavior type and its default config values.
+# Wound entities reference these by ID in their WoundEffects component.
+
+# --- Bleeding effects (baseBleedAmount) ---
+
+- type: woundEffect
+  id: BleedingTiny
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 0.5
+
+- type: woundEffect
+  id: BleedingSmall
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 1.0
+
+- type: woundEffect
+  id: BleedingLight
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 1.5
+
+- type: woundEffect
+  id: BleedingModerate
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 2.0
+
+- type: woundEffect
+  id: BleedingFair
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 2.5
+
+- type: woundEffect
+  id: BleedingLarge
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 3.0
+
+- type: woundEffect
+  id: BleedingHeavy
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 4.0
+
+- type: woundEffect
+  id: BleedingSevere
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 5.0
+
+- type: woundEffect
+  id: BleedingCritical
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 6.0
+
+- type: woundEffect
+  id: BleedingMassive
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 8.0
+
+# --- Pain effects (painAmount, freshPainAmount) ---
+
+- type: woundEffect
+  id: PainMinute
+  effectType: Pain
+  config:
+    painAmount: 0.5
+    freshPainAmount: 1.0
+
+- type: woundEffect
+  id: PainMild
+  effectType: Pain
+  config:
+    painAmount: 1.0
+    freshPainAmount: 3.0
+
+- type: woundEffect
+  id: PainUncomfortable
+  effectType: Pain
+  config:
+    painAmount: 2.0
+    freshPainAmount: 5.0
+
+- type: woundEffect
+  id: PainModerate
+  effectType: Pain
+  config:
+    painAmount: 3.0
+    freshPainAmount: 8.0
+
+- type: woundEffect
+  id: PainBothersome
+  effectType: Pain
+  config:
+    painAmount: 4.0
+    freshPainAmount: 10.0
+
+- type: woundEffect
+  id: PainNasty
+  effectType: Pain
+  config:
+    painAmount: 5.0
+    freshPainAmount: 12.0
+
+- type: woundEffect
+  id: PainPainful
+  effectType: Pain
+  config:
+    painAmount: 6.0
+    freshPainAmount: 14.0
+
+- type: woundEffect
+  id: PainSevere
+  effectType: Pain
+  config:
+    painAmount: 8.0
+    freshPainAmount: 18.0
+
+- type: woundEffect
+  id: PainAgonizing
+  effectType: Pain
+  config:
+    painAmount: 10.0
+    freshPainAmount: 22.0
+
+- type: woundEffect
+  id: PainExcruciating
+  effectType: Pain
+  config:
+    painAmount: 12.0
+    freshPainAmount: 25.0
+
+- type: woundEffect
+  id: PainUnbearable
+  effectType: Pain
+  config:
+    painAmount: 14.0
+    freshPainAmount: 28.0
+
+- type: woundEffect
+  id: PainHellish
+  effectType: Pain
+  config:
+    painAmount: 15.0
+    freshPainAmount: 30.0
+
+- type: woundEffect
+  id: PainTorment
+  effectType: Pain
+  config:
+    painAmount: 18.0
+    freshPainAmount: 35.0
+
+- type: woundEffect
+  id: PainMortal
+  effectType: Pain
+  config:
+    painAmount: 20.0
+    freshPainAmount: 40.0
+
+- type: woundEffect
+  id: PainCutDeep
+  effectType: Pain
+  config:
+    painAmount: 4.0
+    freshPainAmount: 8.0
+
+- type: woundEffect
+  id: PainPunctureSmall
+  effectType: Pain
+  config:
+    painAmount: 3.0
+    freshPainAmount: 7.0
+
+- type: woundEffect
+  id: PainSurgical
+  effectType: Pain
+  config:
+    painAmount: 1.0
+    freshPainAmount: 2.0
+
+# --- Healable effects (healPerTick) ---
+
+- type: woundEffect
+  id: HealableVeryFast
+  effectType: Healable
+  config:
+    healPerTick: 0.15
+
+- type: woundEffect
+  id: HealableFast
+  effectType: Healable
+  config:
+    healPerTick: 0.1
+
+- type: woundEffect
+  id: HealableMedium
+  effectType: Healable
+  config:
+    healPerTick: 0.08
+
+- type: woundEffect
+  id: HealableModerate
+  effectType: Healable
+  config:
+    healPerTick: 0.06
+
+- type: woundEffect
+  id: HealableSlow
+  effectType: Healable
+  config:
+    healPerTick: 0.05
+
+- type: woundEffect
+  id: HealableVerySlow
+  effectType: Healable
+  config:
+    healPerTick: 0.04
+
+- type: woundEffect
+  id: HealableExtremelySlow
+  effectType: Healable
+  config:
+    healPerTick: 0.03
+
+- type: woundEffect
+  id: HealableGlacial
+  effectType: Healable
+  config:
+    healPerTick: 0.02
+
+- type: woundEffect
+  id: HealableMolasses
+  effectType: Healable
+  config:
+    healPerTick: 0.015
+
+- type: woundEffect
+  id: HealableGlacialest
+  effectType: Healable
+  config:
+    healPerTick: 0.01
+
+- type: woundEffect
+  id: HealableNone
+  effectType: Healable
+  config:
+    healPerTick: 0
+
+# --- Marker effects (no config, runtime state only) ---
+
+- type: woundEffect
+  id: Tendable
+  effectType: Tendable
+  config: {}
+
+- type: woundEffect
+  id: Clampable
+  effectType: Clampable
+  config: {}
+
+- type: woundEffect
+  id: GermTracking
+  effectType: Germ
+  config: {}
+
+- type: woundEffect
+  id: Surgical
+  effectType: Surgical
+  config: {}
+
+- type: woundEffect
+  id: Embedded
+  effectType: Embedded
+  config: {}

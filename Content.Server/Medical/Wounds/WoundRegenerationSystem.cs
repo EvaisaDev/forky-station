@@ -1,18 +1,14 @@
 using Content.Shared.FixedPoint;
 using Content.Shared.Medical.Wounds;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Server.Medical.Wounds;
 
-/// <summary>
-/// Advances wound stages over time as wounds heal.
-/// Surgical wounds don't heal naturally — must be cauterized.
-/// Tended (bandaged) wounds heal faster.
-/// Fully healed wounds are removed.
-/// </summary>
 public sealed partial class WoundRegenerationSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     private TimeSpan _nextUpdate;
     public TimeSpan UpdateInterval = TimeSpan.FromSeconds(2);
@@ -33,18 +29,27 @@ public sealed partial class WoundRegenerationSystem : EntitySystem
             if (wound.IsSurgical)
                 continue;
 
-            // Embedded objects prevent natural healing
-            if (TryComp<EmbeddedObjectComponent>(uid, out var embedded) && embedded.EmbeddedItems.Count > 0)
+            if (!TryComp<WoundEffectsComponent>(uid, out var effects))
                 continue;
 
-            if (!TryComp<HealableWoundComponent>(uid, out var healable) || healable.HealPerTick <= 0)
+            // Embedded objects prevent natural healing
+            var embedded = effects.GetEffect("Embedded", _prototype);
+            if (embedded is { StringListParams: { Count: > 0 } })
+                continue;
+
+            var healable = effects.GetEffect("Healable", _prototype);
+            if (healable == null)
+                continue;
+
+            var healPerTick = healable.GetFloatOrConfig("healPerTick", _prototype);
+            if (healPerTick <= 0)
                 continue;
 
             // Tended wounds heal faster
-            var tended = TryComp<TendableWoundComponent>(uid, out var tend) && tend.Tended;
-            var healRate = (float)healable.HealPerTick.Float() * (tended ? 2 : 1);
+            var tended = effects.GetEffect("Tendable", _prototype) is { } tend
+                && tend.GetFloat("tended") > 0;
+            var healRate = healPerTick * (tended ? 2 : 1);
 
-            // Apply healing
             var totalDamage = wound.Damage.GetTotal();
             if (totalDamage <= 0)
             {
@@ -52,7 +57,6 @@ public sealed partial class WoundRegenerationSystem : EntitySystem
                 continue;
             }
 
-            // Reduce damage across all types
             var raw = (float)totalDamage.Float();
             foreach (var (type, value) in wound.Damage.DamageDict)
             {
@@ -63,7 +67,6 @@ public sealed partial class WoundRegenerationSystem : EntitySystem
                 }
             }
 
-            // Advance stage based on remaining damage percentage
             var maxDmg = (float)wound.MaximumDamage.Float();
             var curDmg = (float)wound.Damage.GetTotal().Float();
             var pct = maxDmg > 0 ? curDmg / maxDmg : 0;

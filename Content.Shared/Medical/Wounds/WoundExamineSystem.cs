@@ -2,15 +2,14 @@ using Content.Shared.Body.Components;
 using Content.Shared.Body.Organs;
 using Content.Shared.Examine;
 using Content.Shared.IdentityManagement;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Medical.Wounds;
 
-/// <summary>
-///     Shows wound descriptions when examining a mob.
-///     Displays visible wounds, bleeding status, embedded objects, and missing limbs.
-/// </summary>
 public sealed partial class WoundExamineSystem : EntitySystem
 {
+    [Dependency] private IPrototypeManager _prototype = default!;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -28,8 +27,6 @@ public sealed partial class WoundExamineSystem : EntitySystem
         if (wounds == null || wounds.Count == 0)
             return;
 
-        var totalBleeding = 0;
-        var totalPain = 0f;
         var hasEmbedded = false;
         var woundCount = 0;
 
@@ -40,8 +37,12 @@ public sealed partial class WoundExamineSystem : EntitySystem
 
             woundCount++;
 
-            if (TryComp<EmbeddedObjectComponent>(woundUid, out var emb) && emb.EmbeddedItems.Count > 0)
-                hasEmbedded = true;
+            if (TryComp<WoundEffectsComponent>(woundUid, out var effects))
+            {
+                var embedded = effects.GetEffect("Embedded", _prototype);
+                if (embedded is { StringListParams: { Count: > 0 } })
+                    hasEmbedded = true;
+            }
         }
 
         if (woundCount > 0)

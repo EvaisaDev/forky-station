@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
@@ -16,15 +15,12 @@ using Robust.Shared.Network;
 
 namespace Content.Shared.Medical.Wounds;
 
-/// <summary>
-///     Entity-based wound system. Listens for damage on body entities,
-///     distributes wounds to all woundable limbs.
-/// </summary>
 public sealed partial class WoundSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _net = default!;
     [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     private static readonly ProtoId<DamageTypePrototype>[] BruteTypes = { "Blunt", "Slash", "Piercing" };
     private static readonly ProtoId<DamageTypePrototype>[] BurnTypes = { "Heat", "Cold", "Shock", "Caustic" };
@@ -58,7 +54,6 @@ public sealed partial class WoundSystem : EntitySystem
         var query = EntityQueryEnumerator<WoundableComponent>();
         while (query.MoveNext(out var uid, out var woundable))
         {
-            // Clean up stale wound references
             if (woundable.Wounds.RemoveAll(w => !Exists(w) || TerminatingOrDeleted(w)) > 0)
                 Dirty(uid, woundable);
 
@@ -85,13 +80,13 @@ public sealed partial class WoundSystem : EntitySystem
         if (damage.Empty)
             return;
 
-        // Distribute wounds only to limbs that actually received this damage.
-        // For melee: LimbDamageSystem applies all damage to one random limb before
-        // calling TryChangeDamage, so only that limb has matching ExternalOrganComponent damage.
-        // For untargeted damage: OnDamageChanged distributes across all limbs first,
-        // so all woundable limbs will have matching damage.
         if (ent.Comp.Organs == null)
             return;
+
+        // Check for weapon-specific wound type override
+        ProtoId<WoundComponent>? weaponWoundType = null;
+        if (args.Origin is { } origin && TryComp<WoundTypeOverrideComponent>(origin, out var overrideComp))
+            weaponWoundType = overrideComp.WoundType;
 
         var wBlunt = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Blunt" });
         var wSlash = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Slash" });
@@ -103,8 +98,6 @@ public sealed partial class WoundSystem : EntitySystem
             if (!TryComp<WoundableComponent>(organ, out var woundable))
                 continue;
 
-            // Only create wounds on limbs that actually received this damage.
-            // Check if this limb has matching ExternalOrganComponent damage values.
             if (TryComp<ExternalOrganComponent>(organ, out var ext))
             {
                 var needsBruteWound = (wBlunt > 0 || wSlash > 0 || wPierce > 0);
@@ -112,37 +105,86 @@ public sealed partial class WoundSystem : EntitySystem
                 var hasLimbBrute = ext.BruteDamage > 0;
                 var hasLimbBurn = ext.BurnDamage > 0;
 
-                // Skip if the limb doesn't have the type of damage being applied
                 if ((needsBruteWound && !hasLimbBrute) && (needsBurnWound && !hasLimbBurn))
                     continue;
 
-                // For melee: only one limb has damage, so only that limb gets wounds
-                // For explosions: all limbs have damage, so all get wounds
                 if (needsBruteWound && !hasLimbBrute)
                     continue;
                 if (needsBurnWound && !hasLimbBurn)
                     continue;
             }
 
-            ProcessDamageForLimb((organ, woundable), damage);
+            ProcessDamageForLimb((organ, woundable), ent.Owner, damage, weaponWoundType);
         }
     }
 
-    private void ProcessDamageForLimb(Entity<WoundableComponent> limb, DamageSpecifier damage)
+    private void ProcessDamageForLimb(Entity<WoundableComponent> limb, EntityUid bodyUid, DamageSpecifier damage,
+        ProtoId<WoundComponent>? weaponWoundType = null)
     {
         var blunt = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Blunt" });
         var slash = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Slash" });
         var pierce = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Piercing" });
         var burn = SumTypes(damage, BurnTypes);
 
+        if (weaponWoundType != null)
+        {
+            AddWeaponSpecificWound(limb, bodyUid, damage, weaponWoundType.Value);
+            return;
+        }
+
         if (blunt > 0)
-            AddDamageToWoundGroup(limb, damage, blunt, "Brute");
+            AddDamageToWoundGroup(limb, bodyUid, damage, blunt, "Brute");
         if (slash > 0)
-            AddDamageToWoundGroup(limb, damage, slash, "Cut");
+            AddDamageToWoundGroup(limb, bodyUid, damage, slash, "Cut");
         if (pierce > 0)
-            AddDamageToWoundGroup(limb, damage, pierce, "Puncture");
+            AddDamageToWoundGroup(limb, bodyUid, damage, pierce, "Puncture");
         if (burn > 0)
-            AddDamageToWoundGroup(limb, damage, burn, "Burn");
+            AddDamageToWoundGroup(limb, bodyUid, damage, burn, "Burn");
+    }
+
+    private void AddWeaponSpecificWound(Entity<WoundableComponent> limb, EntityUid bodyUid,
+        DamageSpecifier damage, ProtoId<WoundComponent> woundProtoId)
+    {
+        var entCoords = Transform(limb.Owner).Coordinates;
+        var woundEnt = Spawn(woundProtoId, entCoords);
+
+        if (!TryComp<WoundComponent>(woundEnt, out var newWound))
+        {
+            Del(woundEnt);
+            return;
+        }
+
+        newWound.ParentWoundable = limb.Owner;
+        newWound.CreatedAt = _timing.CurTime;
+        var totalDamage = damage.GetTotal();
+        if (totalDamage > 0)
+            TransferDamage(newWound, damage, totalDamage, totalDamage);
+        Dirty(woundEnt, newWound);
+
+        InitializeWoundEffects(woundEnt);
+
+        limb.Comp.Wounds.Add(woundEnt);
+        Dirty(limb.Owner, limb.Comp);
+
+        MergeCompatibleWounds(limb);
+    }
+
+    private void InitializeWoundEffects(EntityUid woundEnt)
+    {
+        if (!TryComp<WoundEffectsComponent>(woundEnt, out var effects))
+            return;
+
+        foreach (var instance in effects.Effects)
+        {
+            var proto = _prototype.Index(instance.Id);
+            switch (proto.EffectType)
+            {
+                case "Bleeding":
+                    var baseAmount = instance.GetConfigFloat("baseBleedAmount", _prototype);
+                    instance.SetFloat("currentBleedAmount", baseAmount);
+                    break;
+            }
+        }
     }
 
     private void OnGetWoundDamage(Entity<WoundableComponent> ent, ref GetWoundDamageEvent args)
@@ -162,7 +204,9 @@ public sealed partial class WoundSystem : EntitySystem
                 if (args.Tended == null)
                     continue;
 
-                var tended = TryComp<TendableWoundComponent>(woundUid, out var t) && t.Tended;
+                var tended = TryComp<WoundEffectsComponent>(woundUid, out var effects)
+                    && effects.GetEffect("Tendable", _prototype) is { } tendEffect
+                    && tendEffect.GetFloat("tended") > 0;
                 if (tended)
                     AddToDict(args.Tended.DamageDict, type, value);
             }
@@ -171,31 +215,48 @@ public sealed partial class WoundSystem : EntitySystem
 
     private void OnWoundGetBleed(Entity<WoundComponent> ent, ref GetBleedLevelEvent args)
     {
-        if (!TryComp<BleedingWoundComponent>(ent, out var bleeding) || bleeding.CurrentBleedAmount <= 0)
+        if (!TryComp<WoundEffectsComponent>(ent, out var effects))
             return;
 
-        if (TryComp<ClampableWoundComponent>(ent, out var clampable) && clampable.Clamped)
+        var bleedInstance = effects.GetEffect("Bleeding", _prototype);
+        if (bleedInstance == null)
+            return;
+
+        var bleedAmount = bleedInstance.GetFloatOrConfig("currentBleedAmount", _prototype);
+        if (bleedAmount <= 0)
+            return;
+
+        var clampInstance = effects.GetEffect("Clampable", _prototype);
+        if (clampInstance != null && clampInstance.GetFloat("clamped") > 0)
         {
-            args.BleedAmount += bleeding.CurrentBleedAmount * 0.3f;
+            args.BleedAmount += FixedPoint2.New(bleedAmount * 0.3f);
             return;
         }
 
-        if (TryComp<TendableWoundComponent>(ent, out var tendable) && tendable.Tended)
+        var tendInstance = effects.GetEffect("Tendable", _prototype);
+        if (tendInstance != null && tendInstance.GetFloat("tended") > 0)
         {
-            args.BleedAmount += bleeding.CurrentBleedAmount * 0.1f;
+            args.BleedAmount += FixedPoint2.New(bleedAmount * 0.1f);
             return;
         }
 
-        args.BleedAmount += bleeding.CurrentBleedAmount;
+        args.BleedAmount += FixedPoint2.New(bleedAmount);
     }
 
     private void OnWoundGetPain(Entity<WoundComponent> ent, ref GetPainEvent args)
     {
-        if (!TryComp<PainfulWoundComponent>(ent, out var painful))
+        if (!TryComp<WoundEffectsComponent>(ent, out var effects))
             return;
 
-        args.PainAmount += painful.PainAmount;
-        args.FreshPainAmount += painful.FreshPainAmount;
+        var painInstance = effects.GetEffect("Pain", _prototype);
+        if (painInstance == null)
+            return;
+
+        var painAmount = painInstance.GetFloatOrConfig("painAmount", _prototype);
+        var freshPain = painInstance.GetFloatOrConfig("freshPainAmount", _prototype);
+
+        args.PainAmount += FixedPoint2.New(painAmount);
+        args.FreshPainAmount += FixedPoint2.New(freshPain);
     }
 
     private static FixedPoint2 SumTypes(DamageSpecifier damage, ProtoId<DamageTypePrototype>[] types)
@@ -217,7 +278,8 @@ public sealed partial class WoundSystem : EntitySystem
             dict[key] = value;
     }
 
-    private void AddDamageToWoundGroup(Entity<WoundableComponent> limb, DamageSpecifier damage, FixedPoint2 groupTotal, string groupName)
+    private void AddDamageToWoundGroup(Entity<WoundableComponent> limb, EntityUid bodyUid,
+        DamageSpecifier damage, FixedPoint2 groupTotal, string groupName)
     {
         foreach (var woundUid in limb.Comp.Wounds)
         {
@@ -246,6 +308,92 @@ public sealed partial class WoundSystem : EntitySystem
         if (groupTotal <= 0)
             return;
 
+        // Check capacity before spawning a new wound
+        if (IsCapacityReached(limb, bodyUid, groupName))
+        {
+            ReplaceOldestWound(limb, bodyUid, damage, groupTotal, groupName);
+            return;
+        }
+
+        SpawnNewWound(limb, damage, groupTotal, groupName);
+    }
+
+    private bool IsCapacityReached(Entity<WoundableComponent> limb, EntityUid bodyUid, string groupName)
+    {
+        if (!TryComp<WoundCapacityComponent>(bodyUid, out var capacity))
+            return false;
+
+        var maxPerGroup = capacity.GroupCapacity.GetValueOrDefault(groupName, capacity.DefaultCapacity);
+        if (maxPerGroup <= 0)
+            return true;
+
+        var count = 0;
+        foreach (var woundUid in limb.Comp.Wounds)
+        {
+            if (TerminatingOrDeleted(woundUid))
+                continue;
+            if (!TryComp<WoundComponent>(woundUid, out var wound))
+                continue;
+            if (string.IsNullOrEmpty(wound.Group) || !wound.Group.Equals(groupName, StringComparison.OrdinalIgnoreCase))
+                continue;
+            count++;
+        }
+
+        return count >= maxPerGroup;
+    }
+
+    private void ReplaceOldestWound(Entity<WoundableComponent> limb, EntityUid bodyUid,
+        DamageSpecifier damage, FixedPoint2 groupTotal, string groupName)
+    {
+        EntityUid? oldestWound = null;
+        TimeSpan oldestTime = TimeSpan.MaxValue;
+
+        foreach (var woundUid in limb.Comp.Wounds)
+        {
+            if (TerminatingOrDeleted(woundUid))
+                continue;
+            if (!TryComp<WoundComponent>(woundUid, out var wound))
+                continue;
+            if (string.IsNullOrEmpty(wound.Group) || !wound.Group.Equals(groupName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (wound.CreatedAt < oldestTime)
+            {
+                oldestTime = wound.CreatedAt;
+                oldestWound = woundUid;
+            }
+        }
+
+        if (oldestWound is not { } remove)
+        {
+            SpawnNewWound(limb, damage, groupTotal, groupName);
+            return;
+        }
+
+        if (TryComp<WoundComponent>(remove, out var removeWound))
+        {
+            foreach (var (type, value) in removeWound.Damage.DamageDict)
+            {
+                if (value > 0)
+                {
+                    if (damage.DamageDict.TryGetValue(type, out var existing))
+                        damage.DamageDict[type] = existing + value;
+                    else
+                        damage.DamageDict[type] = value;
+                }
+            }
+            groupTotal += removeWound.Damage.GetTotal();
+        }
+
+        limb.Comp.Wounds.Remove(remove);
+        Del(remove);
+
+        SpawnNewWound(limb, damage, groupTotal, groupName);
+    }
+
+    private void SpawnNewWound(Entity<WoundableComponent> limb, DamageSpecifier damage,
+        FixedPoint2 groupTotal, string groupName)
+    {
         var protoId = PickWoundPrototype(groupName, groupTotal);
         if (protoId == null)
             return;
@@ -264,17 +412,14 @@ public sealed partial class WoundSystem : EntitySystem
         TransferDamage(newWound, damage, groupTotal, groupTotal);
         Dirty(woundEnt, newWound);
 
+        InitializeWoundEffects(woundEnt);
+
         limb.Comp.Wounds.Add(woundEnt);
         Dirty(limb.Owner, limb.Comp);
 
-        // Try merging compatible wounds after adding damage
         MergeCompatibleWounds(limb);
     }
 
-    /// <summary>
-    ///     Merges compatible wounds on the same limb.
-    ///     Same type + same treatment state + combined damage ≤ MaxDamage of the larger wound.
-    /// </summary>
     private void MergeCompatibleWounds(Entity<WoundableComponent> limb)
     {
         var wounds = limb.Comp.Wounds.ToList();
@@ -290,17 +435,13 @@ public sealed partial class WoundSystem : EntitySystem
                 if (TerminatingOrDeleted(b) || !TryComp<WoundComponent>(b, out var wb))
                     continue;
 
-                // Check same wound group
                 if (!IsSameGroup(a, b))
                     continue;
 
-                // Check same treatment state
-                var aTended = TryComp<TendableWoundComponent>(a, out var ta) && ta.Tended;
-                var bTended = TryComp<TendableWoundComponent>(b, out var tb) && tb.Tended;
-                if (aTended != bTended)
+                // Check same treatment state via WoundEffectsComponent
+                if (!IsSameTreatmentState(a, b))
                     continue;
 
-                // Merge: absorb the smaller wound into the larger one
                 EntityUid keep, remove;
                 WoundComponent wk, wr;
 
@@ -313,11 +454,9 @@ public sealed partial class WoundSystem : EntitySystem
                     keep = b; wk = wb; remove = a; wr = wa;
                 }
 
-                // Check combined doesn't exceed max
                 var combined = wk.Damage.GetTotal() + wr.Damage.GetTotal();
                 if (combined > wk.MaximumDamage)
                 {
-                    // Combined damage exceeds larger wound's max — replace both with a bigger wound type
                     var groupName = GetWoundGroup(keep);
                     if (string.IsNullOrEmpty(groupName))
                         continue;
@@ -352,6 +491,8 @@ public sealed partial class WoundSystem : EntitySystem
                     }
                     Dirty(newWoundEnt, newWc);
 
+                    InitializeWoundEffects(newWoundEnt);
+
                     limb.Comp.Wounds.Remove(keep);
                     limb.Comp.Wounds.Remove(remove);
                     limb.Comp.Wounds.Add(newWoundEnt);
@@ -359,12 +500,9 @@ public sealed partial class WoundSystem : EntitySystem
                     Del(keep);
                     Del(remove);
 
-                    // Break both loops since we modified the list
-                    // (return since only one merge per call is needed)
                     return;
                 }
 
-                // Transfer damage
                 foreach (var (type, value) in wr.Damage.DamageDict)
                 {
                     if (value <= 0)
@@ -377,12 +515,22 @@ public sealed partial class WoundSystem : EntitySystem
 
                 Dirty(keep, wk);
 
-                // Remove the absorbed wound
                 limb.Comp.Wounds.Remove(remove);
                 Dirty(limb.Owner, limb.Comp);
                 Del(remove);
             }
         }
+    }
+
+    private bool IsSameTreatmentState(EntityUid a, EntityUid b)
+    {
+        var aTended = TryComp<WoundEffectsComponent>(a, out var ea)
+            && ea.GetEffect("Tendable", _prototype) is { } ta
+            && ta.GetFloat("tended") > 0;
+        var bTended = TryComp<WoundEffectsComponent>(b, out var eb)
+            && eb.GetEffect("Tendable", _prototype) is { } tb
+            && tb.GetFloat("tended") > 0;
+        return aTended == bTended;
     }
 
     private bool IsSameGroup(EntityUid a, EntityUid b)
@@ -392,11 +540,9 @@ public sealed partial class WoundSystem : EntitySystem
 
     private string GetWoundGroup(EntityUid wound)
     {
-        // Use the explicit Group field from WoundComponent (fast, deterministic)
         if (TryComp<WoundComponent>(wound, out var wc) && !string.IsNullOrEmpty(wc.Group))
             return wc.Group;
 
-        // Fallback: determine group from the WoundDescription prototype ID
         if (TryComp<WoundDescriptionComponent>(wound, out var desc))
         {
             foreach (var text in desc.Descriptions.Values)
@@ -413,13 +559,11 @@ public sealed partial class WoundSystem : EntitySystem
 
     private bool IsCorrectWoundGroup(EntityUid woundUid, string groupName)
     {
-        // Primary: use the explicit Group field from WoundComponent
         if (TryComp<WoundComponent>(woundUid, out var wc) &&
             !string.IsNullOrEmpty(wc.Group) &&
             wc.Group.Equals(groupName, StringComparison.OrdinalIgnoreCase))
             return true;
 
-        // Secondary: check description text
         if (TryComp<WoundDescriptionComponent>(woundUid, out var desc))
         {
             foreach (var text in desc.Descriptions.Values)
