@@ -51,6 +51,20 @@ public sealed class SurgeryTest : GameTest
   - type: Woundable
 
 - type: entity
+  id: SurgLimbArm
+  components:
+  - type: Organ
+    category: ArmLeft
+  - type: ExternalOrgan
+    maxDamage: 80
+    minBrokenDamage: 50
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
+  - type: Woundable
+
+- type: entity
   id: SurgToolScalpel
   components:
   - type: SurgeryTool
@@ -186,7 +200,7 @@ public sealed class SurgeryTest : GameTest
     maxIntegrity: 100
 ";
 
-    private async Task<(EntityUid Body, EntityUid Limb)> Spawn()
+    private async Task<(EntityUid Body, EntityUid Limb)> Spawn(string limbProto = "SurgLimb")
     {
         var server = Pair.Server;
         var map = await Pair.CreateTestMap();
@@ -200,7 +214,7 @@ public sealed class SurgeryTest : GameTest
             body = entMan.SpawnEntity("SurgBody", map.MapCoords);
             containerSys.EnsureContainer<Container>(body, BodyComponent.ContainerID, out _);
             var c = containerSys.GetContainer(body, BodyComponent.ContainerID);
-            limb = entMan.SpawnEntity("SurgLimb", map.MapCoords);
+            limb = entMan.SpawnEntity(limbProto, map.MapCoords);
             containerSys.Insert(limb, c);
         });
         await server.WaitRunTicks(5);
@@ -366,7 +380,7 @@ public sealed class SurgeryTest : GameTest
     public async Task AmputationRemovesLimb()
     {
         var server = Pair.Server;
-        var (body, limb) = await Spawn();
+        var (body, limb) = await Spawn("SurgLimbArm");
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();
@@ -470,7 +484,7 @@ public sealed class SurgeryTest : GameTest
     public async Task BoneSawOnUnopenedLimbAmputates()
     {
         var server = Pair.Server;
-        var (body, limb) = await Spawn();
+        var (body, limb) = await Spawn("SurgLimbArm");
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();

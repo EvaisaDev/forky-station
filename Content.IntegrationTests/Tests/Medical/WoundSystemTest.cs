@@ -45,23 +45,34 @@ public sealed class WoundSystemTest : GameTest
     - CanBreak
   - type: Woundable
 
+- type: woundEffect
+  id: WSTestBleed
+  effectType: Bleeding
+  config:
+    baseBleedAmount: 2.0
+
+- type: woundEffect
+  id: WSTestPain
+  effectType: Pain
+  config:
+    painAmount: 5.0
+    freshPainAmount: 10.0
+
 - type: entity
-  parent: WoundBruteSmall
+  parent: WoundBase
   id: WSTestWound
   components:
   - type: Wound
     maximumDamage: 20
-  - type: BleedingWound
-    baseBleedAmount: 2
-    currentBleedAmount: 2
-  - type: TendableWound
-  - type: ClampableWound
-  - type: PainfulWound
-    painAmount: 5
-    freshPainAmount: 10
   - type: WoundDescription
     descriptions:
       0.0: test-wound
+  - type: WoundEffects
+    effects:
+    - id: WSTestBleed
+    - id: Tendable
+    - id: Clampable
+    - id: WSTestPain
 ";
 
     private async Task<(EntityUid Body, EntityUid Limb)> Spawn()
@@ -115,6 +126,18 @@ public sealed class WoundSystemTest : GameTest
             w.ParentWoundable = limb;
             w.Damage.DamageDict.Add("Blunt", FixedPoint2.New(10));
             server.EntMan.Dirty(we, w);
+
+            // Initialize bleeding effect runtime state
+            var effects = server.EntMan.GetComponent<WoundEffectsComponent>(we);
+            foreach (var instance in effects.Effects)
+            {
+                var id = instance.Id;
+                if (id == "WSTestBleed" || id == "WSTestBleed")
+                {
+                    instance.FloatParams["currentBleedAmount"] = 2.0f;
+                }
+            }
+
             wc.Wounds.Add(we);
             server.EntMan.Dirty(limb, wc);
 
@@ -135,13 +158,22 @@ public sealed class WoundSystemTest : GameTest
             var coords = server.EntMan.GetComponent<TransformComponent>(limb).Coordinates;
             var we = server.EntMan.SpawnEntity("WSTestWound", coords);
 
+            // Initialize bleeding runtime state
+            var effects = server.EntMan.GetComponent<WoundEffectsComponent>(we);
+            foreach (var instance in effects.Effects)
+            {
+                if (instance.Id == "WSTestBleed")
+                    instance.FloatParams["currentBleedAmount"] = 2.0f;
+            }
+
             var ev = new GetBleedLevelEvent(FixedPoint2.Zero);
             server.EntMan.EventBus.RaiseLocalEvent(we, ref ev);
             var before = ev.BleedAmount;
 
-            var twc = server.EntMan.GetComponent<TendableWoundComponent>(we);
-            twc.Tended = true;
-            server.EntMan.Dirty(we, twc);
+            var tendInstance = effects.Effects.Find(e => e.Id == "Tendable");
+            Assert.That(tendInstance, Is.Not.Null);
+            tendInstance!.FloatParams["tended"] = 1;
+            server.EntMan.Dirty(we, effects);
 
             ev = new GetBleedLevelEvent(FixedPoint2.Zero);
             server.EntMan.EventBus.RaiseLocalEvent(we, ref ev);
@@ -159,13 +191,21 @@ public sealed class WoundSystemTest : GameTest
             var coords = server.EntMan.GetComponent<TransformComponent>(limb).Coordinates;
             var we = server.EntMan.SpawnEntity("WSTestWound", coords);
 
+            var effects = server.EntMan.GetComponent<WoundEffectsComponent>(we);
+            foreach (var instance in effects.Effects)
+            {
+                if (instance.Id == "WSTestBleed")
+                    instance.FloatParams["currentBleedAmount"] = 2.0f;
+            }
+
             var ev = new GetBleedLevelEvent(FixedPoint2.Zero);
             server.EntMan.EventBus.RaiseLocalEvent(we, ref ev);
             var before = ev.BleedAmount;
 
-            var cwc = server.EntMan.GetComponent<ClampableWoundComponent>(we);
-            cwc.Clamped = true;
-            server.EntMan.Dirty(we, cwc);
+            var clampInstance = effects.Effects.Find(e => e.Id == "Clampable");
+            Assert.That(clampInstance, Is.Not.Null);
+            clampInstance!.FloatParams["clamped"] = 1;
+            server.EntMan.Dirty(we, effects);
 
             ev = new GetBleedLevelEvent(FixedPoint2.Zero);
             server.EntMan.EventBus.RaiseLocalEvent(we, ref ev);

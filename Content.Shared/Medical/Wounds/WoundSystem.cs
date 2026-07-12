@@ -5,6 +5,8 @@ using Content.Shared.Body.Organs;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
+using Content.Shared.Body.Components;
+using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Medical.Pain;
@@ -26,6 +28,7 @@ public sealed partial class WoundSystem : EntitySystem
     [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private PainSystem _pain = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedSolutionContainerSystem _solution = default!;
 
     private static readonly ProtoId<DamageTypePrototype>[] BruteTypes = { "Blunt", "Slash", "Piercing" };
     private static readonly ProtoId<DamageTypePrototype>[] BurnTypes = { "Heat", "Cold", "Shock", "Caustic" };
@@ -160,6 +163,18 @@ public sealed partial class WoundSystem : EntitySystem
                 AddDamageToWoundGroup(limb, bodyUid, damage, burn, "Burn");
         }
 
+        // Fluid loss from burns — severe burns cause blood loss from blistering
+        if (burn > 0 && ext != null && (ext.Status & OrganStatusFlags.Robotic) == 0 && _net.IsServer)
+        {
+            var burnFloat = burn.Float();
+            if (burnFloat > 5 && TryComp<BloodstreamComponent>(bodyUid, out var bloodstream)
+                && _solution.ResolveSolution(bodyUid, bloodstream.BloodSolutionName, ref bloodstream.BloodSolution, out var bloodSolution))
+            {
+                var fluidLoss = burnFloat * 0.01f;
+                _solution.RemoveReagent(bloodstream.BloodSolution!.Value, "Blood", FixedPoint2.New(fluidLoss));
+            }
+        }
+
         // Damage triggers for limb conditions
         if (ext != null && _net.IsServer)
         {
@@ -225,6 +240,27 @@ public sealed partial class WoundSystem : EntitySystem
                 }
             }
 
+        }
+
+        // Baystation: disturbing salved burns with brute damage removes the salve
+        if (blunt > 0 && ext != null && (ext.Status & OrganStatusFlags.Robotic) == 0 && _net.IsServer)
+        {
+            foreach (var woundUid in limb.Comp.Wounds)
+            {
+                if (TerminatingOrDeleted(woundUid))
+                    continue;
+                if (!TryComp<WoundEffectsComponent>(woundUid, out var wEffects))
+                    continue;
+                var salveEffect = wEffects.GetEffect("Salvable", _prototype);
+                if (salveEffect != null && salveEffect.GetFloat("salved") > 0 && blunt.Float() > 5)
+                {
+                    if (_random.Prob(0.3f))
+                    {
+                        salveEffect.SetFloat("salved", 0);
+                        Dirty(woundUid, wEffects);
+                    }
+                }
+            }
         }
 
         // Baystation-style pain spike: add_pain(0.6*burn + 0.4*brute)
@@ -326,6 +362,15 @@ public sealed partial class WoundSystem : EntitySystem
         if (bleedAmount <= 0)
             return;
 
+        // Baystation: large embedded objects plug the wound and prevent bleeding
+        var embeddedInstance = effects.GetEffect("Embedded", _prototype);
+        if (embeddedInstance is { StringListParams: { Count: > 0 } })
+        {
+            // If there are embedded objects, the wound bleeds less (object plugs it)
+            args.BleedAmount += FixedPoint2.New(bleedAmount * 0.5f);
+            return;
+        }
+
         var clampInstance = effects.GetEffect("Clampable", _prototype);
         if (clampInstance != null && clampInstance.GetFloat("clamped") > 0)
         {
@@ -379,7 +424,7 @@ public sealed partial class WoundSystem : EntitySystem
     }
 
     private void AddDamageToWoundGroup(Entity<WoundableComponent> limb, EntityUid bodyUid,
-        DamageSpecifier damage, FixedPoint2 groupTotal, string groupName)
+        DamageSpecifier damage, FixedPoint2 groupTotal, string groupName, EntityUid? origin = null)
     {
         // Baystation: first try to worsen existing wounds (widen them) before filling space
         if (TryWorsenExistingWounds(limb, damage, ref groupTotal, groupName))
@@ -540,7 +585,7 @@ public sealed partial class WoundSystem : EntitySystem
     }
 
     private void SpawnNewWound(Entity<WoundableComponent> limb, DamageSpecifier damage,
-        FixedPoint2 groupTotal, string groupName)
+        FixedPoint2 groupTotal, string groupName, EntityUid? origin = null)
     {
         var protoId = PickWoundPrototype(groupName, groupTotal);
         if (protoId == null)
@@ -561,6 +606,28 @@ public sealed partial class WoundSystem : EntitySystem
         Dirty(woundEnt, newWound);
 
         InitializeWoundEffects(woundEnt);
+
+        // Embedded objects from puncture damage (shrapnel/bullets)
+        if (groupName == "Puncture" && groupTotal.Float() >= 10 && _net.IsServer)
+        {
+            if (_random.Prob(Math.Min(groupTotal.Float() / 50f, 0.5f)))
+            {
+                var effects = EnsureComp<WoundEffectsComponent>(woundEnt);
+                var embedded = effects.GetEffect("Embedded", _prototype);
+                if (embedded != null)
+                {
+                    embedded.StringListParams.Add("shrapnel");
+                    Dirty(woundEnt, effects);
+                }
+                else
+                {
+                    var newEmbedded = new WoundEffectInstance { Id = "Embedded" };
+                    newEmbedded.StringListParams.Add("shrapnel");
+                    effects.Effects.Add(newEmbedded);
+                    Dirty(woundEnt, effects);
+                }
+            }
+        }
 
         limb.Comp.Wounds.Add(woundEnt);
         Dirty(limb.Owner, limb.Comp);

@@ -3,6 +3,7 @@ using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
 using Content.Shared.Body.Organs;
+using Content.Shared.Medical.Wounds;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
@@ -187,6 +188,24 @@ public sealed partial class ExternalOrganSystem : EntitySystem
         {
             stumpExt.Status |= OrganStatusFlags.CutAway;
             Dirty(stump, stumpExt);
+        }
+
+        // Initialize stump bleed timer
+        if (TryComp<WoundEffectsComponent>(stump, out var stumpEffects))
+        {
+            foreach (var instance in stumpEffects.Effects)
+            {
+                if (instance.Id == "BleedingLarge" || instance.Id == "Bleeding")
+                {
+                    // Set bleed timer so the stump bleeds
+                    if (!instance.FloatParams.ContainsKey("bleedTimer"))
+                        instance.FloatParams["bleedTimer"] = 120;
+                    if (!instance.FloatParams.ContainsKey("currentBleedAmount"))
+                        instance.FloatParams["currentBleedAmount"] = 3.0f;
+                    break;
+                }
+            }
+            Dirty(stump, stumpEffects);
         }
 
         // Insert stump into the body — BodySystem.OnBodyEntInserted will set OrganComponent.Body

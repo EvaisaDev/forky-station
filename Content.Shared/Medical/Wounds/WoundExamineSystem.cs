@@ -29,6 +29,7 @@ public sealed partial class WoundExamineSystem : EntitySystem
 
         var hasEmbedded = false;
         var woundCount = 0;
+        var worstStage = -1;
 
         foreach (var woundUid in wounds)
         {
@@ -36,6 +37,12 @@ public sealed partial class WoundExamineSystem : EntitySystem
                 continue;
 
             woundCount++;
+
+            if (TryComp<WoundComponent>(woundUid, out var woundComp))
+            {
+                if (woundComp.Stage > worstStage)
+                    worstStage = woundComp.Stage;
+            }
 
             if (TryComp<WoundEffectsComponent>(woundUid, out var effects))
             {
@@ -48,6 +55,9 @@ public sealed partial class WoundExamineSystem : EntitySystem
         if (woundCount > 0)
         {
             args.PushMarkup(Loc.GetString("wound-examine-wounds-visible", ("count", woundCount)));
+
+            if (worstStage >= 0 && worstStage <= 4)
+                args.PushMarkup(Loc.GetString("wound-stage-" + worstStage));
         }
 
         if (hasEmbedded)

@@ -341,7 +341,20 @@ public sealed class WoundEnhancementTests : GameTest
   - type: Item
   - type: Sprite
 
-# Fast-healing test wound
+# Fast-healing test wound — uses WoundEffects with HealableOverride
+- type: woundEffect
+  id: WETestHealFast
+  effectType: Healable
+  config:
+    healPerTick: 2.0
+
+- type: woundEffect
+  id: WETestPainLight
+  effectType: Pain
+  config:
+    painAmount: 1.0
+    freshPainAmount: 3.0
+
 - type: entity
   parent: WoundBase
   id: WETestHeal
@@ -352,12 +365,11 @@ public sealed class WoundEnhancementTests : GameTest
   - type: WoundDescription
     descriptions:
       0.0: wound-brute-small
-  - type: WoundGerm
-  - type: HealableWound
-    healPerTick: 2
-  - type: PainfulWound
-    painAmount: 1
-    freshPainAmount: 3
+  - type: WoundEffects
+    effects:
+    - id: WETestHealFast
+    - id: WETestPainLight
+    - id: GermTracking
 ";
 
     private async Task<(EntityUid Body, EntityUid Limb)> Spawn()
@@ -419,7 +431,6 @@ public sealed class WoundEnhancementTests : GameTest
             var wc = server.EntMan.GetComponent<WoundableComponent>(limb);
             var coords = server.EntMan.GetComponent<TransformComponent>(limb).Coordinates;
 
-            // Create a fast-healing wound with healPerTick=2
             var wEnt = server.EntMan.SpawnEntity("WETestHeal", coords);
             var w = server.EntMan.GetComponent<WoundComponent>(wEnt);
             w.ParentWoundable = limb;
@@ -429,7 +440,6 @@ public sealed class WoundEnhancementTests : GameTest
             server.EntMan.Dirty(limb, wc);
         });
 
-        // Wait for healing cycles (system runs every 2s = 60 ticks)
         await server.WaitRunTicks(120);
 
         await server.WaitAssertion(() =>
@@ -487,7 +497,9 @@ public sealed class WoundEnhancementTests : GameTest
 
             foreach (var wUid in wc.Wounds)
             {
-                Assert.That(server.EntMan.TryGetComponent<WoundGermComponent>(wUid, out _), Is.True);
+                Assert.That(server.EntMan.TryGetComponent<WoundEffectsComponent>(wUid, out _), Is.True);
+                var effects = server.EntMan.GetComponent<WoundEffectsComponent>(wUid);
+                Assert.That(effects.Effects.Exists(e => e.Id == "GermTracking"), Is.True);
             }
         });
     }
@@ -509,14 +521,20 @@ public sealed class WoundEnhancementTests : GameTest
             w.Damage.DamageDict.Add("Blunt", FixedPoint2.New(5));
             server.EntMan.Dirty(wEnt, w);
 
-            var emb = server.EntMan.EnsureComponent<EmbeddedObjectComponent>(wEnt);
-            emb.EmbeddedItems.Add("shrapnel");
-            server.EntMan.Dirty(wEnt, emb);
+            var effects = server.EntMan.EnsureComponent<WoundEffectsComponent>(wEnt);
+            var embedded = effects.Effects.Find(e => e.Id == "Embedded");
+            if (embedded == null)
+            {
+                embedded = new WoundEffectInstance { Id = "Embedded" };
+                effects.Effects.Add(embedded);
+            }
+            embedded.StringListParams.Add("shrapnel");
+            server.EntMan.Dirty(wEnt, effects);
 
             wc.Wounds.Add(wEnt);
             server.EntMan.Dirty(limb, wc);
 
-            Assert.That(emb.EmbeddedItems.Count, Is.EqualTo(1));
+            Assert.That(embedded.StringListParams.Count, Is.EqualTo(1));
         });
     }
 
