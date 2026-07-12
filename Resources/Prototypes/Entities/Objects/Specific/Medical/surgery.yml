@@ -34,6 +34,8 @@
     action: Cauterize
     steps:
     - Cauterize
+    - MendFacial
+    - CleanStump
     quality: 1.0
     sterile: true
     stepDuration: 2.0
@@ -97,6 +99,9 @@
     action: Incision
     steps:
     - Incision
+    - CleanStump
+    - MendFacial
+    - Autopsy
     quality: 1.0
     sterile: true
     stepDuration: 3.0
@@ -175,6 +180,8 @@
     steps:
     - Retract
     - OrganReplace
+    - MuscleRepair
+    - ImplantItem
     quality: 1.0
     sterile: true
     stepDuration: 2.0
@@ -195,6 +202,10 @@
     steps:
     - Clamp
     - RemoveEmbedded
+    - TendonRepair
+    - RemoveImplanted
+    - RepairEye
+    - RepairEar
     quality: 1.0
     sterile: true
     stepDuration: 2.0
@@ -253,6 +264,9 @@
     action: RemoveEmbedded
     steps:
     - RemoveEmbedded
+    - RepairEye
+    - RepairEar
+    - RemoveImplanted
     quality: 1.0
     sterile: true
     stepDuration: 3.0

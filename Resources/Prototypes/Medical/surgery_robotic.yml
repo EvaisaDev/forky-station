@@ -1,0 +1,64 @@
+# Robotic limb surgery steps
+
+- type: surgeryStep
+  id: OpenHatch
+  action: OpenHatch
+  name: Open robotic hatch
+  description: Opens the access panel on a robotic limb.
+  allowedTools:
+    Screwdriver: 100
+  requiredFlags: 0
+  minDuration: 3.0
+  maxDuration: 4.0
+  shockLevel: 0
+
+- type: surgeryStep
+  id: CloseHatch
+  action: CloseHatch
+  name: Close robotic hatch
+  description: Closes the access panel on a robotic limb.
+  allowedTools:
+    Crowbar: 100
+    Wrench: 75
+  requiredFlags: 0
+  minDuration: 3.0
+  maxDuration: 5.0
+  shockLevel: 0
+
+- type: surgeryStep
+  id: WeldBrute
+  action: WeldBrute
+  name: Weld robotic damage
+  description: Repairs structural damage on a robotic limb with a welding tool.
+  allowedTools:
+    WeldingTool: 100
+  requiredFlags: 0
+  minDuration: 5.0
+  maxDuration: 8.0
+  shockLevel: 0
+
+- type: surgeryStep
+  id: ReplaceWires
+  action: ReplaceWires
+  name: Replace wiring
+  description: Replaces fried wiring in a robotic limb.
+  allowedTools:
+    CableCoil: 100
+    Screwdriver: 75
+  requiredFlags: 0
+  minDuration: 4.0
+  maxDuration: 7.0
+  shockLevel: 0
+
+- type: surgeryStep
+  id: DetachRobotic
+  action: DetachRobotic
+  name: Detach robotic limb
+  description: Removes a robotic limb from its mount.
+  allowedTools:
+    Wrench: 100
+    Crowbar: 75
+  requiredFlags: 0
+  minDuration: 8.0
+  maxDuration: 12.0
+  shockLevel: 10

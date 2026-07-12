@@ -107,6 +107,10 @@
     sprite: Objects/Tools/welder.rsi
   - type: SurgeryTool
     action: Cauterize
+    steps:
+    - Cauterize
+    - WeldBrute
+    - CleanStump
     quality: 0.25
     sterile: false
     stepDuration: 5.0

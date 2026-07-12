@@ -54,6 +54,11 @@
       state: storage
   - type: SurgeryTool
     action: Retract
+    steps:
+    - Retract
+    - CloseHatch
+    - DetachRobotic
+    - ImplantItem
     quality: 0.75
     sterile: false
     stepDuration: 4.0

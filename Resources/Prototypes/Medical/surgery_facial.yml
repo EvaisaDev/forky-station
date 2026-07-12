@@ -1,0 +1,52 @@
+# Facial surgery steps
+
+- type: surgeryStep
+  id: MendFacial
+  action: MendFacial
+  name: Mend facial wounds
+  description: Repairs disfigurement and scar tissue on the face.
+  allowedTools:
+    Scalpel: 100
+    Cautery: 75
+    Retractor: 50
+  requiredFlags: 0
+  minDuration: 8.0
+  maxDuration: 12.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 20
+  delicate: true
+
+- type: surgeryStep
+  id: RepairEye
+  action: RepairEye
+  name: Repair eye
+  description: Repairs a damaged or injured eye.
+  allowedTools:
+    Hemostat: 100
+    Forceps: 75
+    Scalpel: 50
+  requiredFlags: 0
+  minDuration: 7.0
+  maxDuration: 10.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 15
+  delicate: true
+
+- type: surgeryStep
+  id: RepairEar
+  action: RepairEar
+  name: Repair ear
+  description: Repairs a damaged or injured ear.
+  allowedTools:
+    Hemostat: 100
+    Forceps: 75
+    Scalpel: 50
+  requiredFlags: 0
+  minDuration: 6.0
+  maxDuration: 9.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 15
+  delicate: true

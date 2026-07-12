@@ -179,6 +179,10 @@
     - coillv-30
   - type: SurgeryTool
     action: Clamp
+    steps:
+    - Clamp
+    - TendonRepair
+    - ReplaceWires
     quality: 0.75
     sterile: false
     stepDuration: 3.0

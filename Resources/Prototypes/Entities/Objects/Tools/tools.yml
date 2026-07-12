@@ -79,6 +79,14 @@
       - Screwing
     useSound:
       collection: Screwdriver
+  - type: SurgeryTool
+    action: OpenHatch
+    steps:
+    - OpenHatch
+    - ReplaceWires
+    quality: 0.5
+    sterile: false
+    stepDuration: 5.0
   - type: RandomSprite
     available:
       - enum.DamageStateVisualLayers.Base:
@@ -111,6 +119,10 @@
       state: storage
   - type: SurgeryTool
     action: BoneSet
+    steps:
+    - BoneSet
+    - DetachRobotic
+    - CloseHatch
     quality: 0.75
     sterile: false
     stepDuration: 4.0

@@ -4,6 +4,9 @@ using Content.Shared.Chat;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
 using Content.Shared.Body.Organs;
+using Content.Shared.Hands.Components;
+using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Item;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
@@ -20,8 +23,10 @@ using Content.Shared.Stunnable;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 using Robust.Shared.Random;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 namespace Content.Shared.Medical.Surgery;
@@ -38,6 +43,8 @@ public sealed partial class SurgerySystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _net = default!;
     [Dependency] private ISharedChatManager _chat = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedHandsSystem _handsSystem = default!;
 
     public override void Initialize()
     {
@@ -60,6 +67,13 @@ public sealed partial class SurgerySystem : EntitySystem
         if (!args.CanReach || args.Target == null)
             return;
 
+        // Prevent duplicate processing within the same tick (event fires per-organ)
+        var curTick = _timing.CurTick;
+        if (args.Target.Value == LastSurgeryTarget && curTick == LastSurgeryTick)
+            return;
+        LastSurgeryTarget = args.Target.Value;
+        LastSurgeryTick = curTick;
+
         var target = args.Target.Value;
         var (tool, toolComp) = ent;
 
@@ -75,8 +89,8 @@ public sealed partial class SurgerySystem : EntitySystem
             return;
         }
 
-        // Find step prototype for timed surgery
-        var stepProto = FindStepByAction(toolComp.Action);
+        // Find step prototype — use Steps list if available, else fall back to action match
+        var stepProto = FindBestStep(toolComp, foundLimb.Value, foundExt!);
         if (stepProto != null)
         {
             var conscious = !IsPatientReady(target);
@@ -84,8 +98,7 @@ public sealed partial class SurgerySystem : EntitySystem
         }
         else
         {
-            // Fallback to instant execution if no prototype exists
-            var result = ExecuteStepAction(tool, toolComp, foundLimb.Value, foundExt!, target);
+            var result = ExecuteStepAction(tool, toolComp, foundLimb.Value, foundExt!, target, args.User);
             if (result != null)
             {
                 _popup.PopupEntity(result, args.User, args.User);
@@ -102,6 +115,25 @@ public sealed partial class SurgerySystem : EntitySystem
                 return proto;
         }
         return null;
+    }
+
+    private SurgeryStepPrototype? FindBestStep(SurgeryToolComponent toolComp, EntityUid limb, ExternalOrganComponent ext)
+    {
+        // Try the tool's explicit Steps list first
+        if (toolComp.Steps.Count > 0)
+        {
+            foreach (var stepId in toolComp.Steps)
+            {
+                if (!_prototype.TryIndex(stepId, out var proto))
+                    continue;
+
+                if (IsValidSurgeryTarget(limb, ext, proto.Action))
+                    return proto;
+            }
+        }
+
+        // Fallback: match by action string
+        return FindStepByAction(toolComp.Action);
     }
 
     private bool AssessBodyPart(SurgeryStepPrototype step, ExternalOrganComponent ext)
@@ -177,11 +209,11 @@ public sealed partial class SurgerySystem : EntitySystem
         var doAfterArgs = new DoAfterArgs(EntityManager, user, duration,
             new SurgeryStepDoAfterEvent
             {
-                User = user,
-                Tool = tool,
+                User = EntityManager.GetNetEntity(user),
+                Tool = EntityManager.GetNetEntity(tool),
                 StepId = stepProto.ID,
                 SuccessChance = successChance,
-                Limb = limb
+                Limb = EntityManager.GetNetEntity(limb)
             }, tool, target, tool)
         {
             BreakOnDamage = true,
@@ -233,7 +265,7 @@ public sealed partial class SurgerySystem : EntitySystem
             "SawBone" => Loc.GetString("surgery-saw-start", ("tool", toolName), ("target", targetName)),
             "BoneGlue" => Loc.GetString("surgery-boneglue-start", ("tool", toolName), ("target", targetName)),
             "BoneSet" => Loc.GetString("surgery-boneset-start", ("tool", toolName), ("target", targetName)),
-            "BoneFinish" => Loc.GetString("surgery-boneglue-start", ("tool", toolName), ("target", targetName)),
+            "BoneFinish" => Loc.GetString("surgery-bonefinish-start", ("tool", toolName), ("target", targetName)),
             "Amputate" => Loc.GetString("surgery-amputate-start", ("tool", toolName), ("target", targetName)),
             "OrganDetach" => Loc.GetString("surgery-organ-detach-start", ("tool", toolName), ("target", targetName)),
             "OrganRemove" => Loc.GetString("surgery-organ-remove-start", ("tool", toolName), ("target", targetName)),
@@ -241,6 +273,21 @@ public sealed partial class SurgerySystem : EntitySystem
             "OrganAttach" => Loc.GetString("surgery-organ-attach-start", ("tool", toolName), ("target", targetName)),
             "OrganFix" => Loc.GetString("surgery-organ-fix-start", ("tool", toolName), ("target", targetName)),
             "RemoveEmbedded" => Loc.GetString("surgery-embedded-start", ("tool", toolName), ("target", targetName)),
+            "CleanStump" => Loc.GetString("surgery-clean-stump-start", ("tool", toolName), ("target", targetName)),
+            "TendonRepair" => Loc.GetString("surgery-tendon-repair-start", ("tool", toolName), ("target", targetName)),
+            "MuscleRepair" => Loc.GetString("surgery-muscle-repair-start", ("tool", toolName), ("target", targetName)),
+            "CloseReattachment" => Loc.GetString("surgery-close-reattachment-start", ("tool", toolName), ("target", targetName)),
+            "MendFacial" => Loc.GetString("surgery-mend-facial-start", ("tool", toolName), ("target", targetName)),
+            "RepairEye" => Loc.GetString("surgery-repair-eye-start", ("tool", toolName), ("target", targetName)),
+            "RepairEar" => Loc.GetString("surgery-repair-ear-start", ("tool", toolName), ("target", targetName)),
+            "ImplantItem" => Loc.GetString("surgery-implant-item-start", ("tool", toolName), ("target", targetName)),
+            "RemoveImplanted" => Loc.GetString("surgery-remove-implant-start", ("tool", toolName), ("target", targetName)),
+            "OpenHatch" => Loc.GetString("surgery-open-hatch-start", ("tool", toolName), ("target", targetName)),
+            "CloseHatch" => Loc.GetString("surgery-close-hatch-start", ("tool", toolName), ("target", targetName)),
+            "WeldBrute" => Loc.GetString("surgery-weld-brute-start", ("tool", toolName), ("target", targetName)),
+            "ReplaceWires" => Loc.GetString("surgery-replace-wires-start", ("tool", toolName), ("target", targetName)),
+            "DetachRobotic" => Loc.GetString("surgery-detach-robotic-start", ("tool", toolName), ("target", targetName)),
+            "Autopsy" => Loc.GetString("surgery-autopsy-start", ("tool", toolName), ("target", targetName)),
             _ => null
         };
     }
@@ -277,24 +324,31 @@ public sealed partial class SurgerySystem : EntitySystem
 
         args.Handled = true;
 
-        if (!TryComp<ExternalOrganComponent>(args.Limb, out var ext))
+        var limb = EntityManager.GetEntity(args.Limb);
+        if (limb == EntityUid.Invalid || !TryComp<ExternalOrganComponent>(limb, out var ext))
             return;
 
         // Remove surgery-in-progress marker
-        RemComp<SurgeryInProgressComponent>(args.Limb);
+        RemComp<SurgeryInProgressComponent>(limb);
 
         if (!_prototype.TryIndex(args.StepId, out var stepProto))
             return;
 
-        var target = args.Target ?? args.Limb;
+        var user = EntityManager.GetEntity(args.User);
+        var tool = EntityManager.GetEntity(args.Tool);
+        var target = user;
+
+        if (args.Target is { } targ && targ != EntityUid.Invalid)
+            target = targ;
+
         var success = _random.Prob(args.SuccessChance / 100f);
         if (success)
         {
-            EndSurgeryStep(args.User, args.Tool, ent.Comp, args.Limb, ext, target, stepProto);
+            EndSurgeryStep(user, tool, ent.Comp, limb, ext, target, stepProto);
         }
         else
         {
-            FailSurgeryStep(args.User, args.Tool, ent.Comp, args.Limb, ext, target, stepProto);
+            FailSurgeryStep(user, tool, ent.Comp, limb, ext, target, stepProto);
         }
     }
 
@@ -302,7 +356,7 @@ public sealed partial class SurgerySystem : EntitySystem
         EntityUid limb, ExternalOrganComponent ext, EntityUid target,
         SurgeryStepPrototype stepProto)
     {
-        var result = ExecuteStepAction(tool, toolComp, limb, ext, target);
+        var result = ExecuteStepAction(tool, toolComp, limb, ext, target, user);
         if (result != null)
             _popup.PopupEntity(result, user, user);
     }
@@ -323,17 +377,38 @@ public sealed partial class SurgerySystem : EntitySystem
         var limbName = Name(limb);
         return action switch
         {
-            "Incision" or "LaserIncision" or "ManagedIncision" => Loc.GetString("surgery-incision-fail", ("limb", limbName)),
+            "Incision" => Loc.GetString("surgery-incision-fail", ("limb", limbName)),
+            "LaserIncision" => Loc.GetString("surgery-incision-laser-fail", ("limb", limbName)),
+            "ManagedIncision" => Loc.GetString("surgery-incision-managed-fail", ("limb", limbName)),
             "Clamp" => Loc.GetString("surgery-clamp-fail", ("limb", limbName)),
             "Retract" => Loc.GetString("surgery-retract-fail", ("limb", limbName)),
             "Cauterize" => Loc.GetString("surgery-cauterize-fail", ("limb", limbName)),
             "SawBone" => Loc.GetString("surgery-saw-fail", ("limb", limbName)),
             "BoneGlue" => Loc.GetString("surgery-boneglue-fail", ("limb", limbName)),
             "BoneSet" => Loc.GetString("surgery-boneset-fail", ("limb", limbName)),
-            "BoneFinish" => Loc.GetString("surgery-boneglue-fail", ("limb", limbName)),
+            "BoneFinish" => Loc.GetString("surgery-bonefinish-fail", ("limb", limbName)),
             "Amputate" => Loc.GetString("surgery-amputate-fail", ("limb", limbName)),
-            "OrganDetach" or "OrganRemove" or "OrganReplace" or "OrganAttach" or "OrganFix" => Loc.GetString("surgery-organ-fail", ("limb", limbName)),
+            "OrganDetach" => Loc.GetString("surgery-organ-detach-fail", ("limb", limbName)),
+            "OrganRemove" => Loc.GetString("surgery-organ-remove-fail", ("limb", limbName)),
+            "OrganReplace" => Loc.GetString("surgery-organ-replace-fail", ("limb", limbName)),
+            "OrganAttach" => Loc.GetString("surgery-organ-attach-fail", ("limb", limbName)),
+            "OrganFix" => Loc.GetString("surgery-organ-fix-fail", ("limb", limbName)),
             "RemoveEmbedded" => Loc.GetString("surgery-embedded-fail", ("limb", limbName)),
+            "CleanStump" => Loc.GetString("surgery-clean-stump-fail", ("limb", limbName)),
+            "TendonRepair" => Loc.GetString("surgery-tendon-repair-fail", ("limb", limbName)),
+            "MuscleRepair" => Loc.GetString("surgery-muscle-repair-fail", ("limb", limbName)),
+            "CloseReattachment" => Loc.GetString("surgery-close-reattachment-fail", ("limb", limbName)),
+            "MendFacial" => Loc.GetString("surgery-mend-facial-fail", ("limb", limbName)),
+            "RepairEye" => Loc.GetString("surgery-repair-eye-fail", ("limb", limbName)),
+            "RepairEar" => Loc.GetString("surgery-repair-ear-fail", ("limb", limbName)),
+            "ImplantItem" => Loc.GetString("surgery-implant-item-fail", ("limb", limbName)),
+            "RemoveImplanted" => Loc.GetString("surgery-remove-implant-fail", ("limb", limbName)),
+            "OpenHatch" => Loc.GetString("surgery-open-hatch-fail", ("limb", limbName)),
+            "CloseHatch" => Loc.GetString("surgery-close-hatch-fail", ("limb", limbName)),
+            "WeldBrute" => Loc.GetString("surgery-weld-brute-fail", ("limb", limbName)),
+            "ReplaceWires" => Loc.GetString("surgery-replace-wires-fail", ("limb", limbName)),
+            "DetachRobotic" => Loc.GetString("surgery-detach-robotic-fail", ("limb", limbName)),
+            "Autopsy" => Loc.GetString("surgery-autopsy-fail", ("limb", limbName)),
             _ => Loc.GetString("surgery-step-fail")
         };
     }
@@ -433,7 +508,6 @@ public sealed partial class SurgerySystem : EntitySystem
 
     private bool IsValidSurgeryTarget(EntityUid limb, ExternalOrganComponent ext, string action)
     {
-        // Block torso amputation
         if ((action == "BoneSaw" || action == "Amputate") && TryComp<OrganComponent>(limb, out var limbOrg)
             && limbOrg.Category == "Torso")
             return false;
@@ -467,13 +541,41 @@ public sealed partial class SurgerySystem : EntitySystem
             case "OrganFix":
             case "RemoveEmbedded":
                 return ext.SurgeryStage == SurgeryStage.Retracted || ext.SurgeryStage == SurgeryStage.Encased;
+            case "CleanStump":
+                return (ext.Status & OrganStatusFlags.CutAway) != 0;
+            case "TendonRepair":
+                return (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Incised;
+            case "MuscleRepair":
+                return (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Clamped;
+            case "CloseReattachment":
+                return (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Retracted;
+            case "MendFacial":
+                return ext.Disfigured && ext.SurgeryStage == SurgeryStage.Retracted;
+            case "RepairEye":
+            case "RepairEar":
+                return ext.SurgeryStage == SurgeryStage.Retracted;
+            case "ImplantItem":
+            case "RemoveImplanted":
+                return ext.SurgeryStage == SurgeryStage.Retracted || ext.SurgeryStage == SurgeryStage.Encased;
+            case "OpenHatch":
+                return (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.SurgeryStage == SurgeryStage.None;
+            case "CloseHatch":
+                return (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.SurgeryStage == SurgeryStage.Incised;
+            case "WeldBrute":
+                return (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.BruteDamage > 0 && ext.SurgeryStage == SurgeryStage.Incised;
+            case "ReplaceWires":
+                return (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.BurnDamage > 0 && ext.SurgeryStage == SurgeryStage.Incised;
+            case "DetachRobotic":
+                return (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.SurgeryStage == SurgeryStage.None;
+            case "Autopsy":
+                return true;
             default:
                 return (ext.Flags & LimbFlags.CanAmputate) != 0;
         }
     }
 
     public string? ExecuteStepAction(EntityUid tool, SurgeryToolComponent toolComp,
-        EntityUid limb, ExternalOrganComponent ext, EntityUid target)
+        EntityUid limb, ExternalOrganComponent ext, EntityUid target, EntityUid user = default)
     {
         var action = toolComp.Action;
 
@@ -568,6 +670,72 @@ public sealed partial class SurgerySystem : EntitySystem
             case "RemoveEmbedded":
                 return RemoveEmbeddedObject(limb);
 
+            case "CleanStump" when (ext.Status & OrganStatusFlags.CutAway) != 0:
+                ext.SurgeryStage = SurgeryStage.Incised;
+                Dirty(limb, ext);
+                return Loc.GetString("surgery-clean-stump-end");
+
+            case "TendonRepair" when (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Incised:
+                ext.Status &= ~OrganStatusFlags.TendonCut;
+                ext.SurgeryStage = SurgeryStage.Clamped;
+                Dirty(limb, ext);
+                return Loc.GetString("surgery-tendon-repair-end");
+
+            case "MuscleRepair" when (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Clamped:
+                ext.SurgeryStage = SurgeryStage.Retracted;
+                Dirty(limb, ext);
+                return Loc.GetString("surgery-muscle-repair-end");
+
+            case "CloseReattachment" when (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Retracted:
+                return ReattachLimb(limb, ext, target);
+
+            case "MendFacial" when ext.Disfigured && ext.SurgeryStage == SurgeryStage.Retracted:
+                ext.Disfigured = false;
+                Dirty(limb, ext);
+                return Loc.GetString("surgery-mend-facial-end");
+
+            case "RepairEye" when ext.SurgeryStage == SurgeryStage.Retracted:
+                return Loc.GetString("surgery-repair-eye-end");
+
+            case "RepairEar" when ext.SurgeryStage == SurgeryStage.Retracted:
+                return Loc.GetString("surgery-repair-ear-end");
+
+            case "ImplantItem" when ext.SurgeryStage == SurgeryStage.Retracted || ext.SurgeryStage == SurgeryStage.Encased:
+                return ImplantItem(limb, ext, tool, target, user);
+
+            case "RemoveImplanted" when ext.SurgeryStage == SurgeryStage.Retracted || ext.SurgeryStage == SurgeryStage.Encased:
+                return RemoveImplanted(limb, ext, target);
+
+            case "OpenHatch" when (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.SurgeryStage == SurgeryStage.None:
+                ext.SurgeryStage = SurgeryStage.Incised;
+                Dirty(limb, ext);
+                return Loc.GetString("surgery-open-hatch-end");
+
+            case "CloseHatch" when (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.SurgeryStage == SurgeryStage.Incised:
+                ext.SurgeryStage = SurgeryStage.None;
+                Dirty(limb, ext);
+                return Loc.GetString("surgery-close-hatch-end");
+
+            case "WeldBrute" when (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.BruteDamage > 0 && ext.SurgeryStage == SurgeryStage.Incised:
+                ext.BruteDamage = FixedPoint2.Zero;
+                Dirty(limb, ext);
+                return Loc.GetString("surgery-weld-brute-end");
+
+            case "ReplaceWires" when (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.BurnDamage > 0 && ext.SurgeryStage == SurgeryStage.Incised:
+                ext.BurnDamage = FixedPoint2.Zero;
+                Dirty(limb, ext);
+                return Loc.GetString("surgery-replace-wires-end");
+
+            case "DetachRobotic" when (ext.Status & OrganStatusFlags.Robotic) != 0 && ext.SurgeryStage == SurgeryStage.None:
+            {
+                var detachEv = new LimbAmputateEvent((limb, ext), DropLimbType.Edge);
+                RaiseLocalEvent(limb, ref detachEv);
+                return Loc.GetString("surgery-detach-robotic-end");
+            }
+
+            case "Autopsy":
+                return PerformAutopsy(limb, ext, target);
+
             default:
                 return Loc.GetString("surgery-step-not-valid", ("action", action));
         }
@@ -576,7 +744,7 @@ public sealed partial class SurgerySystem : EntitySystem
     // Legacy test API — forwards to ExecuteStepAction
     public string? ExecuteStep(EntityUid tool, SurgeryToolComponent toolComp, EntityUid limb, ExternalOrganComponent ext, BodyComponent? body = null, EntityUid bodyEnt = default)
     {
-        return ExecuteStepAction(tool, toolComp, limb, ext, bodyEnt != default ? bodyEnt : limb);
+        return ExecuteStepAction(tool, toolComp, limb, ext, bodyEnt != default ? bodyEnt : limb, default);
     }
 
     private static bool CanIncise(ExternalOrganComponent limb)
@@ -720,15 +888,138 @@ public sealed partial class SurgerySystem : EntitySystem
 
         return Loc.GetString("surgery-no-embedded");
     }
+
+    private string? ReattachLimb(EntityUid limb, ExternalOrganComponent ext, EntityUid target)
+    {
+        if (!TryComp<OrganComponent>(limb, out var limbOrg) || limbOrg.Category == null)
+            return Loc.GetString("surgery-step-not-valid", ("action", "CloseReattachment"));
+
+        var category = limbOrg.Category;
+        EntityUid? severedLimb = null;
+
+        // Check nearby entities on the ground
+        var coords = Transform(target).Coordinates;
+        foreach (var nearby in _lookup.GetEntitiesInRange(coords, 2.0f))
+        {
+            if (nearby == limb || TerminatingOrDeleted(nearby))
+                continue;
+
+            if (!TryComp<ExternalOrganComponent>(nearby, out var nearExt))
+                continue;
+
+            if (!TryComp<OrganComponent>(nearby, out var nearOrg))
+                continue;
+
+            if (nearOrg.Category != category)
+                continue;
+
+            if ((nearExt.Status & OrganStatusFlags.CutAway) == 0)
+                continue;
+
+            severedLimb = nearby;
+            break;
+        }
+
+        if (severedLimb == null)
+            return Loc.GetString("surgery-reattach-no-limb");
+
+        // Insert the severed limb back into the body
+        if (!TryComp<BodyComponent>(target, out var bodyComp) || bodyComp.Organs == null)
+            return Loc.GetString("surgery-no-woundable-limb");
+
+        _container.Insert(severedLimb.Value, bodyComp.Organs);
+
+        // Clear the stump state
+        ext.Status &= ~OrganStatusFlags.CutAway;
+        ext.Status &= ~OrganStatusFlags.ArteryCut;
+        ext.Status &= ~OrganStatusFlags.TendonCut;
+        ext.Status &= ~OrganStatusFlags.Bleeding;
+        ext.SurgeryStage = SurgeryStage.None;
+        Dirty(limb, ext);
+
+        return Loc.GetString("surgery-close-reattachment-end");
+    }
+
+    private string? ImplantItem(EntityUid limb, ExternalOrganComponent ext, EntityUid tool, EntityUid target, EntityUid user)
+    {
+        if (!TryComp<BodyComponent>(target, out var bodyComp) || bodyComp.Organs == null)
+            return Loc.GetString("surgery-no-woundable-limb");
+
+        EntityUid? heldItem = null;
+        if (TryComp<HandsComponent>(user, out var hands))
+        {
+            foreach (var held in _handsSystem.EnumerateHeld((user, hands)))
+            {
+                if (held != tool)
+                {
+                    heldItem = held;
+                    break;
+                }
+            }
+        }
+
+        if (heldItem == null || !HasComp<ItemComponent>(heldItem.Value))
+            return Loc.GetString("surgery-implant-no-item");
+
+        _container.Insert(heldItem.Value, bodyComp.Organs);
+        return Loc.GetString("surgery-implant-item-end");
+    }
+
+    private string? RemoveImplanted(EntityUid limb, ExternalOrganComponent ext, EntityUid target)
+    {
+        if (!TryComp<BodyComponent>(target, out var bodyComp) || bodyComp.Organs == null)
+            return Loc.GetString("surgery-no-woundable-limb");
+
+        foreach (var organ in bodyComp.Organs.ContainedEntities)
+        {
+            if (TryComp<ItemComponent>(organ, out _))
+            {
+                _container.Remove(organ, bodyComp.Organs);
+                var dropCoords = Transform(target).Coordinates;
+                Transform(organ).Coordinates = dropCoords;
+                return Loc.GetString("surgery-remove-implant-end");
+            }
+        }
+
+        return Loc.GetString("surgery-remove-implant-none");
+    }
+
+    private string? PerformAutopsy(EntityUid limb, ExternalOrganComponent ext, EntityUid target)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Autopsy findings for " + Name(target) + ":");
+
+        if (TryComp<MobStateComponent>(target, out var mobState))
+            sb.AppendLine("State: " + mobState.CurrentState);
+
+        sb.AppendLine("Limb: " + Name(limb));
+        sb.AppendLine("Brute damage: " + ext.BruteDamage);
+        sb.AppendLine("Burn damage: " + ext.BurnDamage);
+        sb.AppendLine("Flags: " + ext.Status);
+
+        if (TryComp<DamageableComponent>(target, out var dmgComp))
+        {
+            var dmgPerGroup = _damageable.GetDamagePerGroup((target, dmgComp));
+            foreach (var (group, dmg) in dmgPerGroup)
+            {
+                if (dmg > 0)
+                    sb.AppendLine(group + ": " + dmg);
+            }
+        }
+
+        _chat.SendAdminAlert(target, sb.ToString());
+        return Loc.GetString("surgery-autopsy-end");
+    }
 }
 
+[Serializable, NetSerializable]
 public sealed partial class SurgeryStepDoAfterEvent : DoAfterEvent
 {
     [DataField]
-    public EntityUid User;
+    public NetEntity User;
 
     [DataField]
-    public EntityUid Tool;
+    public NetEntity Tool;
 
     [DataField]
     public ProtoId<SurgeryStepPrototype> StepId;
@@ -737,7 +1028,7 @@ public sealed partial class SurgeryStepDoAfterEvent : DoAfterEvent
     public float SuccessChance;
 
     [DataField]
-    public EntityUid Limb;
+    public NetEntity Limb;
 
     public override DoAfterEvent Clone() => this;
 }

@@ -53,6 +53,9 @@
     steps:
     - Incision
     - Retract
+    - CleanStump
+    - MendFacial
+    - Autopsy
     quality: 0.75
     sterile: false
     stepDuration: 4.0

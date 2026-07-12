@@ -112,7 +112,19 @@ public sealed partial class ExternalOrganSystem : EntitySystem
     }
 
     /// <summary>
+    /// Maps a limb category to its dependent limb (e.g., ArmLeft -> HandLeft, LegLeft -> FootLeft).
+    /// </summary>
+    private static readonly Dictionary<string, string> LimbDependents = new()
+    {
+        { "ArmLeft", "HandLeft" },
+        { "ArmRight", "HandRight" },
+        { "LegLeft", "FootLeft" },
+        { "LegRight", "FootRight" },
+    };
+
+    /// <summary>
     /// Dismember (remove) a limb from its body.
+    /// Also removes dependent limbs (arm → hand, leg → foot).
     /// </summary>
     public void DropLimb(Entity<ExternalOrganComponent> ent, DropLimbType type = DropLimbType.Edge)
     {
@@ -121,6 +133,12 @@ public sealed partial class ExternalOrganSystem : EntitySystem
 
         if (!TryComp<OrganComponent>(ent, out var organ) || organ.Body is not { } body)
             return;
+
+        // Remove dependent limb (hand when arm drops, foot when leg drops)
+        if (organ.Category != null && LimbDependents.TryGetValue(organ.Category, out var dependentCategory))
+        {
+            DropChildLimb(body, dependentCategory, type);
+        }
 
         if (TryComp<ContainerManagerComponent>(body, out var containers))
         {
@@ -138,6 +156,46 @@ public sealed partial class ExternalOrganSystem : EntitySystem
 
         var ev = new LimbDismemberedEvent(body, ent, type);
         RaiseLocalEvent(body, ref ev);
+    }
+
+    /// <summary>
+    /// Find and remove a child limb (hand/foot) that depends on a parent limb (arm/leg).
+    /// </summary>
+    private void DropChildLimb(EntityUid body, string category, DropLimbType type)
+    {
+        if (!TryComp<BodyComponent>(body, out var bodyComp) || bodyComp.Organs == null)
+            return;
+
+        if (!TryComp<ContainerManagerComponent>(body, out var containers))
+            return;
+
+        if (!_container.TryGetContainer(body, BodyComponent.ContainerID, out var container, containers))
+            return;
+
+        foreach (var childOrgan in container.ContainedEntities)
+        {
+            if (TerminatingOrDeleted(childOrgan))
+                continue;
+
+            if (!TryComp<ExternalOrganComponent>(childOrgan, out var childExt))
+                continue;
+
+            if (!TryComp<OrganComponent>(childOrgan, out var childOrg))
+                continue;
+
+            if (childOrg.Category != category)
+                continue;
+
+            _container.Remove(childOrgan, container, force: true);
+            var dropCoords = Transform(body).Coordinates;
+            _transform.SetCoordinates(childOrgan, dropCoords);
+            childExt.Status |= OrganStatusFlags.CutAway;
+            Dirty(childOrgan, childExt);
+
+            var ev = new LimbDismemberedEvent(body, (childOrgan, childExt), type);
+            RaiseLocalEvent(body, ref ev);
+            return;
+        }
     }
 
     /// <summary>

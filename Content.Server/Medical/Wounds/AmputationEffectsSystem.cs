@@ -27,21 +27,24 @@ public sealed partial class AmputationEffectsSystem : EntitySystem
         if (TerminatingOrDeleted(args.Limb) || !TryComp<ExternalOrganComponent>(args.Limb, out var ext))
             return;
 
+        // Leg amputation: crawl or slow
         if ((ext.Flags & LimbFlags.CanStand) != 0)
         {
             var legsRemaining = CountStandingLimbs(ent);
             if (legsRemaining == 0)
             {
-                _stun.TryAddParalyzeDuration(ent, TimeSpan.FromSeconds(4));
+                // Permanent crawling state — ensure they can crawl and never auto-stand
+                EnsureComp<CrawlerComponent>(ent);
+                _stun.TryKnockdown((ent, null), TimeSpan.FromHours(1), autoStand: false);
                 _popup.PopupEntity(Loc.GetString("amputation-no-legs"), ent, ent);
             }
             else if (legsRemaining == 1)
             {
-                _stun.TryAddParalyzeDuration(ent, TimeSpan.FromSeconds(1));
                 _popup.PopupEntity(Loc.GetString("amputation-one-leg"), ent, ent);
             }
         }
 
+        // Arm/hand amputation: drop held items
         if ((ext.Flags & LimbFlags.CanGrasp) != 0)
         {
             _popup.PopupEntity(Loc.GetString("amputation-no-grasp", ("limb", Name(args.Limb))), ent, ent);
@@ -52,7 +55,7 @@ public sealed partial class AmputationEffectsSystem : EntitySystem
 
     private void OnRefreshMovespeed(Entity<BodyComponent> ent, ref RefreshMovementSpeedModifiersEvent args)
     {
-        if (ent.Comp.Organs == null)
+        if (ent.Comp.Organs == null || ent.Comp.Organs.ContainedEntities.Count == 0)
             return;
 
         var standCount = CountStandingLimbs(ent);
