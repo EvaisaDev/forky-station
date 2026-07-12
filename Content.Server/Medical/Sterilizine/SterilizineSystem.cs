@@ -50,6 +50,7 @@ public sealed partial class SterilizineSystem : EntitySystem
 
                 var newLevel = Math.Max(0, germInstance.GetFloat("germLevel") - 10);
                 germInstance.SetFloat("germLevel", newLevel);
+                germInstance.SetFloat("disinfected", 1);
                 Dirty(woundUid, effects);
                 cleaned++;
             }

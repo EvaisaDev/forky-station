@@ -40,10 +40,17 @@ public sealed partial class InfectionSystem : EntitySystem
             if (germInstance == null)
                 continue;
 
+            // Baystation: disinfected wounds are immune to infection
+            var disinfected = germInstance.GetFloat("disinfected") > 0;
+            if (disinfected)
+                continue;
+
             var tended = effects.GetEffect("Tendable", _prototype) is { } tend
                 && tend.GetFloat("tended") > 0;
+            var salved = effects.GetEffect("Salvable", _prototype) is { } salve
+                && salve.GetFloat("salved") > 0;
 
-            if (!tended)
+            if (!tended && !salved)
             {
                 germInstance.SetFloat("germLevel", germInstance.GetFloat("germLevel") + 1);
             }

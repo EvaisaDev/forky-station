@@ -2,67 +2,77 @@
 # Each effect defines a behavior type and its default config values.
 # Wound entities reference these by ID in their WoundEffects component.
 
-# --- Bleeding effects (baseBleedAmount) ---
+# --- Bleeding effects (baseBleedAmount, bleedTimer: ticks until natural stop) ---
 
 - type: woundEffect
   id: BleedingTiny
   effectType: Bleeding
   config:
     baseBleedAmount: 0.5
+    bleedTimer: 30
 
 - type: woundEffect
   id: BleedingSmall
   effectType: Bleeding
   config:
     baseBleedAmount: 1.0
+    bleedTimer: 45
 
 - type: woundEffect
   id: BleedingLight
   effectType: Bleeding
   config:
     baseBleedAmount: 1.5
+    bleedTimer: 60
 
 - type: woundEffect
   id: BleedingModerate
   effectType: Bleeding
   config:
     baseBleedAmount: 2.0
+    bleedTimer: 75
 
 - type: woundEffect
   id: BleedingFair
   effectType: Bleeding
   config:
     baseBleedAmount: 2.5
+    bleedTimer: 90
 
 - type: woundEffect
   id: BleedingLarge
   effectType: Bleeding
   config:
     baseBleedAmount: 3.0
+    bleedTimer: 105
 
 - type: woundEffect
   id: BleedingHeavy
   effectType: Bleeding
   config:
     baseBleedAmount: 4.0
+    bleedTimer: 120
 
 - type: woundEffect
   id: BleedingSevere
   effectType: Bleeding
   config:
     baseBleedAmount: 5.0
+    bleedTimer: 150
 
 - type: woundEffect
   id: BleedingCritical
   effectType: Bleeding
   config:
     baseBleedAmount: 6.0
+    bleedTimer: 180
 
 - type: woundEffect
   id: BleedingMassive
   effectType: Bleeding
   config:
     baseBleedAmount: 8.0
+    bleedTimer: 240
 
 # --- Pain effects (painAmount, freshPainAmount) ---
 
@@ -185,75 +195,86 @@
     painAmount: 1.0
     freshPainAmount: 2.0
 
-# --- Healable effects (healPerTick) ---
+# --- Healable effects (healPerTick, autohealCutoff: max damage that can heal without treatment) ---
 
 - type: woundEffect
   id: HealableVeryFast
   effectType: Healable
   config:
     healPerTick: 0.15
+    autohealCutoff: 5
 
 - type: woundEffect
   id: HealableFast
   effectType: Healable
   config:
     healPerTick: 0.1
+    autohealCutoff: 10
 
 - type: woundEffect
   id: HealableMedium
   effectType: Healable
   config:
     healPerTick: 0.08
+    autohealCutoff: 15
 
 - type: woundEffect
   id: HealableModerate
   effectType: Healable
   config:
     healPerTick: 0.06
+    autohealCutoff: 20
 
 - type: woundEffect
   id: HealableSlow
   effectType: Healable
   config:
     healPerTick: 0.05
+    autohealCutoff: 25
 
 - type: woundEffect
   id: HealableVerySlow
   effectType: Healable
   config:
     healPerTick: 0.04
+    autohealCutoff: 30
 
 - type: woundEffect
   id: HealableExtremelySlow
   effectType: Healable
   config:
     healPerTick: 0.03
+    autohealCutoff: 50
 
 - type: woundEffect
   id: HealableGlacial
   effectType: Healable
   config:
     healPerTick: 0.02
+    autohealCutoff: 60
 
 - type: woundEffect
   id: HealableMolasses
   effectType: Healable
   config:
     healPerTick: 0.015
+    autohealCutoff: 80
 
 - type: woundEffect
   id: HealableGlacialest
   effectType: Healable
   config:
     healPerTick: 0.01
+    autohealCutoff: 100
 
 - type: woundEffect
   id: HealableNone
   effectType: Healable
   config:
     healPerTick: 0
+    autohealCutoff: 0
 
-# --- Marker effects (no config, runtime state only) ---
+# --- Marker effects ---
 
 - type: woundEffect
   id: Tendable
@@ -263,6 +284,11 @@
 - type: woundEffect
   id: Clampable
   effectType: Clampable
+  config: {}
+
+- type: woundEffect
+  id: Salvable
+  effectType: Salvable
   config: {}
 
 - type: woundEffect

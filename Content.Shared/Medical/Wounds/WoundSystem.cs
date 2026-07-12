@@ -271,6 +271,8 @@ public sealed partial class WoundSystem : EntitySystem
                 case "Bleeding":
                     var baseAmount = instance.GetConfigFloat("baseBleedAmount", _prototype);
                     instance.SetFloat("currentBleedAmount", baseAmount);
+                    var bleedTimer = instance.GetConfigFloat("bleedTimer", _prototype);
+                    instance.SetFloat("bleedTimer", bleedTimer);
                     break;
             }
         }
@@ -309,6 +311,15 @@ public sealed partial class WoundSystem : EntitySystem
 
         var bleedInstance = effects.GetEffect("Bleeding", _prototype);
         if (bleedInstance == null)
+            return;
+
+        // Baystation: bruises only bleed at moderate+ severity (damage >= 20)
+        if (ent.Comp.Group == "Brute" && ent.Comp.Damage.GetTotal() < 20)
+            return;
+
+        // Baystation: bleed timer — wound stops bleeding naturally when timer expires
+        var bleedTimer = bleedInstance.GetFloatOrConfig("bleedTimer", _prototype);
+        if (bleedTimer <= 0)
             return;
 
         var bleedAmount = bleedInstance.GetFloatOrConfig("currentBleedAmount", _prototype);
@@ -370,16 +381,22 @@ public sealed partial class WoundSystem : EntitySystem
     private void AddDamageToWoundGroup(Entity<WoundableComponent> limb, EntityUid bodyUid,
         DamageSpecifier damage, FixedPoint2 groupTotal, string groupName)
     {
+        // Baystation: first try to worsen existing wounds (widen them) before filling space
+        if (TryWorsenExistingWounds(limb, damage, ref groupTotal, groupName))
+            return;
+
+        // Fill remaining capacity in existing wounds
         foreach (var woundUid in limb.Comp.Wounds)
         {
-            if (!TryComp<WoundComponent>(woundUid, out var wound) || TerminatingOrDeleted(woundUid))
+            if (TerminatingOrDeleted(woundUid))
+                continue;
+            if (!TryComp<WoundComponent>(woundUid, out var wound))
+                continue;
+            if (!IsCorrectWoundGroup(woundUid, groupName))
                 continue;
 
             var space = wound.MaximumDamage - wound.Damage.GetTotal();
             if (space <= 0)
-                continue;
-
-            if (!IsCorrectWoundGroup(woundUid, groupName))
                 continue;
 
             var toAdd = FixedPoint2.Min(groupTotal, space);
@@ -405,6 +422,48 @@ public sealed partial class WoundSystem : EntitySystem
         }
 
         SpawnNewWound(limb, damage, groupTotal, groupName);
+    }
+
+    /// <summary>
+    /// Baystation: try to worsen an existing compatible wound instead of creating a new one.
+    /// A wound can be worsened if it's the same damage type and the combined damage
+    /// doesn't exceed 1.5x the first stage's damage threshold.
+    /// Merged wounds (amount > 1) cannot be worsened.
+    /// </summary>
+    private bool TryWorsenExistingWounds(Entity<WoundableComponent> limb, DamageSpecifier damage,
+        ref FixedPoint2 groupTotal, string groupName)
+    {
+        foreach (var woundUid in limb.Comp.Wounds)
+        {
+            if (TerminatingOrDeleted(woundUid))
+                continue;
+            if (!TryComp<WoundComponent>(woundUid, out var wound))
+                continue;
+            if (!IsCorrectWoundGroup(woundUid, groupName))
+                continue;
+
+            // Baystation: merged wounds (multiple wounds of same type stacked) can't be worsened
+            if (wound.Damage.GetTotal() > wound.MaximumDamage * 0.8f)
+                continue;
+
+            // Check if the wound can absorb more damage (1.5x first stage threshold)
+            // For our system, use 1.5x maximumDamage as the cap
+            var maxWorsenDmg = wound.MaximumDamage.Float() * 1.5f;
+            var currentDmg = wound.Damage.GetTotal().Float();
+            if (currentDmg + groupTotal.Float() > maxWorsenDmg)
+                continue;
+
+            // Worsen: add the damage directly to this wound
+            TransferDamage(wound, damage, groupTotal, groupTotal);
+            Dirty(woundUid, wound);
+            var refresh = new RefreshWoundsEvent();
+            RaiseLocalEvent(woundUid, ref refresh);
+            groupTotal = FixedPoint2.Zero;
+            MergeCompatibleWounds(limb);
+            return true;
+        }
+
+        return false;
     }
 
     private bool IsCapacityReached(Entity<WoundableComponent> limb, EntityUid bodyUid, string groupName)

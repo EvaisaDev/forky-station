@@ -45,17 +45,31 @@ public sealed partial class WoundRegenerationSystem : EntitySystem
             if (healPerTick <= 0)
                 continue;
 
-            // Tended wounds heal faster
-            var tended = effects.GetEffect("Tendable", _prototype) is { } tend
-                && tend.GetFloat("tended") > 0;
-            var healRate = healPerTick * (tended ? 2 : 1);
-
             var totalDamage = wound.Damage.GetTotal();
             if (totalDamage <= 0)
             {
                 RemoveWound(uid, wound);
                 continue;
             }
+
+            // Baystation-style autoheal cutoff: wounds above this damage don't heal unless treated
+            var autohealCutoff = healable.GetFloatOrConfig("autohealCutoff", _prototype);
+            var currentDmg = (float)totalDamage.Float();
+            if (autohealCutoff > 0 && currentDmg > autohealCutoff)
+            {
+                // Check if the wound is treated (tended for cuts/pierce, salved for burns)
+                var treated = effects.GetEffect("Tendable", _prototype) is { } tend
+                    && tend.GetFloat("tended") > 0;
+                if (!treated && effects.GetEffect("Salvable", _prototype) is { } salveEff)
+                    treated = salveEff.GetFloat("salved") > 0;
+                if (!treated)
+                    continue;
+            }
+
+            // Tended wounds heal twice as fast
+            var tended = effects.GetEffect("Tendable", _prototype) is { } tendEff
+                && tendEff.GetFloat("tended") > 0;
+            var healRate = healPerTick * (tended ? 2 : 1);
 
             var raw = (float)totalDamage.Float();
             foreach (var (type, value) in wound.Damage.DamageDict)
@@ -64,6 +78,20 @@ public sealed partial class WoundRegenerationSystem : EntitySystem
                 {
                     var reduction = FixedPoint2.New((float)value.Float() * (healRate / raw));
                     wound.Damage.DamageDict[type] = value - reduction;
+                }
+            }
+
+            // Decrement bleed timer (Baystation: wounds naturally stop bleeding over time)
+            var bleedInstance = effects.GetEffect("Bleeding", _prototype);
+            if (bleedInstance != null)
+            {
+                var bleedTimer = bleedInstance.GetFloat("bleedTimer");
+                if (bleedTimer > 0)
+                {
+                    bleedTimer -= 1;
+                    if (bleedTimer < 0)
+                        bleedTimer = 0;
+                    bleedInstance.SetFloat("bleedTimer", bleedTimer);
                 }
             }
 

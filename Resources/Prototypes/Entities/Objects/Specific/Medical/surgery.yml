@@ -33,6 +33,7 @@
   - type: SurgeryTool
     action: Cauterize
     steps:
+    - CloseReattachment
     - Cauterize
     - MendFacial
     - CleanStump
@@ -203,6 +204,7 @@
     - Clamp
     - RemoveEmbedded
     - TendonRepair
+    - MuscleRepair
     - RemoveImplanted
     - RepairEye
     - RepairEar

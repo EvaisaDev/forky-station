@@ -55,7 +55,7 @@ public sealed partial class SurgerySystem : EntitySystem
     }
 
     public EntityUid? LastSurgeryTarget;
-    public GameTick LastSurgeryTick;
+    public TimeSpan LastSurgeryTime;
 
     private void OnToolAfterInteract(Entity<SurgeryToolComponent> ent, ref AfterInteractEvent args)
     {
@@ -67,12 +67,12 @@ public sealed partial class SurgerySystem : EntitySystem
         if (!args.CanReach || args.Target == null)
             return;
 
-        // Prevent duplicate processing within the same tick (event fires per-organ)
-        var curTick = _timing.CurTick;
-        if (args.Target.Value == LastSurgeryTarget && curTick == LastSurgeryTick)
+        // Prevent duplicate processing within 500ms (event fires per-organ across ticks)
+        var curTime = _timing.CurTime;
+        if (args.Target.Value == LastSurgeryTarget && curTime - LastSurgeryTime < TimeSpan.FromSeconds(0.5))
             return;
         LastSurgeryTarget = args.Target.Value;
-        LastSurgeryTick = curTick;
+        LastSurgeryTime = curTime;
 
         var target = args.Target.Value;
         var (tool, toolComp) = ent;
@@ -89,7 +89,6 @@ public sealed partial class SurgerySystem : EntitySystem
             return;
         }
 
-        // Find step prototype — use Steps list if available, else fall back to action match
         var stepProto = FindBestStep(toolComp, foundLimb.Value, foundExt!);
         if (stepProto != null)
         {
@@ -132,8 +131,12 @@ public sealed partial class SurgerySystem : EntitySystem
             }
         }
 
-        // Fallback: match by action string
-        return FindStepByAction(toolComp.Action);
+        // Fallback: match by action string (only if valid for current limb)
+        var fallback = FindStepByAction(toolComp.Action);
+        if (fallback != null && IsValidSurgeryTarget(limb, ext, fallback.Action))
+            return fallback;
+
+        return null;
     }
 
     private bool AssessBodyPart(SurgeryStepPrototype step, ExternalOrganComponent ext)
@@ -356,7 +359,7 @@ public sealed partial class SurgerySystem : EntitySystem
         EntityUid limb, ExternalOrganComponent ext, EntityUid target,
         SurgeryStepPrototype stepProto)
     {
-        var result = ExecuteStepAction(tool, toolComp, limb, ext, target, user);
+        var result = ExecuteStepAction(tool, toolComp, limb, ext, target, user, stepProto.Action);
         if (result != null)
             _popup.PopupEntity(result, user, user);
     }
@@ -481,6 +484,8 @@ public sealed partial class SurgerySystem : EntitySystem
 
         EntityUid? fallback = null;
         ExternalOrganComponent? fallbackExt = null;
+        EntityUid? stumpLimb = null;
+        ExternalOrganComponent? stumpExt = null;
 
         foreach (var organ in body.Organs.ContainedEntities)
         {
@@ -496,12 +501,22 @@ public sealed partial class SurgerySystem : EntitySystem
             if (organComp.Category == targetZone)
                 return (organ, external);
 
-            if (fallback == null && organComp.Category == "Torso")
+            // Track stumps (CutAway limbs with no category) for reattachment targeting
+            if ((external.Status & OrganStatusFlags.CutAway) != 0)
+            {
+                stumpLimb = organ;
+                stumpExt = external;
+            }
+            else if (fallback == null && organComp.Category == "Torso")
             {
                 fallback = organ;
                 fallbackExt = external;
             }
         }
+
+        // Prefer stumps over torso fallback
+        if (stumpLimb != null)
+            return (stumpLimb, stumpExt);
 
         return (fallback, fallbackExt);
     }
@@ -517,11 +532,11 @@ public sealed partial class SurgerySystem : EntitySystem
             case "Incision":
                 return ext.SurgeryStage == SurgeryStage.None && (ext.Status & OrganStatusFlags.CutAway) == 0;
             case "Clamp":
-                return ext.SurgeryStage == SurgeryStage.Incised;
+                return ext.SurgeryStage == SurgeryStage.Incised && (ext.Status & OrganStatusFlags.CutAway) == 0;
             case "Retract":
-                return ext.SurgeryStage == SurgeryStage.Clamped;
+                return ext.SurgeryStage == SurgeryStage.Clamped && (ext.Status & OrganStatusFlags.CutAway) == 0;
             case "Cauterize":
-                return ext.SurgeryStage != SurgeryStage.None;
+                return ext.SurgeryStage != SurgeryStage.None && (ext.Status & OrganStatusFlags.CutAway) == 0;
             case "BoneSaw":
                 return CanAmputate(ext) || ext.SurgeryStage == SurgeryStage.Retracted;
             case "SawBone":
@@ -542,13 +557,13 @@ public sealed partial class SurgerySystem : EntitySystem
             case "RemoveEmbedded":
                 return ext.SurgeryStage == SurgeryStage.Retracted || ext.SurgeryStage == SurgeryStage.Encased;
             case "CleanStump":
-                return (ext.Status & OrganStatusFlags.CutAway) != 0;
+                return (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.None;
             case "TendonRepair":
                 return (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Incised;
             case "MuscleRepair":
                 return (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Clamped;
             case "CloseReattachment":
-                return (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Retracted;
+                return (ext.Status & OrganStatusFlags.CutAway) != 0;
             case "MendFacial":
                 return ext.Disfigured && ext.SurgeryStage == SurgeryStage.Retracted;
             case "RepairEye":
@@ -575,9 +590,10 @@ public sealed partial class SurgerySystem : EntitySystem
     }
 
     public string? ExecuteStepAction(EntityUid tool, SurgeryToolComponent toolComp,
-        EntityUid limb, ExternalOrganComponent ext, EntityUid target, EntityUid user = default)
+        EntityUid limb, ExternalOrganComponent ext, EntityUid target, EntityUid user = default,
+        string? overrideAction = null)
     {
-        var action = toolComp.Action;
+        var action = overrideAction ?? toolComp.Action;
 
         switch (action)
         {
@@ -596,17 +612,17 @@ public sealed partial class SurgerySystem : EntitySystem
                 Dirty(limb, ext);
                 return Loc.GetString("surgery-incision-managed-end");
 
-            case "Clamp" when ext.SurgeryStage == SurgeryStage.Incised:
+            case "Clamp" when ext.SurgeryStage == SurgeryStage.Incised && (ext.Status & OrganStatusFlags.CutAway) == 0:
                 ext.SurgeryStage = SurgeryStage.Clamped;
                 Dirty(limb, ext);
                 return Loc.GetString("surgery-clamp-end");
 
-            case "Retract" when ext.SurgeryStage == SurgeryStage.Clamped:
+            case "Retract" when ext.SurgeryStage == SurgeryStage.Clamped && (ext.Status & OrganStatusFlags.CutAway) == 0:
                 ext.SurgeryStage = SurgeryStage.Retracted;
                 Dirty(limb, ext);
                 return Loc.GetString("surgery-retract-end");
 
-            case "Cauterize":
+            case "Cauterize" when (ext.Status & OrganStatusFlags.CutAway) == 0:
                 ext.SurgeryStage = SurgeryStage.None;
                 Dirty(limb, ext);
                 return Loc.GetString("surgery-cauterize-end");
@@ -617,7 +633,8 @@ public sealed partial class SurgerySystem : EntitySystem
                 return Loc.GetString("surgery-saw-end", ("bone", ext.Encased));
 
             // Legacy BoneSaw support — test tools still use this action
-            case "BoneSaw" when CanAmputate(ext) && ext.SurgeryStage == SurgeryStage.None:
+            case "BoneSaw" when CanAmputate(ext) && ext.SurgeryStage == SurgeryStage.None
+                && TryComp<OrganComponent>(limb, out var bsOrg) && bsOrg.Category != "Torso":
             {
                 var sawEv = new LimbAmputateEvent((limb, ext), DropLimbType.Edge);
                 RaiseLocalEvent(limb, ref sawEv);
@@ -647,7 +664,7 @@ public sealed partial class SurgerySystem : EntitySystem
                 Dirty(limb, ext);
                 return Loc.GetString("surgery-bonefinish-end");
 
-            case "Amputate":
+            case "Amputate" when TryComp<OrganComponent>(limb, out var ampOrg) && ampOrg.Category != "Torso":
                 var amputateEv = new LimbAmputateEvent((limb, ext), DropLimbType.Edge);
                 RaiseLocalEvent(limb, ref amputateEv);
                 return Loc.GetString("surgery-amputate-end");
@@ -670,7 +687,7 @@ public sealed partial class SurgerySystem : EntitySystem
             case "RemoveEmbedded":
                 return RemoveEmbeddedObject(limb);
 
-            case "CleanStump" when (ext.Status & OrganStatusFlags.CutAway) != 0:
+            case "CleanStump" when (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.None:
                 ext.SurgeryStage = SurgeryStage.Incised;
                 Dirty(limb, ext);
                 return Loc.GetString("surgery-clean-stump-end");
@@ -686,7 +703,7 @@ public sealed partial class SurgerySystem : EntitySystem
                 Dirty(limb, ext);
                 return Loc.GetString("surgery-muscle-repair-end");
 
-            case "CloseReattachment" when (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.Retracted:
+            case "CloseReattachment" when (ext.Status & OrganStatusFlags.CutAway) != 0:
                 return ReattachLimb(limb, ext, target);
 
             case "MendFacial" when ext.Disfigured && ext.SurgeryStage == SurgeryStage.Retracted:
@@ -891,13 +908,9 @@ public sealed partial class SurgerySystem : EntitySystem
 
     private string? ReattachLimb(EntityUid limb, ExternalOrganComponent ext, EntityUid target)
     {
-        if (!TryComp<OrganComponent>(limb, out var limbOrg) || limbOrg.Category == null)
-            return Loc.GetString("surgery-step-not-valid", ("action", "CloseReattachment"));
-
-        var category = limbOrg.Category;
         EntityUid? severedLimb = null;
 
-        // Check nearby entities on the ground
+        // Find any severed limb nearby (stump has no category, so we match by CutAway)
         var coords = Transform(target).Coordinates;
         foreach (var nearby in _lookup.GetEntitiesInRange(coords, 2.0f))
         {
@@ -907,10 +920,7 @@ public sealed partial class SurgerySystem : EntitySystem
             if (!TryComp<ExternalOrganComponent>(nearby, out var nearExt))
                 continue;
 
-            if (!TryComp<OrganComponent>(nearby, out var nearOrg))
-                continue;
-
-            if (nearOrg.Category != category)
+            if (!TryComp<OrganComponent>(nearby, out _))
                 continue;
 
             if ((nearExt.Status & OrganStatusFlags.CutAway) == 0)
@@ -929,13 +939,9 @@ public sealed partial class SurgerySystem : EntitySystem
 
         _container.Insert(severedLimb.Value, bodyComp.Organs);
 
-        // Clear the stump state
-        ext.Status &= ~OrganStatusFlags.CutAway;
-        ext.Status &= ~OrganStatusFlags.ArteryCut;
-        ext.Status &= ~OrganStatusFlags.TendonCut;
-        ext.Status &= ~OrganStatusFlags.Bleeding;
-        ext.SurgeryStage = SurgeryStage.None;
-        Dirty(limb, ext);
+        // Remove the stump from the body (it's no longer needed)
+        _container.Remove(limb, bodyComp.Organs);
+        QueueDel(limb);
 
         return Loc.GetString("surgery-close-reattachment-end");
     }

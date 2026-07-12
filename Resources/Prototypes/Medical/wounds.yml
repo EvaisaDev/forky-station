@@ -163,6 +163,7 @@
     - id: HealableFast
     - id: PainUncomfortable
     - id: GermTracking
+    - id: Salvable
 
 - type: entity
   parent: WoundBase
@@ -181,6 +182,7 @@
     - id: HealableMedium
     - id: PainBothersome
     - id: GermTracking
+    - id: Salvable
 
 - type: entity
   parent: WoundBase
@@ -199,6 +201,7 @@
     - id: HealableSlow
     - id: PainPainful
     - id: GermTracking
+    - id: Salvable
 
 - type: entity
   parent: WoundBase
@@ -217,6 +220,7 @@
     - id: HealableExtremelySlow
     - id: PainAgonizing
     - id: GermTracking
+    - id: Salvable
 
 - type: entity
   parent: WoundBase
@@ -235,6 +239,7 @@
     - id: HealableGlacial
     - id: PainUnbearable
     - id: GermTracking
+    - id: Salvable
 
 - type: entity
   parent: WoundBase
@@ -253,6 +258,7 @@
     - id: HealableGlacialest
     - id: PainMortal
     - id: GermTracking
+    - id: Salvable
 
 # --- Cut wounds ---
 

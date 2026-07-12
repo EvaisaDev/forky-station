@@ -125,6 +125,7 @@ public sealed partial class ExternalOrganSystem : EntitySystem
     /// <summary>
     /// Dismember (remove) a limb from its body.
     /// Also removes dependent limbs (arm → hand, leg → foot).
+    /// Spawns a stump in the body for reattachment surgery.
     /// </summary>
     public void DropLimb(Entity<ExternalOrganComponent> ent, DropLimbType type = DropLimbType.Edge)
     {
@@ -134,8 +135,10 @@ public sealed partial class ExternalOrganSystem : EntitySystem
         if (!TryComp<OrganComponent>(ent, out var organ) || organ.Body is not { } body)
             return;
 
+        var category = organ.Category;
+
         // Remove dependent limb (hand when arm drops, foot when leg drops)
-        if (organ.Category != null && LimbDependents.TryGetValue(organ.Category, out var dependentCategory))
+        if (category != null && LimbDependents.TryGetValue(category, out var dependentCategory))
         {
             DropChildLimb(body, dependentCategory, type);
         }
@@ -154,8 +157,40 @@ public sealed partial class ExternalOrganSystem : EntitySystem
         ent.Comp.Status |= OrganStatusFlags.CutAway;
         Dirty(ent);
 
+        // Spawn a stump in the body so reattachment surgery can target it
+        if (category != null)
+        {
+            SpawnStump(body, category);
+        }
+
         var ev = new LimbDismemberedEvent(body, ent, type);
         RaiseLocalEvent(body, ref ev);
+    }
+
+    /// <summary>
+    /// Spawns a stump organ in the body container at the given category slot.
+    /// The stump has CutAway set so reattachment surgery can find and operate on it.
+    /// </summary>
+    private void SpawnStump(EntityUid body, string category)
+    {
+        if (!TryComp<ContainerManagerComponent>(body, out var containers))
+            return;
+
+        if (!_container.TryGetContainer(body, BodyComponent.ContainerID, out var container, containers))
+            return;
+
+        // Spawn the stump entity and set it up via EntityManager
+        var stump = Spawn("OrganStump", Transform(body).Coordinates);
+
+        // Set CutAway on the stump's external organ
+        if (TryComp<ExternalOrganComponent>(stump, out var stumpExt))
+        {
+            stumpExt.Status |= OrganStatusFlags.CutAway;
+            Dirty(stump, stumpExt);
+        }
+
+        // Insert stump into the body — BodySystem.OnBodyEntInserted will set OrganComponent.Body
+        _container.Insert(stump, container);
     }
 
     /// <summary>
