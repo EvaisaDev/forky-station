@@ -23,6 +23,13 @@ wound-examine-disfigured = The {$limb} is disfigured beyond recognition.
 wound-examine-necrotic = The {$limb} is necrotic.
 wound-examine-bleeding = The {$limb} is bleeding.
 
+# Wound stage descriptions (0=worst, 4=almost healed)
+wound-stage-0 = severe wound
+wound-stage-1 = large wound
+wound-stage-2 = moderate wound
+wound-stage-3 = healing wound
+wound-stage-4 = nearly healed
+
 # Limb damage event messages
 limb-artery-cut = You feel a sharp rip as an artery in your {$limb} is severed!
 limb-tendon-cut = You feel a snap as a tendon in your {$limb} is severed!
