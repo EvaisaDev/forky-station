@@ -7,6 +7,9 @@ using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
+using Content.Shared.Medical.Pain;
+using Content.Shared.Mobs.Components;
+using Content.Shared.Popups;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -21,6 +24,8 @@ public sealed partial class WoundSystem : EntitySystem
     [Dependency] private INetManager _net = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private PainSystem _pain = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
 
     private static readonly ProtoId<DamageTypePrototype>[] BruteTypes = { "Blunt", "Slash", "Piercing" };
     private static readonly ProtoId<DamageTypePrototype>[] BurnTypes = { "Heat", "Cold", "Shock", "Caustic" };
@@ -126,20 +131,104 @@ public sealed partial class WoundSystem : EntitySystem
         var pierce = SumTypes(damage, new ProtoId<DamageTypePrototype>[] { "Piercing" });
         var burn = SumTypes(damage, BurnTypes);
 
+        var brute = blunt + slash + pierce;
+
+        // Brittle limb: 1.5x blunt damage
+        TryComp<ExternalOrganComponent>(limb, out var ext);
+        if (ext != null && (ext.Status & OrganStatusFlags.Brittle) != 0 && blunt > 0)
+        {
+            var extraBlunt = FixedPoint2.Min(blunt * 0.5f, FixedPoint2.New(100));
+            damage.DamageDict.TryGetValue("Blunt", out var existingBlunt);
+            damage.DamageDict["Blunt"] = existingBlunt + extraBlunt;
+            blunt += extraBlunt;
+            brute += extraBlunt;
+        }
+
         if (weaponWoundType != null)
         {
             AddWeaponSpecificWound(limb, bodyUid, damage, weaponWoundType.Value);
-            return;
+        }
+        else
+        {
+            if (blunt > 0)
+                AddDamageToWoundGroup(limb, bodyUid, damage, blunt, "Brute");
+            if (slash > 0)
+                AddDamageToWoundGroup(limb, bodyUid, damage, slash, "Cut");
+            if (pierce > 0)
+                AddDamageToWoundGroup(limb, bodyUid, damage, pierce, "Puncture");
+            if (burn > 0)
+                AddDamageToWoundGroup(limb, bodyUid, damage, burn, "Burn");
         }
 
-        if (blunt > 0)
-            AddDamageToWoundGroup(limb, bodyUid, damage, blunt, "Brute");
-        if (slash > 0)
-            AddDamageToWoundGroup(limb, bodyUid, damage, slash, "Cut");
-        if (pierce > 0)
-            AddDamageToWoundGroup(limb, bodyUid, damage, pierce, "Puncture");
-        if (burn > 0)
-            AddDamageToWoundGroup(limb, bodyUid, damage, burn, "Burn");
+        // Damage triggers for limb conditions
+        if (ext != null && _net.IsServer)
+        {
+            var totalBrute = brute.Float();
+            var totalBurn = burn.Float();
+
+            // Artery cut: slash/pierce > 15 has a chance to sever artery
+            if ((ext.Flags & LimbFlags.HasTendon) != 0
+                && (ext.Status & OrganStatusFlags.ArteryCut) == 0
+                && (ext.Status & OrganStatusFlags.Robotic) == 0)
+            {
+                var sharpDamage = slash.Float() + pierce.Float();
+                if (sharpDamage > 15 && _random.Prob(Math.Min(sharpDamage, 75f) / 100f))
+                {
+                    ext.Status |= OrganStatusFlags.ArteryCut;
+                    Dirty(limb, ext);
+                    var msg = Loc.GetString("limb-artery-cut", ("limb", Name(limb)));
+                    _popup.PopupEntity(msg, bodyUid, bodyUid);
+                }
+            }
+
+            // Tendon cut: slash/pierce damage has a chance to sever tendon
+            if ((ext.Flags & LimbFlags.HasTendon) != 0
+                && (ext.Status & OrganStatusFlags.TendonCut) == 0
+                && (ext.Status & OrganStatusFlags.Robotic) == 0)
+            {
+                var sharpDamage = slash.Float() + pierce.Float();
+                if (sharpDamage > 10 && _random.Prob(Math.Min(sharpDamage / 4f, 50f) / 100f))
+                {
+                    ext.Status |= OrganStatusFlags.TendonCut;
+                    Dirty(limb, ext);
+                    var msg = Loc.GetString("limb-tendon-cut", ("limb", Name(limb)));
+                    _popup.PopupEntity(msg, bodyUid, bodyUid);
+                }
+            }
+
+            // Dislocation: high brute damage chance
+            if (!ext.Dislocated && (ext.Status & OrganStatusFlags.Robotic) == 0 && brute.Float() > 20
+                && (ext.Flags & LimbFlags.CanBreak) != 0)
+            {
+                if (_random.Prob(Math.Min(brute.Float() / 100f, 0.5f)))
+                {
+                    ext.Dislocated = true;
+                    Dirty(limb, ext);
+                    var msg = Loc.GetString("limb-dislocated", ("limb", Name(limb)));
+                    _popup.PopupEntity(msg, bodyUid, bodyUid);
+                }
+            }
+
+            // Disfigurement: severe damage to head
+            if (!ext.Disfigured && TryComp<OrganComponent>(limb, out var organComp)
+                && organComp.Category == "Head")
+            {
+                if (totalBrute > 30 || totalBurn > 20)
+                {
+                    if (_random.Prob(Math.Min((totalBrute + totalBurn) / 100f, 0.75f)))
+                    {
+                        ext.Disfigured = true;
+                        Dirty(limb, ext);
+                        var msg = Loc.GetString("limb-disfigured");
+                        _popup.PopupEntity(msg, bodyUid, bodyUid);
+                    }
+                }
+            }
+
+        }
+
+        // Baystation-style pain spike: add_pain(0.6*burn + 0.4*brute)
+        _pain.AddPainSpike(limb, brute.Float(), burn.Float());
     }
 
     private void AddWeaponSpecificWound(Entity<WoundableComponent> limb, EntityUid bodyUid,

@@ -12,10 +12,9 @@ public sealed class TargetingSystem : SharedTargetingSystem
 
     private void OnTargetChange(TargetChangeEvent message, EntitySessionEventArgs args)
     {
-        if (!TryComp<TargetingComponent>(GetEntity(message.Uid), out var target))
-            return;
-
+        var uid = GetEntity(message.Uid);
+        var target = EnsureComp<TargetingComponent>(uid);
         target.ActivePart = message.BodyPart;
-        Dirty(GetEntity(message.Uid), target);
+        Dirty(uid, target);
     }
 }

@@ -64,6 +64,19 @@ public sealed partial class ExternalOrganComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public int BoneRepairStage;
+
+    /// <summary>
+    ///     Name of the encased bone structure (e.g. "ribcage", "skull").
+    ///     If set, this limb requires sawing through bone to access internals.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public string? Encased;
+
+    /// <summary>
+    ///     Whether this limb is disfigured (scarred/mangled beyond recognition).
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Disfigured;
 }
 
 /// <summary>

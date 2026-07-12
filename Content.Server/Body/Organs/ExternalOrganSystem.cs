@@ -130,8 +130,8 @@ public sealed partial class ExternalOrganSystem : EntitySystem
             }
         }
 
-        var coords = new EntityCoordinates(body, Vector2.Zero);
-        _transform.SetCoordinates(ent.Owner, coords);
+        var dropCoords = Transform(body).Coordinates;
+        _transform.SetCoordinates(ent.Owner, dropCoords);
 
         ent.Comp.Status |= OrganStatusFlags.CutAway;
         Dirty(ent);

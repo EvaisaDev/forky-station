@@ -70,6 +70,18 @@ public sealed partial class WoundExamineSystem : EntitySystem
         if ((ext.Status & OrganStatusFlags.ArteryCut) != 0)
             args.PushMarkup(Loc.GetString("wound-examine-artery-cut", ("limb", Name(ent))));
 
+        if ((ext.Status & OrganStatusFlags.TendonCut) != 0)
+            args.PushMarkup(Loc.GetString("wound-examine-tendon-cut", ("limb", Name(ent))));
+
+        if (ext.Dislocated)
+            args.PushMarkup(Loc.GetString("wound-examine-dislocated", ("limb", Name(ent))));
+
+        if (ext.Disfigured)
+            args.PushMarkup(Loc.GetString("wound-examine-disfigured", ("limb", Name(ent))));
+
+        if ((ext.Status & OrganStatusFlags.Dead) != 0)
+            args.PushMarkup(Loc.GetString("wound-examine-necrotic", ("limb", Name(ent))));
+
         if ((ext.Status & OrganStatusFlags.Bleeding) != 0)
             args.PushMarkup(Loc.GetString("wound-examine-bleeding", ("limb", Name(ent))));
     }

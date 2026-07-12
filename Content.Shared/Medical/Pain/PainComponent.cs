@@ -1,4 +1,3 @@
-using Content.Shared.FixedPoint;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
@@ -17,8 +16,8 @@ public sealed partial class PainComponent : Component
     public float PainkillerLevel;
 
     [DataField, AutoNetworkedField]
-    public float FreshPain;
+    public TimeSpan LastPainMessageTime;
 
     [DataField]
-    public float FreshPainDecay = 0.05f;
+    public string LastPainMessage = string.Empty;
 }

@@ -32,6 +32,8 @@
       path: /Audio/Effects/lightburn.ogg
   - type: SurgeryTool
     action: Cauterize
+    steps:
+    - Cauterize
     quality: 1.0
     sterile: true
     stepDuration: 2.0
@@ -93,6 +95,8 @@
       path: /Audio/Weapons/bladeslice.ogg
   - type: SurgeryTool
     action: Incision
+    steps:
+    - Incision
     quality: 1.0
     sterile: true
     stepDuration: 3.0
@@ -144,6 +148,13 @@
     state: laser
   - type: Item
     heldPrefix: laser
+  - type: SurgeryTool
+    action: LaserIncision
+    steps:
+    - LaserIncision
+    quality: 1.0
+    sterile: true
+    stepDuration: 3.0
 
 # Scissors
 
@@ -161,6 +172,9 @@
     storedRotation: 90
   - type: SurgeryTool
     action: Retract
+    steps:
+    - Retract
+    - OrganReplace
     quality: 1.0
     sterile: true
     stepDuration: 2.0
@@ -178,6 +192,9 @@
     storedRotation: 90
   - type: SurgeryTool
     action: Clamp
+    steps:
+    - Clamp
+    - RemoveEmbedded
     quality: 1.0
     sterile: true
     stepDuration: 2.0
@@ -195,6 +212,8 @@
     storedRotation: 90
   - type: SurgeryTool
     action: BoneSet
+    steps:
+    - BoneSet
     quality: 1.0
     sterile: true
     stepDuration: 3.0
@@ -212,6 +231,9 @@
     storedRotation: 90
   - type: SurgeryTool
     action: BoneGlue
+    steps:
+    - BoneGlue
+    - BoneFinish
     quality: 1.0
     sterile: true
     stepDuration: 2.0
@@ -229,6 +251,8 @@
     storedRotation: 90
   - type: SurgeryTool
     action: RemoveEmbedded
+    steps:
+    - RemoveEmbedded
     quality: 1.0
     sterile: true
     stepDuration: 3.0
@@ -256,6 +280,9 @@
     - Slicing
   - type: SurgeryTool
     action: BoneSaw
+    steps:
+    - Amputate
+    - SawBone
     quality: 0.7
     sterile: false
     stepDuration: 4.0
@@ -300,6 +327,9 @@
     speedModifier: 1.5
   - type: SurgeryTool
     action: BoneSaw
+    steps:
+    - Amputate
+    - SawBone
     quality: 0.9
     sterile: true
     stepDuration: 3.0
@@ -320,6 +350,9 @@
     speedModifier: 2.0
   - type: SurgeryTool
     action: BoneSaw
+    steps:
+    - Amputate
+    - SawBone
     quality: 1.0
     sterile: true
     stepDuration: 2.5
@@ -339,6 +372,8 @@
     storedRotation: 90
   - type: SurgeryTool
     action: OrganFix
+    steps:
+    - OrganFix
     quality: 1.0
     sterile: true
     stepDuration: 5.0
@@ -356,6 +391,8 @@
     storedRotation: 90
   - type: SurgeryTool
     action: OrganFix
+    steps:
+    - OrganFix
     quality: 1.0
     sterile: true
     stepDuration: 4.0
@@ -370,6 +407,8 @@
   components:
   - type: SurgeryTool
     action: OrganDetach
+    steps:
+    - OrganDetach
     quality: 1.0
     sterile: true
     stepDuration: 4.0
@@ -387,6 +426,8 @@
     storedRotation: 90
   - type: SurgeryTool
     action: OrganRemove
+    steps:
+    - OrganRemove
     quality: 1.0
     sterile: true
     stepDuration: 3.0
@@ -408,6 +449,8 @@
     storedRotation: 90
   - type: SurgeryTool
     action: OrganAttach
+    steps:
+    - OrganAttach
     quality: 1.0
     sterile: true
     stepDuration: 5.0

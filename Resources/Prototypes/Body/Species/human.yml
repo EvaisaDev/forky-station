@@ -142,6 +142,8 @@
     maxDamage: 200
     minBrokenDamage: 150
     flags:
+    - CanAmputate
+    - CanBreak
     - HasTendon
 
 - type: entity

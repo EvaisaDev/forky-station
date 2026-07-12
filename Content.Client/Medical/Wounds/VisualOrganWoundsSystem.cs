@@ -4,6 +4,7 @@ using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Organs;
 using Content.Shared.Medical.Wounds;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -18,6 +19,7 @@ public sealed partial class VisualOrganWoundsSystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private Robust.Client.Player.IPlayerManager _playerManager = default!;
     [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private SpriteSystem _spriteSys = default!;
 
     private TimeSpan _nextUpdate;
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1);
@@ -39,10 +41,46 @@ public sealed partial class VisualOrganWoundsSystem : EntitySystem
             return;
 
         var control = _uiManager.GetActiveUIWidgetOrNull<TargetingControl>();
-        if (control == null)
+        if (control != null)
+            UpdateOverlays(control, body);
+
+        UpdateLimbVisuals(player.Value, body);
+    }
+
+    private void UpdateLimbVisuals(EntityUid uid, BodyComponent body)
+    {
+        if (!TryComp<SpriteComponent>(uid, out var sprite))
             return;
 
-        UpdateOverlays(control, body);
+        if (body.Organs == null)
+            return;
+
+        foreach (var organ in body.Organs.ContainedEntities)
+        {
+            if (TerminatingOrDeleted(organ))
+                continue;
+
+            if (!TryComp<ExternalOrganComponent>(organ, out var ext))
+                continue;
+
+            if (!TryComp<VisualOrganComponent>(organ, out var vis))
+                continue;
+
+            var layer = vis.Layer;
+            if (layer == null)
+                continue;
+
+            if ((ext.Status & OrganStatusFlags.CutAway) != 0)
+            {
+                if (_spriteSys.LayerMapTryGet(uid, layer, out var baseIdx, false))
+                    _spriteSys.LayerSetVisible(uid, baseIdx, false);
+            }
+            else
+            {
+                if (_spriteSys.LayerMapTryGet(uid, layer, out var baseIdx, false))
+                    _spriteSys.LayerSetVisible(uid, baseIdx, true);
+            }
+        }
     }
 
     private void UpdateOverlays(TargetingControl control, BodyComponent body)

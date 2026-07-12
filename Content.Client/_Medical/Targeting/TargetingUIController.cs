@@ -43,35 +43,36 @@ public sealed class TargetingUIController : UIController, IOnStateEntered<Gamepl
     {
         _targetingComponent = component;
 
-        if (TargetingControl != null)
+        var control = TargetingControl;
+        if (control != null)
         {
-            TargetingControl.SetTargetDollVisible(_targetingComponent != null);
+            control.OnPartSelected += CycleTarget;
+            control.SetTargetDollVisible(_targetingComponent != null);
 
             if (_targetingComponent != null)
-                TargetingControl.SetBodyPartsVisible(_targetingComponent.ActivePart);
+                control.SetBodyPartsVisible(_targetingComponent.ActivePart);
         }
     }
 
     public void RemoveTargetingControl()
     {
-        if (TargetingControl != null)
-            TargetingControl.SetTargetDollVisible(false);
+        var control = TargetingControl;
+        if (control != null)
+        {
+            control.OnPartSelected -= CycleTarget;
+            control.SetTargetDollVisible(false);
+        }
 
         _targetingComponent = null;
     }
 
     public void CycleTarget(TargetBodyPart bodyPart)
     {
-        if (_playerManager.LocalEntity is not { } user
-            || !_entManager.TryGetComponent<TargetingComponent>(user, out var targetingComponent)
-            || TargetingControl == null)
+        if (_playerManager.LocalEntity is not { } user || TargetingControl == null)
             return;
 
-        if (bodyPart != targetingComponent.ActivePart)
-        {
-            var msg = new TargetChangeEvent(_entManager.GetNetEntity(user), bodyPart);
-            _net.SendSystemNetworkMessage(msg);
-            TargetingControl?.SetBodyPartsVisible(bodyPart);
-        }
+        var msg = new TargetChangeEvent(_entManager.GetNetEntity(user), bodyPart);
+        _net.SendSystemNetworkMessage(msg);
+        TargetingControl?.SetBodyPartsVisible(bodyPart);
     }
 }

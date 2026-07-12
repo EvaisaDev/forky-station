@@ -50,6 +50,9 @@
     - FoodRecipes
   - type: SurgeryTool
     action: Incision
+    steps:
+    - Incision
+    - Retract
     quality: 0.75
     sterile: false
     stepDuration: 4.0

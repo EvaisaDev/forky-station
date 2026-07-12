@@ -160,6 +160,7 @@
       Puncture: 3
       Stump: 3
       Incision: 3
+  - type: Targeting
   - type: Tag
     tags:
     - CanPilot
