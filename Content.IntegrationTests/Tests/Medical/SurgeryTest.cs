@@ -200,7 +200,7 @@ public sealed class SurgeryTest : GameTest
     maxIntegrity: 100
 ";
 
-    private async Task<(EntityUid Body, EntityUid Limb)> Spawn(string limbProto = "SurgLimb")
+    private async Task<(EntityUid Body, EntityUid Limb)> SpawnBodyAndLimb(string limbProto = "SurgLimb")
     {
         var server = Pair.Server;
         var map = await Pair.CreateTestMap();
@@ -224,7 +224,7 @@ public sealed class SurgeryTest : GameTest
     private async Task<(EntityUid Body, EntityUid Limb)> SpawnWithInternalOrgan()
     {
         var server = Pair.Server;
-        var (body, limb) = await Spawn();
+        var (body, limb) = await SpawnBodyAndLimb();
         await server.WaitPost(() =>
         {
             var entMan = server.ResolveDependency<IEntityManager>();
@@ -250,7 +250,7 @@ public sealed class SurgeryTest : GameTest
     public async Task IncisionAdvancesStage()
     {
         var server = Pair.Server;
-        var (_, limb) = await Spawn();
+        var (_, limb) = await SpawnBodyAndLimb();
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();
@@ -267,7 +267,7 @@ public sealed class SurgeryTest : GameTest
     public async Task FullSurgeryProgression()
     {
         var server = Pair.Server;
-        var (_, limb) = await Spawn();
+        var (_, limb) = await SpawnBodyAndLimb();
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();
@@ -319,7 +319,7 @@ public sealed class SurgeryTest : GameTest
     public async Task WrongStepReturnsError()
     {
         var server = Pair.Server;
-        var (_, limb) = await Spawn();
+        var (_, limb) = await SpawnBodyAndLimb();
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();
@@ -335,7 +335,7 @@ public sealed class SurgeryTest : GameTest
     public async Task LowQualityToolMayFail()
     {
         var server = Pair.Server;
-        var (_, limb) = await Spawn();
+        var (_, limb) = await SpawnBodyAndLimb();
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();
@@ -355,7 +355,7 @@ public sealed class SurgeryTest : GameTest
     public async Task CauterizeWorksOnRetractedAndEncased()
     {
         var server = Pair.Server;
-        var (_, limb) = await Spawn();
+        var (_, limb) = await SpawnBodyAndLimb();
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();
@@ -380,7 +380,7 @@ public sealed class SurgeryTest : GameTest
     public async Task AmputationRemovesLimb()
     {
         var server = Pair.Server;
-        var (body, limb) = await Spawn("SurgLimbArm");
+        var (body, limb) = await SpawnBodyAndLimb("SurgLimbArm");
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();
@@ -408,7 +408,7 @@ public sealed class SurgeryTest : GameTest
     public async Task BoneRepairRequiresBrokenBone()
     {
         var server = Pair.Server;
-        var (_, limb) = await Spawn();
+        var (_, limb) = await SpawnBodyAndLimb();
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();
@@ -484,7 +484,7 @@ public sealed class SurgeryTest : GameTest
     public async Task BoneSawOnUnopenedLimbAmputates()
     {
         var server = Pair.Server;
-        var (body, limb) = await Spawn("SurgLimbArm");
+        var (body, limb) = await SpawnBodyAndLimb("SurgLimbArm");
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();
@@ -504,7 +504,7 @@ public sealed class SurgeryTest : GameTest
     public async Task FullProgressionShort()
     {
         var server = Pair.Server;
-        var (_, limb) = await Spawn();
+        var (_, limb) = await SpawnBodyAndLimb();
         await server.WaitAssertion(() =>
         {
             var sys = server.EntMan.System<SurgerySystem>();

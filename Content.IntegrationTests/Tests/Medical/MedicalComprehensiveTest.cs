@@ -20,7 +20,6 @@ using Content.Shared.Medical.Sleeper;
 using Content.Shared.Medical.Machines;
 using Content.Shared.Medical.Pain;
 using Content.Shared.Medical.Scanners;
-using Content.Shared.Medical.Sleeper;
 using Content.Shared.Medical.Surgery;
 using Content.Shared.Medical.Wounds;
 using Content.Shared.Mobs;
