@@ -10,9 +10,9 @@
   description: Cuts open the skin to access underlying tissue.
   allowedTools:
     Scalpel: 100
-    Knife: 75
-    BrokenBottle: 50
-    GlassShard: 50
+    KitchenKnife: 75
+    ScalpelShiv: 50
+    ShardGlass: 50
   requiredFlags: 0
   minDuration: 9.0
   maxDuration: 11.0
@@ -26,7 +26,7 @@
   name: Make laser incision
   description: A bloodless incision using laser technology.
   allowedTools:
-    LaserScalpel: 100
+    ScalpelLaser: 100
     EnergySword: 5
   requiredFlags: 0
   minDuration: 9.0
@@ -40,7 +40,7 @@
   name: Make managed incision
   description: A combined incision, clamping, and retraction using advanced tools.
   allowedTools:
-    ManagedScalpel: 100
+    ScalpelAdvanced: 100
   requiredFlags: 0
   minDuration: 8.0
   maxDuration: 12.0
@@ -54,7 +54,7 @@
   description: Clamps bleeding vessels to prevent blood loss during surgery.
   allowedTools:
     Hemostat: 100
-    CableCoil: 75
+    CableStack: 75
     Mousetrap: 20
   requiredFlags: 0
   minDuration: 4.0
@@ -73,7 +73,7 @@
     Retractor: 100
     JawsOfLife: 80
     Crowbar: 75
-    Knife: 50
+    KitchenKnife: 50
     Fork: 50
   requiredFlags: 0
   minDuration: 3.0
@@ -90,7 +90,7 @@
     Cautery: 100
     Cigarette: 75
     Lighter: 50
-    WeldingTool: 25
+    Welder: 25
   requiredFlags: 0
   minDuration: 7.0
   maxDuration: 10.0
@@ -105,7 +105,7 @@
   description: Applies bone adhesive to prepare for bone setting.
   allowedTools:
     BoneGel: 100
-    TapeRoll: 75
+    CableStack: 50
   requiredFlags: 0
   minDuration: 5.0
   maxDuration: 6.0
@@ -135,7 +135,7 @@
   description: Applies final adhesive to complete bone mending.
   allowedTools:
     BoneGel: 100
-    TapeRoll: 75
+    CableStack: 50
   requiredFlags: 0
   minDuration: 5.0
   maxDuration: 6.0
@@ -151,9 +151,9 @@
   name: Saw through bone
   description: Cuts through the ribcage or skull to access internal organs.
   allowedTools:
-    CircularSaw: 100
-    Hatchet: 75
-    Knife: 50
+    Saw: 100
+    SawImprov: 50
+    KitchenKnife: 50
   requiredFlags: 0
   minDuration: 5.0
   maxDuration: 7.0
@@ -171,8 +171,8 @@
   name: Amputate limb
   description: Completely severs a limb from the body.
   allowedTools:
-    CircularSaw: 100
-    Hatchet: 75
+    Saw: 100
+    SawImprov: 50
   requiredFlags: 0
   minDuration: 11.0
   maxDuration: 16.0
@@ -188,7 +188,7 @@
   description: Separates an internal organ from its connections.
   allowedTools:
     Scalpel: 100
-    Knife: 75
+    KitchenKnife: 75
   requiredFlags: 0
   minDuration: 5.0
   maxDuration: 8.0
@@ -204,7 +204,7 @@
   description: Removes a detached internal organ from the body.
   allowedTools:
     Hemostat: 100
-    CableCoil: 75
+    CableStack: 75
   requiredFlags: 0
   minDuration: 3.0
   maxDuration: 5.0
@@ -236,7 +236,7 @@
   description: Connects an inserted organ to the body's systems.
   allowedTools:
     Cautery: 100
-    WeldingTool: 50
+    Welder: 50
   requiredFlags: 0
   minDuration: 6.0
   maxDuration: 8.0

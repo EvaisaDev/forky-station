@@ -5,11 +5,11 @@
   description: A handheld device that can analyze the chemical composition of any solution. Point it at a beaker or container to scan.
   components:
   - type: Sprite
-    sprite: Objects/Specific/Medical/health_analyzer.rsi
-    state: icon
+    sprite: Objects/Devices/health_analyzer.rsi
+    state: unknown
   - type: Item
     size: Small
   - type: MassSpectrometer
   - type: GuideHelp
     guides:
-    - Chemistry
+    - Medical

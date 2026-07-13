@@ -9,7 +9,7 @@
   allowedTools:
     Scalpel: 100
     Cautery: 75
-    Knife: 50
+    KitchenKnife: 50
   requiredFlags: 0
   minDuration: 5.0
   maxDuration: 8.0
@@ -24,7 +24,7 @@
   description: Reconnects severed tendons between the stump and the severed limb.
   allowedTools:
     Hemostat: 100
-    CableCoil: 75
+    CableStack: 75
     Forceps: 50
   requiredFlags: 0
   minDuration: 6.0
@@ -59,7 +59,7 @@
   allowedTools:
     Cautery: 100
     Cigarette: 50
-    WeldingTool: 25
+    Welder: 25
   requiredFlags: 0
   minDuration: 6.0
   maxDuration: 9.0

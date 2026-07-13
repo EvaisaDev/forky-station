@@ -699,19 +699,6 @@
     Tramadol: 3
 
 - type: reaction
-  id: Oxycodone
-  reactants:
-    Tramadol:
-      amount: 1
-    Ethanol:
-      amount: 1
-    Phoron:
-      amount: 1
-      catalyst: true
-  products:
-    Oxycodone: 2
-
-- type: reaction
   id: Clonexadone
   reactants:
     Cryoxadone:
@@ -722,30 +709,7 @@
     Clonexadone: 2
   minTemp: 198.15
 
-- type: reaction
-  id: Peridaxon
-  reactants:
-    Bicaridine:
-      amount: 1
-    Clonexadone:
-      amount: 1
-    Phoron:
-      amount: 1
-      catalyst: true
-  products:
-    Peridaxon: 3
 
-- type: reaction
-  id: Alkysine
-  reactants:
-    Dylovene:
-      amount: 1
-    HydrochloricAcid:
-      amount: 1
-    Ammonia:
-      amount: 1
-  products:
-    Alkysine: 3
 
 - type: reaction
   id: Paracetamol

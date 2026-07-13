@@ -7,7 +7,7 @@
   description: Scans the body to determine cause of death and document wounds.
   allowedTools:
     Scalpel: 100
-    Knife: 75
+    KitchenKnife: 75
   requiredFlags: 0
   minDuration: 10.0
   maxDuration: 15.0

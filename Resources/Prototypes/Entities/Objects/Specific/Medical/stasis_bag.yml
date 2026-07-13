@@ -20,14 +20,13 @@
     isCollidableWhenOpen: true
     openOnMove: false
     closeSound:
-      path: /Audio/Effects/body_bag.ogg
+      path: /Audio/Effects/trashbag1.ogg
     openSound:
-      path: /Audio/Effects/body_bag.ogg
+      path: /Audio/Effects/trashbag1.ogg
   - type: Tag
     tags:
     - StasisBag
   - type: Damageable
-    damageContainer: Inorganic
   - type: Destructible
     thresholds:
     - trigger:

@@ -31,7 +31,7 @@
   name: Weld robotic damage
   description: Repairs structural damage on a robotic limb with a welding tool.
   allowedTools:
-    WeldingTool: 100
+    Welder: 100
   requiredFlags: 0
   minDuration: 5.0
   maxDuration: 8.0
@@ -43,7 +43,7 @@
   name: Replace wiring
   description: Replaces fried wiring in a robotic limb.
   allowedTools:
-    CableCoil: 100
+    CableStack: 100
     Screwdriver: 75
   requiredFlags: 0
   minDuration: 4.0
