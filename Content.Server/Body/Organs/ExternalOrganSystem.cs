@@ -5,6 +5,7 @@ using Content.Shared.Body.Events;
 using Content.Shared.Body.Organs;
 using Content.Shared.Medical.Wounds;
 using Content.Shared.FixedPoint;
+using Content.Shared.Rejuvenate;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 
@@ -24,6 +25,7 @@ public sealed partial class ExternalOrganSystem : EntitySystem
 
         SubscribeLocalEvent<ExternalOrganComponent, LimbFractureCheckEvent>(OnFractureCheck);
         SubscribeLocalEvent<ExternalOrganComponent, LimbAmputateEvent>(OnAmputate);
+        SubscribeLocalEvent<BodyComponent, RejuvenateEvent>(OnRejuvenate);
     }
 
     private void OnFractureCheck(Entity<ExternalOrganComponent> ent, ref LimbFractureCheckEvent args)
@@ -275,5 +277,46 @@ public sealed partial class ExternalOrganSystem : EntitySystem
         }
 
         return false;
+    }
+
+    private void OnRejuvenate(Entity<BodyComponent> ent, ref RejuvenateEvent args)
+    {
+        if (ent.Comp.Organs == null)
+            return;
+
+        foreach (var organ in ent.Comp.Organs.ContainedEntities)
+        {
+            if (TerminatingOrDeleted(organ))
+                continue;
+
+            // Clear limb damage and heal conditions
+            if (TryComp<ExternalOrganComponent>(organ, out var ext))
+            {
+                ext.BruteDamage = FixedPoint2.Zero;
+                ext.BurnDamage = FixedPoint2.Zero;
+                ext.Dislocated = false;
+                ext.Disfigured = false;
+                ext.SurgeryStage = SurgeryStage.None;
+                ext.BoneRepairStage = 0;
+                ext.Status &= ~(OrganStatusFlags.Broken
+                    | OrganStatusFlags.ArteryCut
+                    | OrganStatusFlags.TendonCut
+                    | OrganStatusFlags.Bleeding);
+                Dirty(organ, ext);
+            }
+
+            // Remove all wounds
+            if (TryComp<WoundableComponent>(organ, out var wnd))
+            {
+                foreach (var wUid in wnd.Wounds)
+                {
+                    if (!TerminatingOrDeleted(wUid))
+                        QueueDel(wUid);
+                }
+                wnd.Wounds.Clear();
+                wnd.Pain = 0;
+                Dirty(organ, wnd);
+            }
+        }
     }
 }

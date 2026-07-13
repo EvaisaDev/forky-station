@@ -528,6 +528,11 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         var hitEvent = new MeleeHitEvent(new List<EntityUid> { target.Value }, user, meleeUid, damage, null);
         RaiseLocalEvent(meleeUid, hitEvent);
 
+        // Play hit sound before damage handling so it plays even when Handled=true (LimbDamageSystem)
+        var soundDamage = damage + hitEvent.BonusDamage;
+        var soundDamageModified = DamageSpecifier.ApplyModifierSets(soundDamage, hitEvent.ModifiersList);
+        _meleeSound.PlayHitSound(target.Value, user, GetHighestDamageSound(soundDamageModified, _protoManager), hitEvent.HitSoundOverride, component);
+
         if (hitEvent.Handled)
             return;
 
@@ -573,8 +578,6 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
             }
 
         }
-
-        _meleeSound.PlayHitSound(target.Value, user, GetHighestDamageSound(modifiedDamage, _protoManager), hitEvent.HitSoundOverride, component);
 
         if (damageResult.GetTotal() > FixedPoint2.Zero && !TerminatingOrDeleted(target.Value))
         {
@@ -673,6 +676,15 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         var hitEvent = new MeleeHitEvent(targets, user, meleeUid, damage, direction);
         RaiseLocalEvent(meleeUid, hitEvent);
 
+        // Play hit sound before damage handling so it plays even when Handled=true (LimbDamageSystem)
+        if (entities.Count != 0)
+        {
+            var soundTarget = entities.First();
+            var soundDamage = damage + hitEvent.BonusDamage;
+            var soundDamageModified = DamageSpecifier.ApplyModifierSets(soundDamage, hitEvent.ModifiersList);
+            _meleeSound.PlayHitSound(soundTarget, user, GetHighestDamageSound(soundDamageModified, _protoManager), hitEvent.HitSoundOverride, component);
+        }
+
         if (hitEvent.Handled)
             return true;
 
@@ -737,12 +749,6 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
 
             if (TerminatingOrDeleted(entity))
                 targets.RemoveAt(i);
-        }
-
-        if (entities.Count != 0)
-        {
-            var target = entities.First();
-            _meleeSound.PlayHitSound(target, user, GetHighestDamageSound(appliedDamage, _protoManager), hitEvent.HitSoundOverride, component);
         }
 
         if (appliedDamage.GetTotal() > FixedPoint2.Zero && targets.Count > 0)

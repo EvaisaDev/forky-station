@@ -1,8 +1,9 @@
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared._Medical.Targeting;
 
-[Flags]
+[Flags, Serializable, NetSerializable]
 public enum TargetBodyPart : ushort
 {
     Head = 1,
