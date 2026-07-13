@@ -48,6 +48,17 @@
     guides:
     - Chef
     - FoodRecipes
+  - type: SurgeryTool
+    action: Incision
+    steps:
+    - Incision
+    - Retract
+    - CleanStump
+    - MendFacial
+    - Autopsy
+    quality: 0.75
+    sterile: false
+    stepDuration: 4.0
   - type: Fixtures
     fixtures:
       fix1:
