@@ -11,6 +11,7 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -27,6 +28,7 @@ public sealed partial class WoundSystem : EntitySystem
     [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private SharedSolutionContainerSystem _solution = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
 
     private static readonly ProtoId<DamageTypePrototype>[] BruteTypes = { "Blunt", "Slash", "Piercing" };
     private static readonly ProtoId<DamageTypePrototype>[] BurnTypes = { "Heat", "Cold", "Shock", "Caustic" };
@@ -283,6 +285,7 @@ public sealed partial class WoundSystem : EntitySystem
         Dirty(woundEnt, newWound);
 
         InitializeWoundEffects(woundEnt);
+        InsertWoundInContainer(woundEnt, limb);
 
         limb.Comp.Wounds.Add(woundEnt);
         Dirty(limb.Owner, limb.Comp);
@@ -703,6 +706,7 @@ public sealed partial class WoundSystem : EntitySystem
                     Dirty(newWoundEnt, newWc);
 
                     InitializeWoundEffects(newWoundEnt);
+                    InsertWoundInContainer(newWoundEnt, limb);
 
                     limb.Comp.Wounds.Remove(keep);
                     limb.Comp.Wounds.Remove(remove);
@@ -841,6 +845,21 @@ public sealed partial class WoundSystem : EntitySystem
         };
 
         return suffix != null ? $"Wound{groupName}{suffix}" : null;
+    }
+
+    private void InsertWoundInContainer(EntityUid woundEnt, Entity<WoundableComponent> limb)
+    {
+        var bodyUid = Transform(limb.Owner).ParentUid;
+        if (!HasComp<BodyComponent>(bodyUid))
+            return;
+
+        if (!TryComp<ContainerManagerComponent>(bodyUid, out var containerComp))
+            containerComp = AddComp<ContainerManagerComponent>(bodyUid);
+
+        if (!_container.TryGetContainer(bodyUid, BodyComponent.WoundContainerID, out var container, containerComp))
+            container = _container.MakeContainer<Container>(bodyUid, BodyComponent.WoundContainerID, containerComp);
+
+        _container.Insert(woundEnt, container);
     }
 }
 // Baystation end
