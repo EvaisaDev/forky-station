@@ -67,7 +67,7 @@ public sealed partial class IVDripSystem : EntitySystem
             if (iv.TransferRate <= 0)
                 continue;
 
-            if (Deleted(iv.ConnectedPatient.Value) || !EntityManager.EntityExists(iv.ConnectedPatient.Value))
+            if (Deleted(iv.ConnectedPatient.Value) || !Exists(iv.ConnectedPatient.Value))
             {
                 DisconnectDrip(uid, iv);
                 continue;
