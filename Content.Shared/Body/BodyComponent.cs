@@ -13,7 +13,6 @@ namespace Content.Shared.Body;
 public sealed partial class BodyComponent : Component
 {
     public const string ContainerID = "body_organs";
-    public const string WoundContainerID = "body_wounds";
 
     /// <summary>
     /// The actual container with entities with <see cref="OrganComponent" /> in it
