@@ -137,6 +137,48 @@ namespace Content.Shared.Chemistry.Reagent
         public FixedPoint2 EvaporationSpeed = FixedPoint2.Zero;
 
         /// <summary>
+        ///     Baystation: Bioavailability (0.0 to 1.0).
+        ///     Fraction of the dose that enters the bloodstream when ingested orally.
+        ///     1.0 = 100% (IV injection). 0.6 = 60% (most pills).
+        ///     0.0 = cannot be absorbed orally (must be injected).
+        /// </summary>
+        [DataField]
+        public float Bioavailability = 1.0f;
+
+        /// <summary>
+        ///     Baystation: Metabolism rate (units per tick).
+        ///     How fast this reagent is metabolized out of the bloodstream.
+        ///     Default 0.2u/tick.
+        /// </summary>
+        [DataField]
+        public float MetabolismRate = 0.2f;
+
+        /// <summary>
+        ///     Baystation: Overdose threshold (units).
+        ///     If the amount of this reagent in the bloodstream exceeds this value,
+        ///     overdose effects trigger. 0 = no overdose possible.
+        /// </summary>
+        [DataField]
+        public float OverdoseThreshold;
+
+        /// <summary>
+        ///     Baystation: Active metabolite reagent ID.
+        ///     When this reagent is metabolized, it converts into this metabolite.
+        ///     The metabolite accumulates and its level determines overdose effects.
+        ///     Empty string = no active metabolite (inert metabolites only).
+        /// </summary>
+        [DataField]
+        public string? ActiveMetabolite;
+
+        /// <summary>
+        ///     Baystation: Metabolite potency.
+        ///     How many units of active metabolite are produced per unit of reagent metabolized.
+        ///     E.g., 2.0 means 1u of reagent produces 2u of metabolite.
+        /// </summary>
+        [DataField]
+        public float MetabolitePotency = 1.0f;
+
+        /// <summary>
         /// If this reagent can be used to mop up other reagents.
         /// </summary>
         [DataField]

@@ -211,7 +211,6 @@
     sprite:
       sprite: Effects/creampie.rsi
       state: creampie_vulpkanin
-  - type: TailDuoEmote # Funky Change
 
 - type: entity
   parent: OrganBaseOrganic
@@ -252,15 +251,29 @@
   components:
   - type: Sprite
     sprite: Mobs/Species/Vulpkanin/parts.rsi
+  - type: Woundable
 
 - type: entity
   parent: [ OrganBaseTorsoSexed, OrganBaseTorso, OrganVulpkaninExternal ]
   id: OrganVulpkaninTorso
+  components:
+  - type: ExternalOrgan
+    maxDamage: 180
+    minBrokenDamage: 130
+    flags:
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHead, OrganVulpkaninExternal ]
   id: OrganVulpkaninHead
   components:
+  - type: ExternalOrgan
+    maxDamage: 90
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
   - type: VisualOrganMarkings
     hideableLayers:
     - enum.HumanoidVisualLayers.Snout
@@ -281,34 +294,106 @@
 - type: entity
   parent: [ OrganBaseArmLeft, OrganVulpkaninExternal ]
   id: OrganVulpkaninArmLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 45
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmRight, OrganVulpkaninExternal ]
   id: OrganVulpkaninArmRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 45
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandLeft, OrganVulpkaninExternal ]
   id: OrganVulpkaninHandLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 45
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandRight, OrganVulpkaninExternal ]
   id: OrganVulpkaninHandRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 45
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegLeft, OrganVulpkaninExternal ]
   id: OrganVulpkaninLegLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 45
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegRight, OrganVulpkaninExternal ]
   id: OrganVulpkaninLegRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 45
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootLeft, OrganVulpkaninExternal ]
   id: OrganVulpkaninFootLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 45
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootRight, OrganVulpkaninExternal ]
   id: OrganVulpkaninFootRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 45
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseBrain, OrganSpriteHumanInternal, OrganVulpkaninInternal ]
@@ -333,10 +418,17 @@
 - type: entity
   parent: [ OrganBaseLungs, OrganVulpkaninInternal, OrganVulpkaninMetabolizer ]
   id: OrganVulpkaninLungs
+  components:
+  - type: LungCondition
+    efficiency: 1.0
 
 - type: entity
   parent: [ OrganBaseHeart, OrganVulpkaninInternal, OrganVulpkaninMetabolizer ]
   id: OrganVulpkaninHeart
+  components:
+  - type: HeartCondition
+    efficiency: 1.0
+    beating: true
 
 - type: entity
   parent: [ OrganBaseStomach, OrganVulpkaninInternal, OrganVulpkaninMetabolizer ]

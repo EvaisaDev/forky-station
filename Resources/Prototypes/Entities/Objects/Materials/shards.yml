@@ -109,6 +109,11 @@
       reagents:
       - ReagentId: Silicon
         Quantity: 5 #Half of the value of regular glass. TECHNICALLY, welding a single shard of glass gives you the full thing back with just 1 sheet, but that is stupid so I am making it half.
+  - type: SurgeryTool
+    action: Incision
+    quality: 0.5
+    sterile: false
+    stepDuration: 5.0
   - type: Construction
     graph: ShivConstruct
     node: start

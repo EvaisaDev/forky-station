@@ -1,0 +1,16 @@
+# Other medical procedure steps
+
+- type: surgeryStep
+  id: Autopsy
+  action: Autopsy
+  name: Perform autopsy
+  description: Scans the body to determine cause of death and document wounds.
+  allowedTools:
+    Scalpel: 100
+    KitchenKnife: 75
+  requiredFlags: 0
+  minDuration: 10.0
+  maxDuration: 15.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 0

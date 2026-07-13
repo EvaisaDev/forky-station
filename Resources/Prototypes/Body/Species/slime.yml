@@ -208,46 +208,133 @@
   - type: VisualOrganMarkings
     markingData:
       group: Slime
+  - type: Woundable
 
 - type: entity
   parent: [ OrganBaseTorsoSexed, OrganBaseTorso, OrganSlimePersonExternal ]
   id: OrganSlimePersonTorso
+  components:
+  - type: ExternalOrgan
+    maxDamage: 150
+    minBrokenDamage: 100
+    flags:
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHead, OrganSlimePersonExternal ]
   id: OrganSlimePersonHead
+  components:
+  - type: ExternalOrgan
+    maxDamage: 80
+    minBrokenDamage: 30
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmLeft, OrganSlimePersonExternal ]
   id: OrganSlimePersonArmLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmRight, OrganSlimePersonExternal ]
   id: OrganSlimePersonArmRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandLeft, OrganSlimePersonExternal ]
   id: OrganSlimePersonHandLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 35
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandRight, OrganSlimePersonExternal ]
   id: OrganSlimePersonHandRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 35
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegLeft, OrganSlimePersonExternal ]
   id: OrganSlimePersonLegLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegRight, OrganSlimePersonExternal ]
   id: OrganSlimePersonLegRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootLeft, OrganSlimePersonExternal ]
   id: OrganSlimePersonFootLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 35
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootRight, OrganSlimePersonExternal ]
   id: OrganSlimePersonFootRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 35
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseBrain, OrganSlimePersonInternal, OrganSlimePersonMetabolizer ]
@@ -270,3 +357,5 @@
   components:
   - type: Lung
     alert: LowNitrogen
+  - type: LungCondition
+    efficiency: 1.0

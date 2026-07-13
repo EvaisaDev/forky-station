@@ -1,4 +1,3 @@
-# Baystation start
 - type: markingsGroup
   id: None
   onlyGroupWhitelisted: true
@@ -499,4 +498,25 @@
     sexStateOverrides:
       Male: torso_m
       Female: torso_f
-# Baystation end
+
+# Stump — replaces a missing limb for reattachment surgery
+- type: entity
+  id: OrganStump
+  name: stump
+  parent: OrganBase
+  description: A bloody stump where a limb was torn off.
+  components:
+  - type: Organ
+  - type: ExternalOrgan
+    maxDamage: 100
+    minBrokenDamage: 50
+    flags:
+    - CanAmputate
+  - type: Woundable
+  - type: WoundEffects
+    effects:
+    - id: BleedingLarge
+    - id: Tendable
+    - id: HealableNone
+    - id: PainHellish
+    - id: GermTracking

@@ -97,46 +97,133 @@
   - type: VisualOrganMarkings
     markingData:
       group: None
+  - type: Woundable
 
 - type: entity
   parent: [ OrganBaseTorso, OrganGingerbreadExternal ]
   id: OrganGingerbreadTorso
+  components:
+  - type: ExternalOrgan
+    maxDamage: 160
+    minBrokenDamage: 100
+    flags:
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHead, OrganGingerbreadExternal ]
   id: OrganGingerbreadHead
+  components:
+  - type: ExternalOrgan
+    maxDamage: 80
+    minBrokenDamage: 30
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmLeft, OrganGingerbreadExternal ]
   id: OrganGingerbreadArmLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmRight, OrganGingerbreadExternal ]
   id: OrganGingerbreadArmRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandLeft, OrganGingerbreadExternal ]
   id: OrganGingerbreadHandLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 35
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandRight, OrganGingerbreadExternal ]
   id: OrganGingerbreadHandRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 35
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegLeft, OrganGingerbreadExternal ]
   id: OrganGingerbreadLegLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegRight, OrganGingerbreadExternal ]
   id: OrganGingerbreadLegRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootLeft, OrganGingerbreadExternal ]
   id: OrganGingerbreadFootLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 35
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootRight, OrganGingerbreadExternal ]
   id: OrganGingerbreadFootRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 35
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   name: gingerbread man
