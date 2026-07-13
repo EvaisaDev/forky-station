@@ -163,6 +163,25 @@
   delicate: true
   strictAccessRequirement: true
 
+# --- Bone saw for direct amputation (no prior incision needed on heavily damaged limbs) ---
+
+- type: surgeryStep
+  id: BoneSaw
+  action: BoneSaw
+  name: Saw off limb
+  description: Cuts through bone and tissue to sever a limb from the body.
+  allowedTools:
+    Saw: 100
+    SawElectric: 85
+    SawAdvanced: 85
+    SawImprov: 60
+  requiredFlags: 0
+  minDuration: 8.0
+  maxDuration: 12.0
+  bloodLevel: 2
+  shockLevel: 80
+  delicate: true
+
 # --- Amputation ---
 
 - type: surgeryStep
