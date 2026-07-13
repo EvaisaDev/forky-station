@@ -110,12 +110,12 @@
     tags:
     - Wrench
   - type: Sprite
-    sprite: _Funkystation/Objects/Tools/wrench.rsi
+    sprite: Objects/Tools/wrench.rsi
     state: icon
   - type: Item
-    sprite: _Funkystation/Objects/Tools/wrench.rsi
+    sprite: Objects/Tools/wrench.rsi
     storedSprite:
-      sprite: _Funkystation/Objects/Tools/wrench.rsi
+      sprite: Objects/Tools/wrench.rsi
       state: storage
   - type: SurgeryTool
     action: BoneSet
@@ -158,7 +158,7 @@
     sound:
       path: /Audio/Items/multitool_drop.ogg
   - type: Sprite
-    sprite: _Funkystation/Objects/Tools/multitool.rsi
+    sprite: Objects/Tools/multitool.rsi
     layers:
     - state: icon
     - state: green-unlit
@@ -166,7 +166,7 @@
   - type: Item
     size: Small
   - type: Clothing
-    sprite: _Funkystation/Objects/Tools/multitool.rsi
+    sprite: Objects/Tools/multitool.rsi
     quickEquip: false
     slots:
     - Belt
@@ -212,7 +212,7 @@
       sound:
         path: /Audio/Items/multitool_drop.ogg
     - type: Sprite
-      sprite: _Funkystation/Objects/Tools/network_configurator.rsi
+      sprite: Objects/Tools/network_configurator.rsi
       layers:
         - state: icon
         - state: mode-link
