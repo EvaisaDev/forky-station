@@ -18,6 +18,7 @@ using Content.Shared.Medical.Wounds;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Bed.Sleep;
+using Content.Shared.Buckle.Components;
 using Content.Shared.Popups;
 using Content.Shared.Stunnable;
 using Robust.Shared.Containers;
@@ -67,9 +68,9 @@ public sealed partial class SurgerySystem : EntitySystem
         if (!args.CanReach || args.Target == null)
             return;
 
-        // Prevent duplicate processing within 500ms (event fires per-organ across ticks)
+        // Prevent duplicate processing — AfterInteractEvent fires once per organ in the body
         var curTime = _timing.CurTime;
-        if (args.Target.Value == LastSurgeryTarget && curTime - LastSurgeryTime < TimeSpan.FromSeconds(0.5))
+        if (args.Target.Value == LastSurgeryTarget && curTime - LastSurgeryTime < TimeSpan.FromSeconds(1))
             return;
         LastSurgeryTarget = args.Target.Value;
         LastSurgeryTime = curTime;
@@ -92,6 +93,10 @@ public sealed partial class SurgerySystem : EntitySystem
         var stepProto = FindBestStep(toolComp, foundLimb.Value, foundExt!);
         if (stepProto != null)
         {
+            // Prevent starting surgery on a limb that's already being operated on
+            if (HasComp<SurgeryInProgressComponent>(foundLimb.Value))
+                return;
+
             var conscious = !IsPatientReady(target);
             BeginSurgeryStep(args.User, tool, toolComp, foundLimb.Value, foundExt!, target, body, stepProto, conscious);
         }
@@ -212,11 +217,11 @@ public sealed partial class SurgerySystem : EntitySystem
         var doAfterArgs = new DoAfterArgs(EntityManager, user, duration,
             new SurgeryStepDoAfterEvent
             {
-                User = EntityManager.GetNetEntity(user),
-                Tool = EntityManager.GetNetEntity(tool),
+                EventUser = GetNetEntity(user),
+                EventTool = GetNetEntity(tool),
                 StepId = stepProto.ID,
                 SuccessChance = successChance,
-                Limb = EntityManager.GetNetEntity(limb)
+                EventLimb = GetNetEntity(limb)
             }, tool, target, tool)
         {
             BreakOnDamage = true,
@@ -240,9 +245,16 @@ public sealed partial class SurgerySystem : EntitySystem
             _pain.AddPainSpike((limb, woundable), 0, stepProto.ShockLevel);
         }
 
-        // Add infection risk from non-sterile tools
+        // Add infection risk from non-sterile tools (reduced by sterile operating table)
         if (stepProto.CanInfect && !toolComp.Sterile && TryComp<WoundableComponent>(limb, out var wnd))
         {
+            var tableBonus = 1.0f;
+            if (TryComp<BuckleComponent>(target, out var buckle) && buckle.Buckled
+                && TryComp<OperativeTableComponent>(buckle.BuckledTo, out var opTable) && opTable.SterileEnvironment)
+                tableBonus = 0.25f;
+
+            var germToAdd = (int)(5 * tableBonus);
+
             foreach (var wUid in wnd.Wounds)
             {
                 if (TryComp<WoundEffectsComponent>(wUid, out var effects))
@@ -250,7 +262,7 @@ public sealed partial class SurgerySystem : EntitySystem
                     var germ = effects.GetEffect("Germ", _prototype);
                     if (germ != null)
                     {
-                        germ.SetFloat("germLevel", germ.GetFloat("germLevel") + 5);
+                        germ.SetFloat("germLevel", germ.GetFloat("germLevel") + germToAdd);
                         Dirty(wUid, effects);
                     }
                 }
@@ -276,6 +288,7 @@ public sealed partial class SurgerySystem : EntitySystem
             "OrganAttach" => Loc.GetString("surgery-organ-attach-start", ("tool", toolName), ("target", targetName)),
             "OrganFix" => Loc.GetString("surgery-organ-fix-start", ("tool", toolName), ("target", targetName)),
             "RemoveEmbedded" => Loc.GetString("surgery-embedded-start", ("tool", toolName), ("target", targetName)),
+            "TreatInternalBleeding" => Loc.GetString("surgery-treat-internal-bleeding-start", ("tool", toolName), ("target", targetName)),
             "CleanStump" => Loc.GetString("surgery-clean-stump-start", ("tool", toolName), ("target", targetName)),
             "TendonRepair" => Loc.GetString("surgery-tendon-repair-start", ("tool", toolName), ("target", targetName)),
             "MuscleRepair" => Loc.GetString("surgery-muscle-repair-start", ("tool", toolName), ("target", targetName)),
@@ -304,20 +317,32 @@ public sealed partial class SurgerySystem : EntitySystem
         if (user == target)
             chance -= 10;
 
-        // Conscious patient penalty
-        if (!conscious)
+        // Conscious patient penalty — awake patients flinch and move
+        if (conscious)
             chance -= 15;
 
-        // Surface quality bonus
+        // Surface quality bonus — check if patient is on an operating table
         if (stepProto.Delicate)
         {
-            if (TryComp<OperativeTableComponent>(target, out var table))
-                chance *= table.SurgeryQualityBonus;
+            var tableQuality = GetTableQuality(target);
+            if (tableQuality.HasValue)
+                chance *= tableQuality.Value;
             else
                 chance -= 10;
         }
 
         return Math.Clamp(chance, 0, 100);
+    }
+
+    private float? GetTableQuality(EntityUid target)
+    {
+        // Check if patient is buckled to an operating table
+        if (TryComp<BuckleComponent>(target, out var buckle) && buckle.Buckled)
+        {
+            if (TryComp<OperativeTableComponent>(buckle.BuckledTo, out var table))
+                return table.SurgeryQualityBonus;
+        }
+        return null;
     }
 
     private void OnStepDoAfter(Entity<SurgeryToolComponent> ent, ref SurgeryStepDoAfterEvent args)
@@ -327,7 +352,7 @@ public sealed partial class SurgerySystem : EntitySystem
 
         args.Handled = true;
 
-        var limb = EntityManager.GetEntity(args.Limb);
+        var limb = GetEntity(args.EventLimb);
         if (limb == EntityUid.Invalid || !TryComp<ExternalOrganComponent>(limb, out var ext))
             return;
 
@@ -337,8 +362,8 @@ public sealed partial class SurgerySystem : EntitySystem
         if (!_prototype.TryIndex(args.StepId, out var stepProto))
             return;
 
-        var user = EntityManager.GetEntity(args.User);
-        var tool = EntityManager.GetEntity(args.Tool);
+        var user = GetEntity(args.EventUser);
+        var tool = GetEntity(args.EventTool);
         var target = user;
 
         if (args.Target is { } targ && targ != EntityUid.Invalid)
@@ -397,6 +422,7 @@ public sealed partial class SurgerySystem : EntitySystem
             "OrganAttach" => Loc.GetString("surgery-organ-attach-fail", ("limb", limbName)),
             "OrganFix" => Loc.GetString("surgery-organ-fix-fail", ("limb", limbName)),
             "RemoveEmbedded" => Loc.GetString("surgery-embedded-fail", ("limb", limbName)),
+            "TreatInternalBleeding" => Loc.GetString("surgery-treat-internal-bleeding-fail", ("limb", limbName)),
             "CleanStump" => Loc.GetString("surgery-clean-stump-fail", ("limb", limbName)),
             "TendonRepair" => Loc.GetString("surgery-tendon-repair-fail", ("limb", limbName)),
             "MuscleRepair" => Loc.GetString("surgery-muscle-repair-fail", ("limb", limbName)),
@@ -555,6 +581,7 @@ public sealed partial class SurgerySystem : EntitySystem
             case "OrganAttach":
             case "OrganFix":
             case "RemoveEmbedded":
+            case "TreatInternalBleeding":
                 return ext.SurgeryStage == SurgeryStage.Retracted || ext.SurgeryStage == SurgeryStage.Encased;
             case "CleanStump":
                 return (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.None;
@@ -624,6 +651,13 @@ public sealed partial class SurgerySystem : EntitySystem
 
             case "Cauterize" when (ext.Status & OrganStatusFlags.CutAway) == 0:
                 ext.SurgeryStage = SurgeryStage.None;
+                // Also seals any severed artery (internal bleeding)
+                if ((ext.Status & OrganStatusFlags.ArteryCut) != 0)
+                {
+                    ext.Status &= ~OrganStatusFlags.ArteryCut;
+                    Dirty(limb, ext);
+                    return Loc.GetString("surgery-cauterize-artery-end");
+                }
                 Dirty(limb, ext);
                 return Loc.GetString("surgery-cauterize-end");
 
@@ -686,6 +720,11 @@ public sealed partial class SurgerySystem : EntitySystem
 
             case "RemoveEmbedded":
                 return RemoveEmbeddedObject(limb);
+
+            case "TreatInternalBleeding" when (ext.Status & OrganStatusFlags.ArteryCut) != 0:
+                ext.Status &= ~OrganStatusFlags.ArteryCut;
+                Dirty(limb, ext);
+                return Loc.GetString("surgery-treat-internal-bleeding-end");
 
             case "CleanStump" when (ext.Status & OrganStatusFlags.CutAway) != 0 && ext.SurgeryStage == SurgeryStage.None:
                 ext.SurgeryStage = SurgeryStage.Incised;
@@ -1022,10 +1061,10 @@ public sealed partial class SurgerySystem : EntitySystem
 public sealed partial class SurgeryStepDoAfterEvent : DoAfterEvent
 {
     [DataField]
-    public NetEntity User;
+    public NetEntity EventUser;
 
     [DataField]
-    public NetEntity Tool;
+    public NetEntity EventTool;
 
     [DataField]
     public ProtoId<SurgeryStepPrototype> StepId;
@@ -1034,7 +1073,7 @@ public sealed partial class SurgeryStepDoAfterEvent : DoAfterEvent
     public float SuccessChance;
 
     [DataField]
-    public NetEntity Limb;
+    public NetEntity EventLimb;
 
     public override DoAfterEvent Clone() => this;
 }

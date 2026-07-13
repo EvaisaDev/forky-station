@@ -18,7 +18,7 @@ public enum SurgeryStepFlags : byte
     NeedsEncasement = 1 << 6,
 }
 
-[Prototype("surgeryStep")]
+[Prototype]
 public sealed partial class SurgeryStepPrototype : IPrototype
 {
     [IdDataField]

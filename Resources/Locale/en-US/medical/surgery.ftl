@@ -39,6 +39,7 @@ surgery-retract-fail = Your hand slips, tearing the edges of the incision on {TH
 # Cauterize
 surgery-cauterize-start = You begin to cauterize the incision on {THE($target)} with {$tool}.
 surgery-cauterize-end = You cauterize the incision.
+surgery-cauterize-artery-end = You cauterize the incision and seal the severed artery!
 surgery-cauterize-fail = Your hand slips, burning {THE($limb)}!
 
 # Saw bone (encased)
@@ -157,6 +158,11 @@ surgery-replace-wires-fail = Your hand slips, damaging the wiring harness!
 surgery-detach-robotic-start = You begin unbolting the robotic limb from {THE($target)} with {$tool}.
 surgery-detach-robotic-end = You detach the robotic limb from its mount.
 surgery-detach-robotic-fail = Your tool slips, damaging the mounting port!
+
+# Internal bleeding
+surgery-treat-internal-bleeding-start = You begin treating internal bleeding in {THE($target)} with {$tool}.
+surgery-treat-internal-bleeding-end = You successfully clamp and seal the severed artery!
+surgery-treat-internal-bleeding-fail = Your hand slips, damaging the artery further!
 
 # Other procedures
 surgery-autopsy-start = You begin performing an autopsy on {THE($target)} with {$tool}.

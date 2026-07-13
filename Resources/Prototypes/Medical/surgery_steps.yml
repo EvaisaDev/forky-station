@@ -251,7 +251,10 @@
   name: Repair internal organ
   description: Repairs damaged internal organs.
   allowedTools:
-    OrganFixTool: 100
+    AdvancedTraumaKit: 100
+    Nanopaste: 100
+    Hemostat: 75
+    Forceps: 50
   requiredFlags: 0
   minDuration: 6.0
   maxDuration: 9.0
@@ -274,4 +277,20 @@
   canInfect: true
   bloodLevel: 1
   shockLevel: 10
+  delicate: true
+
+- type: surgeryStep
+  id: TreatInternalBleeding
+  action: TreatInternalBleeding
+  name: Treat internal bleeding
+  description: Clamps and seals a severed artery to stop internal bleeding.
+  allowedTools:
+    Hemostat: 100
+    Cautery: 75
+  requiredFlags: 0
+  minDuration: 5.0
+  maxDuration: 8.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 20
   delicate: true
