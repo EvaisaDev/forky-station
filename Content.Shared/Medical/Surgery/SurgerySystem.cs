@@ -68,15 +68,13 @@ public sealed partial class SurgerySystem : EntitySystem
         if (!args.CanReach || args.Target == null)
             return;
 
-        // Prevent duplicate processing — AfterInteractEvent fires once per organ in the body
+        var target = args.Target.Value;
+        var (tool, toolComp) = ent;
         var curTime = _timing.CurTime;
         if (args.Target.Value == LastSurgeryTarget && curTime - LastSurgeryTime < TimeSpan.FromSeconds(1))
             return;
         LastSurgeryTarget = args.Target.Value;
         LastSurgeryTime = curTime;
-
-        var target = args.Target.Value;
-        var (tool, toolComp) = ent;
 
         if (!TryComp<BodyComponent>(target, out var body) || body.Organs == null)
             return;
@@ -347,16 +345,22 @@ public sealed partial class SurgerySystem : EntitySystem
 
     private void OnStepDoAfter(Entity<SurgeryToolComponent> ent, ref SurgeryStepDoAfterEvent args)
     {
-        if (args.Handled || args.Cancelled)
+        if (!_net.IsServer)
             return;
+
+        var limb = GetEntity(args.EventLimb);
+        if (args.Handled || args.Cancelled)
+        {
+            if (limb != EntityUid.Invalid)
+                RemComp<SurgeryInProgressComponent>(limb);
+            return;
+        }
 
         args.Handled = true;
 
-        var limb = GetEntity(args.EventLimb);
         if (limb == EntityUid.Invalid || !TryComp<ExternalOrganComponent>(limb, out var ext))
             return;
 
-        // Remove surgery-in-progress marker
         RemComp<SurgeryInProgressComponent>(limb);
 
         if (!_prototype.TryIndex(args.StepId, out var stepProto))
@@ -370,14 +374,11 @@ public sealed partial class SurgerySystem : EntitySystem
             target = targ;
 
         var success = _random.Prob(args.SuccessChance / 100f);
+
         if (success)
-        {
             EndSurgeryStep(user, tool, ent.Comp, limb, ext, target, stepProto);
-        }
         else
-        {
             FailSurgeryStep(user, tool, ent.Comp, limb, ext, target, stepProto);
-        }
     }
 
     private void EndSurgeryStep(EntityUid user, EntityUid tool, SurgeryToolComponent toolComp,
