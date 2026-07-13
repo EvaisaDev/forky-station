@@ -5,7 +5,7 @@ using Robust.Client.UserInterface.Controllers;
 
 namespace Content.Client._Medical.Targeting;
 
-public sealed class TargetingUIController : UIController, IOnStateEntered<GameplayState>, IOnSystemChanged<TargetingSystem>
+public sealed partial class TargetingUIController : UIController, IOnStateEntered<GameplayState>, IOnSystemChanged<TargetingSystem>
 {
     [Dependency] private IEntityManager _entManager = default!;
     [Dependency] private IEntityNetworkManager _net = default!;
@@ -18,14 +18,12 @@ public sealed class TargetingUIController : UIController, IOnStateEntered<Gamepl
     {
         system.TargetingStartup += AddTargetingControl;
         system.TargetingShutdown += RemoveTargetingControl;
-        system.TargetChange += CycleTarget;
     }
 
     public void OnSystemUnloaded(TargetingSystem system)
     {
         system.TargetingStartup -= AddTargetingControl;
         system.TargetingShutdown -= RemoveTargetingControl;
-        system.TargetChange -= CycleTarget;
     }
 
     public void OnStateEntered(GameplayState state)

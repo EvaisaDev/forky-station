@@ -274,7 +274,7 @@ public sealed partial class HealthAnalyzerSystem : EntitySystem
                 // Per-limb damage
                 if (TryComp<ExternalOrganComponent>(organ, out var ext))
                 {
-                    var name = EntityManager.GetComponent<MetaDataComponent>(organ).EntityName;
+                    var name = Comp<MetaDataComponent>(organ).EntityName;
                     limbs.Add(new LimbScanData
                     {
                         Name = name,

@@ -4,13 +4,12 @@ using Robust.Shared.Player;
 
 namespace Content.Client._Medical.Targeting;
 
-public sealed class TargetingSystem : SharedTargetingSystem
+public sealed partial class TargetingSystem : SharedTargetingSystem
 {
     [Dependency] private IPlayerManager _playerManager = default!;
 
     public event Action<TargetingComponent>? TargetingStartup;
     public event Action? TargetingShutdown;
-    public event Action<TargetBodyPart>? TargetChange;
 
     public override void Initialize()
     {
