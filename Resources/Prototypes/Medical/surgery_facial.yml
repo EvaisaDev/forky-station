@@ -16,6 +16,9 @@
   bloodLevel: 1
   shockLevel: 20
   delicate: true
+  damage:
+    types:
+      Slash: 3
 
 - type: surgeryStep
   id: RepairEye
@@ -33,6 +36,9 @@
   bloodLevel: 1
   shockLevel: 15
   delicate: true
+  damage:
+    types:
+      Piercing: 3
 
 - type: surgeryStep
   id: RepairEar
@@ -50,3 +56,6 @@
   bloodLevel: 1
   shockLevel: 15
   delicate: true
+  damage:
+    types:
+      Piercing: 3

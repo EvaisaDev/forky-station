@@ -15,6 +15,9 @@
   bloodLevel: 1
   shockLevel: 10
   delicate: true
+  damage:
+    types:
+      Slash: 5
 
 - type: surgeryStep
   id: RemoveImplanted
@@ -31,3 +34,6 @@
   bloodLevel: 1
   shockLevel: 10
   delicate: true
+  damage:
+    types:
+      Slash: 5

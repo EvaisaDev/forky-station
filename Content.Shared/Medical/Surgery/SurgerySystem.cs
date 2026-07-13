@@ -1,9 +1,10 @@
 using Content.Shared._Medical.Targeting;
 using Content.Shared.Body;
-using Content.Shared.Chat;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
 using Content.Shared.Body.Organs;
+using Content.Shared.Body.Systems;
+using Content.Shared.Chat;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Item;
@@ -16,6 +17,7 @@ using Content.Shared.Interaction;
 using Content.Shared.Medical.Pain;
 using Content.Shared.Medical.Wounds;
 using Content.Shared.Mobs;
+using Content.Shared.Movement.Systems;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Bed.Sleep;
 using Content.Shared.Buckle.Components;
@@ -46,6 +48,8 @@ public sealed partial class SurgerySystem : EntitySystem
     [Dependency] private ISharedChatManager _chat = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;
+    [Dependency] private MovementSpeedModifierSystem _movementSpeed = default!;
+    [Dependency] private SharedBloodstreamSystem _bloodstream = default!;
 
     public override void Initialize()
     {
@@ -306,6 +310,99 @@ public sealed partial class SurgerySystem : EntitySystem
         };
     }
 
+    private void ApplySurgeryDamage(EntityUid body, EntityUid limb, ExternalOrganComponent ext, DamageSpecifier damage, bool isAmputation = false)
+    {
+        // Update limb damage values
+        foreach (var (type, value) in damage.DamageDict)
+        {
+            if (value <= 0)
+                continue;
+
+            switch (type)
+            {
+                case "Blunt":
+                case "Slash":
+                case "Piercing":
+                    ext.BruteDamage += value;
+                    break;
+                case "Heat":
+                case "Cold":
+                case "Shock":
+                case "Caustic":
+                    ext.BurnDamage += value;
+                    break;
+            }
+        }
+        Dirty(limb, ext);
+
+        // For amputation, also damage the parent body part
+        if (isAmputation && TryComp<OrganComponent>(limb, out var organ) && organ.Category != null)
+        {
+            ApplyToParentLimb(body, organ.Category, damage * 0.5f);
+        }
+
+        // Trigger bleeding on the body proportional to the damage
+        var totalDamage = damage.GetTotal().Float();
+        if (totalDamage > 0 && TryComp<BloodstreamComponent>(body, out var bloodstream))
+        {
+            _bloodstream.TryModifyBleedAmount((body, bloodstream), totalDamage * 0.5f);
+        }
+    }
+
+    private void ApplyToParentLimb(EntityUid body, string limbCategory, DamageSpecifier damage)
+    {
+        if (!LimbParentCategories.TryGetValue(limbCategory, out var parentCategory))
+            return;
+
+        if (!TryComp<BodyComponent>(body, out var bodyComp) || bodyComp.Organs == null)
+            return;
+
+        foreach (var organ in bodyComp.Organs.ContainedEntities)
+        {
+            if (!TryComp<OrganComponent>(organ, out var org) || org.Category != parentCategory)
+                continue;
+
+            if (TryComp<ExternalOrganComponent>(organ, out var parentExt))
+            {
+                foreach (var (type, value) in damage.DamageDict)
+                {
+                    if (value <= 0)
+                        continue;
+
+                    switch (type)
+                    {
+                        case "Blunt":
+                        case "Slash":
+                        case "Piercing":
+                            parentExt.BruteDamage += value;
+                            break;
+                        case "Heat":
+                        case "Cold":
+                        case "Shock":
+                        case "Caustic":
+                            parentExt.BurnDamage += value;
+                            break;
+                    }
+                }
+                Dirty(organ, parentExt);
+            }
+            return;
+        }
+    }
+
+    private static readonly Dictionary<string, string> LimbParentCategories = new()
+    {
+        { "Head", "Torso" },
+        { "ArmLeft", "Torso" },
+        { "ArmRight", "Torso" },
+        { "LegLeft", "Torso" },
+        { "LegRight", "Torso" },
+        { "HandLeft", "ArmLeft" },
+        { "HandRight", "ArmRight" },
+        { "FootLeft", "LegLeft" },
+        { "FootRight", "LegRight" },
+    };
+
     private float CalculateSuccessChance(SurgeryToolComponent toolComp, SurgeryStepPrototype stepProto,
         EntityUid limb, ExternalOrganComponent ext, EntityUid target, EntityUid user, bool conscious)
     {
@@ -385,6 +482,13 @@ public sealed partial class SurgerySystem : EntitySystem
         EntityUid limb, ExternalOrganComponent ext, EntityUid target,
         SurgeryStepPrototype stepProto)
     {
+        // Apply surgical trauma for amputation
+        if (stepProto.Damage is { } stepDamage)
+        {
+            var isAmputation = stepProto.Action is "BoneSaw" or "Amputate" or "DetachRobotic";
+            ApplySurgeryDamage(target, limb, ext, stepDamage, isAmputation);
+        }
+
         var result = ExecuteStepAction(tool, toolComp, limb, ext, target, user, stepProto.Action);
         if (result != null)
             _popup.PopupEntity(result, user, user);
@@ -673,6 +777,7 @@ public sealed partial class SurgerySystem : EntitySystem
             {
                 var sawEv = new LimbAmputateEvent((limb, ext), DropLimbType.Edge);
                 RaiseLocalEvent(limb, ref sawEv);
+                _movementSpeed.RefreshMovementSpeedModifiers(target);
                 return Loc.GetString("surgery-limb-amputated");
             }
             case "BoneSaw" when ext.SurgeryStage == SurgeryStage.Retracted:
@@ -702,6 +807,7 @@ public sealed partial class SurgerySystem : EntitySystem
             case "Amputate" when TryComp<OrganComponent>(limb, out var ampOrg) && ampOrg.Category != "Torso":
                 var amputateEv = new LimbAmputateEvent((limb, ext), DropLimbType.Edge);
                 RaiseLocalEvent(limb, ref amputateEv);
+                _movementSpeed.RefreshMovementSpeedModifiers(target);
                 return Loc.GetString("surgery-amputate-end");
 
             case "OrganDetach":
@@ -787,6 +893,7 @@ public sealed partial class SurgerySystem : EntitySystem
             {
                 var detachEv = new LimbAmputateEvent((limb, ext), DropLimbType.Edge);
                 RaiseLocalEvent(limb, ref detachEv);
+                _movementSpeed.RefreshMovementSpeedModifiers(target);
                 return Loc.GetString("surgery-detach-robotic-end");
             }
 

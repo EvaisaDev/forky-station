@@ -1,4 +1,5 @@
 using Content.Shared.Body.Organs;
+using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -74,4 +75,11 @@ public sealed partial class SurgeryStepPrototype : IPrototype
     /// </summary>
     [DataField]
     public bool StrictAccessRequirement { get; private set; } = true;
+
+    /// <summary>
+    /// Trauma damage dealt to the patient when this step ends.
+    /// This damage is applied to both the limb and the body (for bleeding).
+    /// </summary>
+    [DataField]
+    public DamageSpecifier? Damage { get; private set; }
 }

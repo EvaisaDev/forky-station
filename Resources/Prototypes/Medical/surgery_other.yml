@@ -14,3 +14,6 @@
   canInfect: true
   bloodLevel: 1
   shockLevel: 0
+  damage:
+    types:
+      Slash: 10

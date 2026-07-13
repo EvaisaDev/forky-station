@@ -16,6 +16,9 @@
   canInfect: true
   bloodLevel: 1
   shockLevel: 15
+  damage:
+    types:
+      Slash: 5
 
 - type: surgeryStep
   id: TendonRepair
@@ -33,6 +36,9 @@
   bloodLevel: 1
   shockLevel: 20
   delicate: true
+  damage:
+    types:
+      Slash: 2
 
 - type: surgeryStep
   id: MuscleRepair
@@ -50,6 +56,9 @@
   bloodLevel: 2
   shockLevel: 25
   delicate: true
+  damage:
+    types:
+      Slash: 2
 
 - type: surgeryStep
   id: CloseReattachment
@@ -64,3 +73,6 @@
   minDuration: 6.0
   maxDuration: 9.0
   shockLevel: 15
+  damage:
+    types:
+      Slash: 5

@@ -24,7 +24,8 @@ public sealed partial class AmputationEffectsSystem : EntitySystem
 
     private void OnLimbDismembered(Entity<BodyComponent> ent, ref LimbDismemberedEvent args)
     {
-        if (TerminatingOrDeleted(args.Limb) || !TryComp<ExternalOrganComponent>(args.Limb, out var ext))
+        EntityUid limbUid = args.Limb;
+        if (TerminatingOrDeleted(limbUid) || !TryComp<ExternalOrganComponent>(limbUid, out var ext))
             return;
 
         // Leg amputation: crawl or slow
@@ -47,7 +48,7 @@ public sealed partial class AmputationEffectsSystem : EntitySystem
         // Arm/hand amputation: drop held items
         if ((ext.Flags & LimbFlags.CanGrasp) != 0)
         {
-            _popup.PopupEntity(Loc.GetString("amputation-no-grasp", ("limb", Name(args.Limb))), ent, ent);
+            _popup.PopupEntity(Loc.GetString("amputation-no-grasp", ("limb", Name(limbUid))), ent, ent);
         }
 
         _movementSpeed.RefreshMovementSpeedModifiers(ent);

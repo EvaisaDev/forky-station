@@ -11,6 +11,9 @@
   minDuration: 3.0
   maxDuration: 4.0
   shockLevel: 0
+  damage:
+    types:
+      Heat: 3
 
 - type: surgeryStep
   id: CloseHatch
@@ -36,6 +39,9 @@
   minDuration: 5.0
   maxDuration: 8.0
   shockLevel: 0
+  damage:
+    types:
+      Heat: 5
 
 - type: surgeryStep
   id: ReplaceWires
@@ -49,6 +55,9 @@
   minDuration: 4.0
   maxDuration: 7.0
   shockLevel: 0
+  damage:
+    types:
+      Shock: 3
 
 - type: surgeryStep
   id: DetachRobotic
@@ -62,3 +71,6 @@
   minDuration: 8.0
   maxDuration: 12.0
   shockLevel: 10
+  damage:
+    types:
+      Slash: 15
