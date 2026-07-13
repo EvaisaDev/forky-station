@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.FixedPoint;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
@@ -37,13 +36,13 @@ public sealed partial class ExternalOrganComponent : Component
     public FixedPoint2 MinBrokenDamage = 60;
 
     /// <summary>
-    /// Organ status flags
+    /// Bitfield of organ status flags.
     /// </summary>
     [DataField, AutoNetworkedField]
     public OrganStatusFlags Status;
 
     /// <summary>
-    /// Limb capability flags
+    /// Bitfield of limb capability flags.
     /// </summary>
     [DataField, AutoNetworkedField]
     public LimbFlags Flags;
@@ -55,33 +54,33 @@ public sealed partial class ExternalOrganComponent : Component
     public bool Dislocated;
 
     /// <summary>
-    /// Surgery state: tracks incision/clamping/retraction/encasement progress.
+    ///     Surgery state: tracks incision/clamping/retraction/encasement progress.
     /// </summary>
     [DataField, AutoNetworkedField]
     public SurgeryStage SurgeryStage;
 
     /// <summary>
-    /// Bone repair progress (0=none, 1=glued, 2=set, 3=finished).
+    ///     Bone repair progress (0-3, 0=none, 1=glued, 2=set, 3=finished).
     /// </summary>
     [DataField, AutoNetworkedField]
     public int BoneRepairStage;
 
     /// <summary>
-    /// Name of the encased bone structure (e.g. "ribcage", "skull").
-    /// If set, this limb requires sawing through bone to access internals.
+    ///     Name of the encased bone structure (e.g. "ribcage", "skull").
+    ///     If set, this limb requires sawing through bone to access internals.
     /// </summary>
     [DataField, AutoNetworkedField]
     public string? Encased;
 
     /// <summary>
-    /// Whether this limb is disfigured (not implemented yet, might just be a simple text added to the examine... idk)
+    ///     Whether this limb is disfigured (scarred/mangled beyond recognition).
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool Disfigured;
 }
 
 /// <summary>
-/// Organ/limb status.
+/// Bitfield flags for organ/limb status.
 /// </summary>
 [Flags, Serializable, NetSerializable]
 public enum OrganStatusFlags : byte
@@ -123,4 +122,3 @@ public enum SurgeryStage : byte
     Retracted,  // Skin retracted (retractors used)
     Encased,    // Bone/ribcage opened (saw used)
 }
-// Baystation end

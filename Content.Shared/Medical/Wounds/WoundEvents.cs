@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 
@@ -51,4 +50,3 @@ public record struct WoundableDamageChangedEvent;
 /// </summary>
 [ByRefEvent]
 public record struct RefreshWoundsEvent;
-// Baystation end

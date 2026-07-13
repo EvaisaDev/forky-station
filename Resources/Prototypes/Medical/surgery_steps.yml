@@ -1,0 +1,277 @@
+# Surgery step prototypes. Map tool entity IDs to quality values.
+# Each step defines what tools can perform it and under what conditions.
+
+# --- Generic open surgery steps ---
+
+- type: surgeryStep
+  id: Incision
+  action: Incision
+  name: Make incision
+  description: Cuts open the skin to access underlying tissue.
+  allowedTools:
+    Scalpel: 100
+    Knife: 75
+    BrokenBottle: 50
+    GlassShard: 50
+  requiredFlags: 0
+  minDuration: 9.0
+  maxDuration: 11.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 10
+
+- type: surgeryStep
+  id: LaserIncision
+  action: LaserIncision
+  name: Make laser incision
+  description: A bloodless incision using laser technology.
+  allowedTools:
+    LaserScalpel: 100
+    EnergySword: 5
+  requiredFlags: 0
+  minDuration: 9.0
+  maxDuration: 11.0
+  bloodLevel: 0
+  shockLevel: 20
+
+- type: surgeryStep
+  id: ManagedIncision
+  action: ManagedIncision
+  name: Make managed incision
+  description: A combined incision, clamping, and retraction using advanced tools.
+  allowedTools:
+    ManagedScalpel: 100
+  requiredFlags: 0
+  minDuration: 8.0
+  maxDuration: 12.0
+  bloodLevel: 0
+  shockLevel: 30
+
+- type: surgeryStep
+  id: Clamp
+  action: Clamp
+  name: Clamp bleeders
+  description: Clamps bleeding vessels to prevent blood loss during surgery.
+  allowedTools:
+    Hemostat: 100
+    CableCoil: 75
+    Mousetrap: 20
+  requiredFlags: 0
+  minDuration: 4.0
+  maxDuration: 6.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 10
+  strictAccessRequirement: false
+
+- type: surgeryStep
+  id: Retract
+  action: Retract
+  name: Widen incision
+  description: Retracts the incision edges to provide better access.
+  allowedTools:
+    Retractor: 100
+    JawsOfLife: 80
+    Crowbar: 75
+    Knife: 50
+    Fork: 50
+  requiredFlags: 0
+  minDuration: 3.0
+  maxDuration: 4.0
+  shockLevel: 10
+  strictAccessRequirement: true
+
+- type: surgeryStep
+  id: Cauterize
+  action: Cauterize
+  name: Cauterize incision
+  description: Closes an incision by burning the wound shut.
+  allowedTools:
+    Cautery: 100
+    Cigarette: 75
+    Lighter: 50
+    WeldingTool: 25
+  requiredFlags: 0
+  minDuration: 7.0
+  maxDuration: 10.0
+  shockLevel: 10
+
+# --- Bone surgery steps ---
+
+- type: surgeryStep
+  id: BoneGlue
+  action: BoneGlue
+  name: Begin bone repair
+  description: Applies bone adhesive to prepare for bone setting.
+  allowedTools:
+    BoneGel: 100
+    TapeRoll: 75
+  requiredFlags: 0
+  minDuration: 5.0
+  maxDuration: 6.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 20
+
+- type: surgeryStep
+  id: BoneSet
+  action: BoneSet
+  name: Set bone
+  description: Aligns broken bone fragments back into place.
+  allowedTools:
+    BoneSetter: 100
+    PowerDrill: 100
+    Wrench: 75
+  requiredFlags: 0
+  minDuration: 6.0
+  maxDuration: 7.0
+  shockLevel: 40
+  delicate: true
+
+- type: surgeryStep
+  id: BoneFinish
+  action: BoneFinish
+  name: Finish bone repair
+  description: Applies final adhesive to complete bone mending.
+  allowedTools:
+    BoneGel: 100
+    TapeRoll: 75
+  requiredFlags: 0
+  minDuration: 5.0
+  maxDuration: 6.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 20
+
+# --- Encased access step ---
+
+- type: surgeryStep
+  id: SawBone
+  action: SawBone
+  name: Saw through bone
+  description: Cuts through the ribcage or skull to access internal organs.
+  allowedTools:
+    CircularSaw: 100
+    Hatchet: 75
+    Knife: 50
+  requiredFlags: 0
+  minDuration: 5.0
+  maxDuration: 7.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 60
+  delicate: true
+  strictAccessRequirement: true
+
+# --- Amputation ---
+
+- type: surgeryStep
+  id: Amputate
+  action: Amputate
+  name: Amputate limb
+  description: Completely severs a limb from the body.
+  allowedTools:
+    CircularSaw: 100
+    Hatchet: 75
+  requiredFlags: 0
+  minDuration: 11.0
+  maxDuration: 16.0
+  bloodLevel: 2
+  shockLevel: 80
+
+# --- Organ surgery steps ---
+
+- type: surgeryStep
+  id: OrganDetach
+  action: OrganDetach
+  name: Detach organ
+  description: Separates an internal organ from its connections.
+  allowedTools:
+    Scalpel: 100
+    Knife: 75
+  requiredFlags: 0
+  minDuration: 5.0
+  maxDuration: 8.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 20
+  delicate: true
+
+- type: surgeryStep
+  id: OrganRemove
+  action: OrganRemove
+  name: Remove organ
+  description: Removes a detached internal organ from the body.
+  allowedTools:
+    Hemostat: 100
+    CableCoil: 75
+  requiredFlags: 0
+  minDuration: 3.0
+  maxDuration: 5.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 10
+  delicate: true
+
+- type: surgeryStep
+  id: OrganReplace
+  action: OrganReplace
+  name: Replace organ
+  description: Inserts a new organ into the body cavity.
+  allowedTools:
+    Retractor: 100
+    Crowbar: 75
+  requiredFlags: 0
+  minDuration: 4.0
+  maxDuration: 6.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 10
+  delicate: true
+
+- type: surgeryStep
+  id: OrganAttach
+  action: OrganAttach
+  name: Attach organ
+  description: Connects an inserted organ to the body's systems.
+  allowedTools:
+    Cautery: 100
+    WeldingTool: 50
+  requiredFlags: 0
+  minDuration: 6.0
+  maxDuration: 8.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 20
+  delicate: true
+
+- type: surgeryStep
+  id: OrganFix
+  action: OrganFix
+  name: Repair internal organ
+  description: Repairs damaged internal organs.
+  allowedTools:
+    OrganFixTool: 100
+  requiredFlags: 0
+  minDuration: 6.0
+  maxDuration: 9.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 30
+  delicate: true
+
+- type: surgeryStep
+  id: RemoveEmbedded
+  action: RemoveEmbedded
+  name: Remove embedded object
+  description: Removes foreign objects embedded in wounds.
+  allowedTools:
+    Forceps: 100
+    Hemostat: 75
+  requiredFlags: 0
+  minDuration: 3.0
+  maxDuration: 5.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 10
+  delicate: true

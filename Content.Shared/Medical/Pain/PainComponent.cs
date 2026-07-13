@@ -1,4 +1,3 @@
-// Baystation start
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
@@ -22,4 +21,3 @@ public sealed partial class PainComponent : Component
     [DataField]
     public string LastPainMessage = string.Empty;
 }
-// Baystation end

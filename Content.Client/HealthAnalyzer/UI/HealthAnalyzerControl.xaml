@@ -33,7 +33,29 @@
             <Label Name="BloodLabel" />
             <Label Text="{Loc 'health-analyzer-window-entity-damage-total-text'}" />
             <Label Name="DamageLabel" />
+            <Label Text="{Loc 'health-analyzer-window-entity-brain-activity-text'}" />
+            <Label Name="BrainActivityLabel" />
+            <Label Text="{Loc 'health-analyzer-window-entity-pulse-text'}" />
+            <Label Name="PulseLabel" />
+            <Label Text="{Loc 'health-analyzer-window-entity-oxygenation-text'}" />
+            <Label Name="OxygenationLabel" />
         </GridContainer>
+
+        <PanelContainer StyleClasses="LowDivider" />
+
+        <BoxContainer Name="LimbDamageContainer" Margin="0 5" Orientation="Vertical">
+            <Label Text="{Loc 'health-analyzer-window-limb-damage-text'}" StyleClasses="LabelKeyText" />
+        </BoxContainer>
+
+        <PanelContainer Name="ConditionsDivider" Visible="False" StyleClasses="LowDivider" />
+
+        <BoxContainer Name="ConditionsContainer" Visible="False" Margin="0 5" Orientation="Vertical">
+        </BoxContainer>
+
+        <PanelContainer Name="ReagentDivider" Visible="False" StyleClasses="LowDivider" />
+
+        <BoxContainer Name="ReagentContainer" Visible="False" Margin="0 5" Orientation="Vertical">
+        </BoxContainer>
     </BoxContainer>
 
     <PanelContainer Name="AlertsDivider" Visible="False" StyleClasses="LowDivider" />

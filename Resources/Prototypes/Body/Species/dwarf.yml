@@ -95,3 +95,7 @@
 - type: entity
   parent: [ OrganDwarfMetabolizer, OrganHumanHeart ]
   id: OrganDwarfHeart
+  components:
+  - type: HeartCondition
+    efficiency: 1.0
+    beating: true

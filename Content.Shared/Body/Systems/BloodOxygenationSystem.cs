@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Body.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Damage;
@@ -16,8 +15,8 @@ using Robust.Shared.Network;
 namespace Content.Shared.Body.Systems;
 
 /// <summary>
-/// Baystation-style blood oxygenation and pulse system.
-/// Pulse uses discrete levels (0-5) with probabilistic heart damage and cardiac arrest.
+///     Baystation-style blood oxygenation and pulse system.
+///     Pulse uses discrete levels (0-5) with probabilistic heart damage and cardiac arrest.
 /// </summary>
 public sealed partial class BloodOxygenationSystem : EntitySystem
 {
@@ -30,7 +29,7 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
     [Dependency] private BrainSystem _brain = default!;
     [Dependency] private INetManager _net = default!;
 
-// Baystation pulse levels (PULSE_NONE=0 through PULSE_THREADY=5)
+    // Baystation pulse levels (PULSE_NONE=0 through PULSE_THREADY=5)
     public const int PULSE_NONE = 0;     // cardiac arrest
     public const int PULSE_SLOW = 1;     // ~50 BPM
     public const int PULSE_NORM = 2;     // ~72 BPM (normal)
@@ -44,7 +43,7 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
     public const float DEXALIN_PLUS_BONUS = 0.80f;
 
     /// <summary>
-    /// How often the oxygenation system updates (every 2 seconds = 1 tick at default 20TPS).
+    ///     How often the oxygenation system updates (every 2 seconds = 1 tick at default 20TPS).
     /// </summary>
     public TimeSpan UpdateInterval = TimeSpan.FromSeconds(2);
 
@@ -124,7 +123,7 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
         oxygenation.Oxygenation = bloodVolume * lungEff * heartEff + dexalinBonus;
         oxygenation.Oxygenation = Math.Clamp(oxygenation.Oxygenation, 0, 1);
 
-// Baystation pulse level calculation
+        // Baystation pulse level calculation
         oxygenation.PulseLevel = CalculatePulseLevel(uid, oxygenation);
 
         // Apply probabilistic heart damage at high pulse (Baystation model)
@@ -153,17 +152,17 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
     }
 
     /// <summary>
-    /// Computes pulse level (0-5)
-    /// Base = PULSE_NORM (2).
-    /// +1 from low O2, +1/2 from shock, chemicals can modify.
-    /// Inaprovaline (CE_STABLE) pulls toward PULSE_NORM.
+    ///     Computes pulse level (0-5) using Baystation's model.
+    ///     Base = PULSE_NORM (2).
+    ///     +1 from low O2, +1/2 from shock, chemicals can modify.
+    ///     Inaprovaline (CE_STABLE) pulls toward PULSE_NORM.
     /// </summary>
     private int CalculatePulseLevel(EntityUid uid, BloodOxygenationComponent oxy)
     {
         // Start at normal
         var pulseMod = 0;
 
-        // Shock contribution
+        // Shock contribution (Baystation: +1 at shock > 30, +1 at shock > 80)
         if (TryComp<PainComponent>(uid, out var pain))
         {
             if (pain.ShockLevel > 80)
@@ -172,13 +171,13 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
                 pulseMod += 1;
         }
 
-        // Low O2 contribution
+        // Low O2 contribution (Baystation: +1 at O2 < 70%, +1 at O2 < 60%)
         if (oxy.Oxygenation < 0.60f)
             pulseMod += 2;
         else if (oxy.Oxygenation < 0.70f)
             pulseMod += 1;
 
-        // Clamp to valid range
+        // Clamp to valid range (0-5, but 0 only if stopped)
         var pulseLevel = Math.Clamp(PULSE_NORM + pulseMod, PULSE_SLOW, PULSE_THREADY);
 
         // Inaprovaline stabilization: pull toward PULSE_NORM
@@ -194,7 +193,7 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
     }
 
     /// <summary>
-    /// converts pulse level to approximate BPM for display.
+    ///     Converts Baystation pulse level to approximate BPM for display.
     /// </summary>
     private static float PulseLevelToBPM(int level)
     {
@@ -211,7 +210,7 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
     }
 
     /// <summary>
-    /// Directly damage the heart organ at high pulses
+    ///     Directly damage the heart organ (from high pulse strain).
     /// </summary>
     private void DamageHeart(EntityUid uid)
     {
@@ -439,4 +438,3 @@ public sealed partial class BloodOxygenationSystem : EntitySystem
         return true;
     }
 }
-// Baystation end

@@ -2,6 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.Body.Events;
 using Content.Shared.Body;
+using Content.Shared.Damage;
+using Content.Shared.EntityEffects.Effects.Damage;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Components.SolutionManager;
 using Content.Shared.Chemistry.EntitySystems;
@@ -136,19 +138,18 @@ public sealed partial class MetabolizerSystem : EntitySystem
 
         LookupSolution(ent, solutionData, true, out var transferSolution, out var transferSolutionEntity, out _);
 
-        // Copy the solution do not edit the original solution list
         var list = solution.Contents.ToList();
 
-        // Collecting blood reagent for filtering
         var ev = new MetabolismExclusionEvent();
         RaiseLocalEvent(solutionOwner.Value, ref ev);
 
-        // randomize the reagent list so we don't have any weird quirks
-        // like alphabetical order or insertion order mattering for processing
         var rand = SharedRandomExtensions.PredictedRandom(_gameTiming, GetNetEntity(ent), GetNetEntity(solutionOwner));
         rand.Shuffle(list);
 
         var isDead = _mobStateSystem.IsDead(solutionOwner.Value);
+
+        // Stage name string for Bioavailability check
+        var stageName = stage.Id;
 
         int reagents = 0;
         foreach (var (reagent, quantity) in list)
@@ -156,7 +157,6 @@ public sealed partial class MetabolizerSystem : EntitySystem
             if (!_prototypeManager.TryIndex<ReagentPrototype>(reagent.Prototype, out var proto))
                 continue;
 
-            // Skip blood reagents
             if (ev.Reagents.Contains(reagent))
                 continue;
 
@@ -177,12 +177,21 @@ public sealed partial class MetabolizerSystem : EntitySystem
                 continue;
             }
 
-            var rate = solutionData.MetabolizeAll ? quantity : entry.MetabolismRate;
+            // Use prototype-level MetabolismRate if set, otherwise use per-stage entry rate
+            var rate = solutionData.MetabolizeAll
+                ? quantity
+                : proto.MetabolismRate != 0.2f
+                    ? FixedPoint2.New(proto.MetabolismRate)
+                    : entry.MetabolismRate;
 
-            // Remove $rate, as long as there's enough reagent there to actually remove that much
             var mostToRemove = FixedPoint2.Clamp(rate, 0, quantity);
 
-            // we're done here entirely if this is true
+            // Baystation: Bioavailability scales oral dose in Digestion stage
+            if (stageName == "Digestion" && proto.Bioavailability < 1.0f)
+            {
+                mostToRemove *= FixedPoint2.New(proto.Bioavailability);
+            }
+
             if (reagents >= ent.Comp1.MaxReagentsProcessable)
                 return;
 
@@ -190,15 +199,11 @@ public sealed partial class MetabolizerSystem : EntitySystem
             if (!solutionData.MetabolizeAll)
                 scale /= (float) rate;
 
-            // if it's possible for them to be dead, and they are,
-            // then we shouldn't process any effects, but should probably
-            // still remove reagents
             if (isDead && !proto.WorksOnTheDead)
                 continue;
 
             var actualEntity = ent.Comp2?.Body ?? solutionOwner.Value;
 
-            // do all effects, if conditions apply
             foreach (var effect in entry.Effects)
             {
                 if (scale < effect.MinScale)
@@ -207,15 +212,12 @@ public sealed partial class MetabolizerSystem : EntitySystem
                 if (rand.NextFloat() >= effect.Probability)
                     continue;
 
-                // See if conditions apply
                 if (effect.Conditions != null && !CanMetabolizeEffect(actualEntity, ent, solutionEntity.Value, effect.Conditions))
                     continue;
 
                 ApplyEffect(effect);
-
             }
 
-            // TODO: We should have to do this with metabolism. ReagentEffect struct needs refactoring and so does metabolism!
             void ApplyEffect(EntityEffect effect)
             {
                 switch (effect)
@@ -232,12 +234,10 @@ public sealed partial class MetabolizerSystem : EntitySystem
                 }
             }
 
-            // remove a certain amount of reagent
             if (mostToRemove > FixedPoint2.Zero)
             {
                 solution.RemoveReagent(reagent, mostToRemove);
 
-                // We have processed a reagant, so count it towards the cap
                 reagents += 1;
 
                 if (transferSolution is not null && entry.Metabolites is not null)
@@ -246,6 +246,13 @@ public sealed partial class MetabolizerSystem : EntitySystem
                     {
                         transferSolution.AddReagent(metabolite, mostToRemove * ratio);
                     }
+                }
+
+                // Baystation: ActiveMetabolite generation (Bloodstream stage)
+                if (proto.ActiveMetabolite != null && stageName == "Bloodstream" && mostToRemove > 0)
+                {
+                    var metAmount = mostToRemove * FixedPoint2.New(proto.MetabolitePotency);
+                    solution.AddReagent(proto.ActiveMetabolite, metAmount);
                 }
             }
         }
@@ -265,6 +272,47 @@ public sealed partial class MetabolizerSystem : EntitySystem
         foreach (var stage in ent.Comp1.Stages)
         {
             TryMetabolizeStage(ent, stage);
+        }
+
+        // Baystation: Overdose threshold check — scan bloodstream for reagents exceeding threshold
+        CheckOverdose(ent);
+    }
+
+    private void CheckOverdose(Entity<MetabolizerComponent, OrganComponent?, SolutionManagerComponent?> ent)
+    {
+        if (!ent.Comp1.Solutions.TryGetValue("Bloodstream", out var solutionData))
+            return;
+
+        if (!LookupSolution(ent, solutionData, false, out var solution, out var solutionEntity, out var solutionOwner))
+            return;
+
+        if (solution.Contents.Count == 0)
+            return;
+
+        var actualEntity = ent.Comp2?.Body ?? solutionOwner.Value;
+
+        foreach (var (reagent, quantity) in solution.Contents)
+        {
+            if (!_prototypeManager.TryIndex<ReagentPrototype>(reagent.Prototype, out var proto))
+                continue;
+
+            if (proto.OverdoseThreshold <= 0)
+                continue;
+
+            if (quantity <= proto.OverdoseThreshold)
+                continue;
+
+            var excess = (float)(quantity - FixedPoint2.New(proto.OverdoseThreshold));
+            var damageAmount = FixedPoint2.New(excess * 0.5f);
+            if (damageAmount <= 0)
+                continue;
+
+            var damage = new DamageSpecifier
+            {
+                DamageDict = new() { { "Poison", damageAmount } }
+            };
+            var healthEffect = new HealthChange { Damage = damage };
+            _entityEffects.ApplyEffect(actualEntity, healthEffect, 1f);
         }
     }
 

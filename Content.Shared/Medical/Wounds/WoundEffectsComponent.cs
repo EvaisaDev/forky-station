@@ -1,4 +1,3 @@
-// Baystation start
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -78,4 +77,3 @@ public static class WoundEffectsHelpers
         return 0;
     }
 }
-// Baystation end

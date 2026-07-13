@@ -79,6 +79,14 @@
       - Screwing
     useSound:
       collection: Screwdriver
+  - type: SurgeryTool
+    action: OpenHatch
+    steps:
+    - OpenHatch
+    - ReplaceWires
+    quality: 0.5
+    sterile: false
+    stepDuration: 5.0
   - type: RandomSprite
     available:
       - enum.DamageStateVisualLayers.Base:
@@ -109,6 +117,15 @@
     storedSprite:
       sprite: _Funkystation/Objects/Tools/wrench.rsi
       state: storage
+  - type: SurgeryTool
+    action: BoneSet
+    steps:
+    - BoneSet
+    - DetachRobotic
+    - CloseHatch
+    quality: 0.75
+    sterile: false
+    stepDuration: 4.0
   - type: MeleeWeapon
     wideAnimationRotation: 135
     attackRate: 1.5

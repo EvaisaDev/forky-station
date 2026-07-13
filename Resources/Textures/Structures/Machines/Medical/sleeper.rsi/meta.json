@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "license": "AGPL-3.0",
+    "copyright": "Baystation12 (https://baystation.xyz)",
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "sleeper",
+            "directions": 4
+        },
+        {
+            "name": "sleeper_closed",
+            "directions": 4
+        },
+        {
+            "name": "sleeper_working",
+            "directions": 1,
+            "delays": [
+                [
+                    1.0,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1
+                ]
+            ]
+        },
+        {
+            "name": "sleeper_panel",
+            "directions": 4
+        }
+    ]
+}

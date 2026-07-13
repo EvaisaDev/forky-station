@@ -106,6 +106,97 @@ public sealed partial class HealthAnalyzerControl : BoxContainer
 
         DamageLabel.Text = _damageable.GetTotalDamage(target.Value).ToString();
 
+        // Baystation Start
+
+        BrainActivityLabel.Text = state.BrainActivity ?? Loc.GetString("health-analyzer-window-entity-unknown-value-text");
+
+        PulseLabel.Text = state.PulseRate > 0
+            ? $"{state.PulseRate:F0} BPM"
+            : Loc.GetString("health-analyzer-window-entity-unknown-value-text");
+
+        OxygenationLabel.Text = state.BloodOxygenation > 0
+            ? $"{state.BloodOxygenation:F1} %"
+            : Loc.GetString("health-analyzer-window-entity-unknown-value-text");
+
+        // Limb damage
+
+        LimbDamageContainer.RemoveAllChildren();
+        LimbDamageContainer.AddChild(new Label
+        {
+            Text = Loc.GetString("health-analyzer-window-limb-damage-text"),
+            StyleClasses = { "LabelKeyText" }
+        });
+
+        if (state.Limbs != null && state.Limbs.Count > 0)
+        {
+            foreach (var limb in state.Limbs)
+            {
+                var limbText = $"{limb.Name}: Brute {limb.BruteDamage}, Burn {limb.BurnDamage}";
+                if (limb.Fractured)
+                    limbText += " [FRACTURE]";
+                if (limb.Bleeding)
+                    limbText += " [BLEEDING]";
+                LimbDamageContainer.AddChild(new Label { Text = "  " + limbText });
+            }
+        }
+        else
+        {
+            LimbDamageContainer.AddChild(new Label
+            {
+                Text = Loc.GetString("health-analyzer-window-no-limb-data-text")
+            });
+        }
+
+        // Conditions (fractures, internal bleeding, organ failure)
+
+        var showConditions = state.HasFractures || state.HasInternalBleeding || state.HasOrganFailure;
+
+        ConditionsDivider.Visible = showConditions;
+        ConditionsContainer.Visible = showConditions;
+
+        if (showConditions)
+            ConditionsContainer.RemoveAllChildren();
+
+        if (state.HasFractures)
+            ConditionsContainer.AddChild(CreateAlertLabel(
+                Loc.GetString("health-analyzer-window-condition-fractures-text")));
+
+        if (state.HasInternalBleeding)
+            ConditionsContainer.AddChild(CreateAlertLabel(
+                Loc.GetString("health-analyzer-window-condition-internal-bleeding-text")));
+
+        if (state.HasOrganFailure)
+            ConditionsContainer.AddChild(CreateAlertLabel(
+                Loc.GetString("health-analyzer-window-condition-organ-failure-text")));
+
+        // Reagent scan
+
+        if (state.Reagents is { Count: > 0 } reagents)
+        {
+            ReagentDivider.Visible = true;
+            ReagentContainer.Visible = true;
+
+            ReagentContainer.RemoveAllChildren();
+            ReagentContainer.AddChild(new Label
+            {
+                Text = Loc.GetString("health-analyzer-window-reagent-scan-text"),
+                StyleClasses = { "LabelKeyText" }
+            });
+
+            foreach (var reagent in reagents)
+            {
+                ReagentContainer.AddChild(new Label
+                {
+                    Text = $"  {reagent.Name}: {reagent.Quantity}u"
+                });
+            }
+        }
+        else
+        {
+            ReagentDivider.Visible = false;
+            ReagentContainer.Visible = false;
+        }
+
         // Alerts
 
         var showAlerts = state.Unrevivable == true || state.Bleeding == true;
@@ -220,6 +311,17 @@ public sealed partial class HealthAnalyzerControl : BoxContainer
         return new Label
         {
             Text = text,
+        };
+    }
+
+    private static Label CreateAlertLabel(string text)
+    {
+        return new Label
+        {
+            Text = text,
+            FontColorOverride = Color.OrangeRed,
+            Margin = new Thickness(0, 4),
+            MaxWidth = 300
         };
     }
 

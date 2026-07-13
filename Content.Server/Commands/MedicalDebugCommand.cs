@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Server.Administration;
 using Content.Shared.Administration;
 using Content.Shared.Body;
@@ -123,4 +122,3 @@ public sealed partial class MedicalDebugCommand : IConsoleCommand
         }
     }
 }
-// Baystation end

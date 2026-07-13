@@ -1,4 +1,3 @@
-# Baystation start
 - type: entity
   abstract: true
   parent:
@@ -161,6 +160,7 @@
       Puncture: 3
       Stump: 3
       Incision: 3
+  - type: Targeting
   - type: Tag
     tags:
     - CanPilot
@@ -197,6 +197,13 @@
         Slash: -0.05
   - type: Fingerprint
   - type: Blindable
+  - type: Pain
+  - type: BloodOxygenation
+  - type: CPR
+  - type: BloodType
+    group: O
+    rhPositive: true
+  - type: Targeting
   - type: Temperature
     currentTemperature: 310.15
     specificHeat: 42
@@ -237,7 +244,4 @@
   - type: FireVisuals
     alternateState: Standing
   - type: StunVisuals
-  - type: ESPainFlash # Funky, ES port
   - type: FootprintOwner # Funky change
-  - type: DuoEmote # Funky change
-# Baystation end

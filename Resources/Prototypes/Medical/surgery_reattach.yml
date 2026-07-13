@@ -1,0 +1,66 @@
+# Limb reattachment surgery steps.
+# Requires a severed limb nearby (or in hand) and a stump on the patient.
+
+- type: surgeryStep
+  id: CleanStump
+  action: CleanStump
+  name: Clean stump
+  description: Cleans and debrides the stump to prepare for reattachment.
+  allowedTools:
+    Scalpel: 100
+    Cautery: 75
+    Knife: 50
+  requiredFlags: 0
+  minDuration: 5.0
+  maxDuration: 8.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 15
+
+- type: surgeryStep
+  id: TendonRepair
+  action: TendonRepair
+  name: Repair tendons
+  description: Reconnects severed tendons between the stump and the severed limb.
+  allowedTools:
+    Hemostat: 100
+    CableCoil: 75
+    Forceps: 50
+  requiredFlags: 0
+  minDuration: 6.0
+  maxDuration: 9.0
+  canInfect: true
+  bloodLevel: 1
+  shockLevel: 20
+  delicate: true
+
+- type: surgeryStep
+  id: MuscleRepair
+  action: MuscleRepair
+  name: Reconnect muscle
+  description: Sutures muscle tissue to rejoin the severed limb to the stump.
+  allowedTools:
+    Hemostat: 100
+    Retractor: 75
+    Forceps: 50
+  requiredFlags: 0
+  minDuration: 7.0
+  maxDuration: 10.0
+  canInfect: true
+  bloodLevel: 2
+  shockLevel: 25
+  delicate: true
+
+- type: surgeryStep
+  id: CloseReattachment
+  action: CloseReattachment
+  name: Close reattachment
+  description: Closes the surgical site, completing the limb reattachment.
+  allowedTools:
+    Cautery: 100
+    Cigarette: 50
+    WeldingTool: 25
+  requiredFlags: 0
+  minDuration: 6.0
+  maxDuration: 9.0
+  shockLevel: 15

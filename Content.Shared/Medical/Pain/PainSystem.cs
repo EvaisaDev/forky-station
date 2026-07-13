@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Organs;
@@ -154,7 +153,7 @@ public sealed partial class PainSystem : EntitySystem
 
             totalPain += limbPain;
 
-// Baystation: prefer the most-damaged organ but randomize 30% to add variety
+            // Baystation: prefer the most-damaged organ but randomize 30% to add variety
             if (limbPain > maxPain && (maxPain == 0 || _random.Prob(0.7f)))
             {
                 maxPain = limbPain;
@@ -261,4 +260,3 @@ public record struct PainDropItemEvent(EntityUid uid);
 
 [ByRefEvent]
 public record struct PainStunEvent(EntityUid uid);
-// Baystation end

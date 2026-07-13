@@ -1,11 +1,10 @@
-// Baystation start
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Content.Shared.Medical.Wounds;
 
-[Prototype]
+[Prototype("woundEffect")]
 public sealed partial class WoundEffectPrototype : IPrototype
 {
     [IdDataField]
@@ -17,4 +16,3 @@ public sealed partial class WoundEffectPrototype : IPrototype
     [DataField]
     public Dictionary<string, float> Config { get; private set; } = new();
 }
-// Baystation end

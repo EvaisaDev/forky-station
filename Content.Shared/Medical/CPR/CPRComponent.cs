@@ -1,4 +1,3 @@
-// Baystation start
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
@@ -23,4 +22,3 @@ public sealed partial class CPRComponent : Component
     [DataField, AutoNetworkedField]
     public EntityUid? Performer;
 }
-// Baystation end

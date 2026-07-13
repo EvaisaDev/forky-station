@@ -1,0 +1,66 @@
+- type: entity
+  parent: BaseStructure
+  id: VitalsMonitor
+  name: vitals monitor
+  description: Displays patient vitals - heart rate, blood oxygenation, brain activity, breathing.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/Medical/vitals_monitor.rsi
+    layers:
+    - state: base
+      map: ["base"]
+    - state: screen
+      map: ["screen"]
+      shader: unshaded
+      visible: false
+    - state: pulse_normal
+      map: ["pulse"]
+      visible: false
+    - state: brain_ok
+      map: ["brain"]
+      visible: false
+    - state: breathing_normal
+      map: ["breathing"]
+      visible: false
+  - type: InteractionOutline
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.25,-0.25,0.25,0.25"
+        density: 50
+        mask:
+          - MachineMask
+        layer:
+          - MachineLayer
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.VitalsMonitorVisuals.PulseStatus:
+        pulse:
+          None: { visible: false }
+          Normal: { state: pulse_normal, visible: true }
+          Fast: { state: pulse_veryfast, visible: true }
+          Threading: { state: pulse_thready, visible: true }
+          Flatline: { state: pulse_flatline, visible: true }
+      enum.VitalsMonitorVisuals.BrainStatus:
+        brain:
+          None: { visible: false }
+          Normal: { state: brain_ok, visible: true }
+          Weak: { state: brain_bad, visible: true }
+          Critical: { state: brain_verybad, visible: true }
+          Warning: { state: brain_warning, visible: true }
+      enum.VitalsMonitorVisuals.BreathingStatus:
+        breathing:
+          None: { visible: false }
+          Normal: { state: breathing_normal, visible: true }
+          Shallow: { state: breathing_shallow, visible: true }
+          NotBreathing: { state: breathing_warning, visible: true }
+          Warning: { state: breathing_warning, visible: true }
+  - type: VitalsMonitor
+  - type: ApcPowerReceiver
+    powerLoad: 100
+  - type: ExtensionCableReceiver

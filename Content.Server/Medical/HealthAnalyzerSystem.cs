@@ -250,7 +250,7 @@ public sealed partial class HealthAnalyzerSystem : EntitySystem
         if (TryComp<UnrevivableComponent>(entity, out var unrevivableComp) && unrevivableComp.Analyzable)
             unrevivable = true;
 
-// Baystation start
+        // Baystation start
         var brainActivity = "Normal";
         var pulseRate = 0f;
         var bloodOxygenation = 0f;
@@ -274,7 +274,7 @@ public sealed partial class HealthAnalyzerSystem : EntitySystem
                 // Per-limb damage
                 if (TryComp<ExternalOrganComponent>(organ, out var ext))
                 {
-                    var name = Comp<MetaDataComponent>(organ).EntityName;
+                    var name = EntityManager.GetComponent<MetaDataComponent>(organ).EntityName;
                     limbs.Add(new LimbScanData
                     {
                         Name = name,

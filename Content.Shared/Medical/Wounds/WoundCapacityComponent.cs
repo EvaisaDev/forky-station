@@ -1,4 +1,3 @@
-// Baystation start
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.Medical.Wounds;
@@ -15,4 +14,3 @@ public sealed partial class WoundCapacityComponent : Component
     [DataField, AutoNetworkedField]
     public int WeaponSpecificCapacity = 1;
 }
-// Baystation end

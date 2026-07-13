@@ -1,4 +1,3 @@
-# Baystation start
 # Pain popup messages
 pain-limb-mild = Your {$limb} {$burning}.
 pain-limb-severe = Your {$limb} {$burning} badly!
@@ -39,4 +38,3 @@ limb-disfigured = Your face is horribly disfigured!
 limb-necrotic = You can't feel your {$limb} anymore...
 limb-broken-hit-scream = {CAPITALIZE(SUBJECT($target))} screams in pain!
 limb-jostle-bone-pain = A piece of bone shifts painfully in your {$limb}!
-# Baystation end

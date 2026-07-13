@@ -2,7 +2,7 @@
   id: OperatingTable
   parent: Bed
   name: operating table
-  description: Special medical table for surgery. This one just seems to be a useless prop, though.
+  description: A sterile operating table with built-in neural suppressors for anesthesia.
   components:
   - type: Sprite
     sprite: Structures/Furniture/Tables/optable.rsi
@@ -11,3 +11,12 @@
   - type: Icon
     sprite: Structures/Furniture/Tables/optable.rsi
     state: operating_table
+  - type: OperativeTable
+    anesthesiaActive: false
+    surgeryQualityBonus: 1.0
+    sterileEnvironment: true
+  - type: ApcPowerReceiver
+    powerLoad: 200
+  - type: ActivatableUI
+    key: enum.OperatingTableUiKey.Key
+  - type: UserInterface

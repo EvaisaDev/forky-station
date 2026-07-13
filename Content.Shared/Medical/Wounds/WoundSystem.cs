@@ -1,4 +1,3 @@
-// Baystation start
 using System.Linq;
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
@@ -6,12 +5,13 @@ using Content.Shared.Body.Organs;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
+using Content.Shared.Body.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
+using Content.Shared.Medical.Pain;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -26,9 +26,9 @@ public sealed partial class WoundSystem : EntitySystem
     [Dependency] private INetManager _net = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private PainSystem _pain = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private SharedSolutionContainerSystem _solution = default!;
-    [Dependency] private EntityLookupSystem _lookup = default!;
 
     private static readonly ProtoId<DamageTypePrototype>[] BruteTypes = { "Blunt", "Slash", "Piercing" };
     private static readonly ProtoId<DamageTypePrototype>[] BurnTypes = { "Heat", "Cold", "Shock", "Caustic" };
@@ -40,7 +40,7 @@ public sealed partial class WoundSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<BodyComponent, DamageChangedEvent>(OnBodyDamageChanged);
+        SubscribeLocalEvent<BodyComponent, DamageChangedEvent>(OnBodyDamageChanged, after: new[] { typeof(LimbDamageSystem) });
         SubscribeLocalEvent<WoundableComponent, GetWoundDamageEvent>(OnGetWoundDamage);
         SubscribeLocalEvent<WoundComponent, GetBleedLevelEvent>(OnWoundGetBleed);
         SubscribeLocalEvent<WoundComponent, GetPainEvent>(OnWoundGetPain);
@@ -242,7 +242,7 @@ public sealed partial class WoundSystem : EntitySystem
 
         }
 
-// Baystation: disturbing salved burns with brute damage removes the salve
+        // Baystation: disturbing salved burns with brute damage removes the salve
         if (blunt > 0 && ext != null && (ext.Status & OrganStatusFlags.Robotic) == 0 && _net.IsServer)
         {
             foreach (var woundUid in limb.Comp.Wounds)
@@ -263,6 +263,8 @@ public sealed partial class WoundSystem : EntitySystem
             }
         }
 
+        // Baystation-style pain spike: add_pain(0.6*burn + 0.4*brute)
+        _pain.AddPainSpike(limb, brute.Float(), burn.Float());
     }
 
     private void AddWeaponSpecificWound(Entity<WoundableComponent> limb, EntityUid bodyUid,
@@ -285,7 +287,6 @@ public sealed partial class WoundSystem : EntitySystem
         Dirty(woundEnt, newWound);
 
         InitializeWoundEffects(woundEnt);
-        RemoveWoundFromBroadphase(woundEnt);
 
         limb.Comp.Wounds.Add(woundEnt);
         Dirty(limb.Owner, limb.Comp);
@@ -348,11 +349,11 @@ public sealed partial class WoundSystem : EntitySystem
         if (bleedInstance == null)
             return;
 
-// Baystation: bruises only bleed at moderate+ severity (damage >= 20)
+        // Baystation: bruises only bleed at moderate+ severity (damage >= 20)
         if (ent.Comp.Group == "Brute" && ent.Comp.Damage.GetTotal() < 20)
             return;
 
-// Baystation: bleed timer — wound stops bleeding naturally when timer expires
+        // Baystation: bleed timer — wound stops bleeding naturally when timer expires
         var bleedTimer = bleedInstance.GetFloatOrConfig("bleedTimer", _prototype);
         if (bleedTimer <= 0)
             return;
@@ -361,7 +362,7 @@ public sealed partial class WoundSystem : EntitySystem
         if (bleedAmount <= 0)
             return;
 
-// Baystation: large embedded objects plug the wound and prevent bleeding
+        // Baystation: large embedded objects plug the wound and prevent bleeding
         var embeddedInstance = effects.GetEffect("Embedded", _prototype);
         if (embeddedInstance is { StringListParams: { Count: > 0 } })
         {
@@ -425,7 +426,7 @@ public sealed partial class WoundSystem : EntitySystem
     private void AddDamageToWoundGroup(Entity<WoundableComponent> limb, EntityUid bodyUid,
         DamageSpecifier damage, FixedPoint2 groupTotal, string groupName, EntityUid? origin = null)
     {
-// Baystation: first try to worsen existing wounds (widen them) before filling space
+        // Baystation: first try to worsen existing wounds (widen them) before filling space
         if (TryWorsenExistingWounds(limb, damage, ref groupTotal, groupName))
             return;
 
@@ -486,7 +487,7 @@ public sealed partial class WoundSystem : EntitySystem
             if (!IsCorrectWoundGroup(woundUid, groupName))
                 continue;
 
-// Baystation: merged wounds (multiple wounds of same type stacked) can't be worsened
+            // Baystation: merged wounds (multiple wounds of same type stacked) can't be worsened
             if (wound.Damage.GetTotal() > wound.MaximumDamage * 0.8f)
                 continue;
 
@@ -706,7 +707,6 @@ public sealed partial class WoundSystem : EntitySystem
                     Dirty(newWoundEnt, newWc);
 
                     InitializeWoundEffects(newWoundEnt);
-                    RemoveWoundFromBroadphase(newWoundEnt);
 
                     limb.Comp.Wounds.Remove(keep);
                     limb.Comp.Wounds.Remove(remove);
@@ -846,11 +846,4 @@ public sealed partial class WoundSystem : EntitySystem
 
         return suffix != null ? $"Wound{groupName}{suffix}" : null;
     }
-
-    private void RemoveWoundFromBroadphase(EntityUid woundEnt)
-    {
-        var xform = Transform(woundEnt);
-        _lookup.RemoveFromEntityTree(woundEnt, xform);
-    }
 }
-// Baystation end

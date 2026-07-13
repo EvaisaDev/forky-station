@@ -1,4 +1,3 @@
-# Baystation start
 # Entity-based wound prototypes for the Baystation medical system.
 # Each wound is a full entity with a WoundEffects component
 # that references YAML-defined effect prototypes.
@@ -517,4 +516,3 @@
     - id: PainSurgical
     - id: GermTracking
     - id: Surgical
-# Baystation end

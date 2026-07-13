@@ -1,20 +1,25 @@
-// Baystation start
+using Content.Client._Medical.Targeting;
+using Content.Shared._Medical.Targeting;
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Organs;
 using Content.Shared.Medical.Wounds;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
+using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Client.Medical.Wounds;
 
-/// <summary>
-///     Hides body sprite layers for limbs that have been cut away.
-/// </summary>
 public sealed partial class VisualOrganWoundsSystem : EntitySystem
 {
+    [Dependency] private IUserInterfaceManager _uiManager = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private Robust.Client.Player.IPlayerManager _playerManager = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private SpriteSystem _spriteSys = default!;
 
     private TimeSpan _nextUpdate;
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1);
@@ -35,7 +40,20 @@ public sealed partial class VisualOrganWoundsSystem : EntitySystem
         if (!TryComp<BodyComponent>(player.Value, out var body) || body.Organs == null)
             return;
 
-        var spriteSys = EntityManager.System<SpriteSystem>();
+        var control = _uiManager.GetActiveUIWidgetOrNull<TargetingControl>();
+        if (control != null)
+            UpdateOverlays(control, body);
+
+        UpdateLimbVisuals(player.Value, body);
+    }
+
+    private void UpdateLimbVisuals(EntityUid uid, BodyComponent body)
+    {
+        if (!TryComp<SpriteComponent>(uid, out var sprite))
+            return;
+
+        if (body.Organs == null)
+            return;
 
         foreach (var organ in body.Organs.ContainedEntities)
         {
@@ -54,15 +72,117 @@ public sealed partial class VisualOrganWoundsSystem : EntitySystem
 
             if ((ext.Status & OrganStatusFlags.CutAway) != 0)
             {
-                if (spriteSys.LayerMapTryGet(player.Value, layer, out var baseIdx, false))
-                    spriteSys.LayerSetVisible(player.Value, baseIdx, false);
+                if (_spriteSys.LayerMapTryGet(uid, layer, out var baseIdx, false))
+                    _spriteSys.LayerSetVisible(uid, baseIdx, false);
             }
             else
             {
-                if (spriteSys.LayerMapTryGet(player.Value, layer, out var baseIdx, false))
-                    spriteSys.LayerSetVisible(player.Value, baseIdx, true);
+                if (_spriteSys.LayerMapTryGet(uid, layer, out var baseIdx, false))
+                    _spriteSys.LayerSetVisible(uid, baseIdx, true);
             }
         }
     }
+
+    private void UpdateOverlays(TargetingControl control, BodyComponent body)
+    {
+        foreach (var (part, btn) in control.GetBodyPartButtons())
+        {
+            var category = BodyPartHelper.ToOrganCategory(part);
+            var (brute, burn, woundCount, hasEmbedded) = GetLimbWoundData(body, category);
+
+            var overlay = FindOrCreateOverlay(btn);
+
+            if (brute <= 0 && burn <= 0 && woundCount == 0)
+            {
+                overlay.Visible = false;
+                continue;
+            }
+
+            overlay.Visible = true;
+            var totalDamage = brute + burn;
+
+            Color overlayColor;
+            if (totalDamage > 60 || woundCount > 3)
+                overlayColor = new Color(1f, 0f, 0f, 0.35f);
+            else if (totalDamage > 30 || woundCount > 1)
+                overlayColor = new Color(1f, 0.65f, 0f, 0.30f);
+            else
+                overlayColor = new Color(1f, 1f, 0f, 0.25f);
+
+            overlay.PanelOverride = new StyleBoxFlat { BackgroundColor = overlayColor };
+        }
+    }
+
+    private (float brute, float burn, int woundCount, bool hasEmbedded) GetLimbWoundData(BodyComponent body, string category)
+    {
+        float brute = 0, burn = 0;
+        int woundCount = 0;
+        bool hasEmbedded = false;
+
+        if (body.Organs == null)
+            return (0, 0, 0, false);
+
+        foreach (var organ in body.Organs.ContainedEntities)
+        {
+            if (!TryComp<OrganComponent>(organ, out var organComp))
+                continue;
+
+            if (organComp.Category != category)
+                continue;
+
+            if (TryComp<ExternalOrganComponent>(organ, out var ext))
+            {
+                brute += (float)ext.BruteDamage.Float();
+                burn += (float)ext.BurnDamage.Float();
+            }
+
+            if (TryComp<WoundableComponent>(organ, out var wnd))
+            {
+                woundCount += wnd.Wounds.Count;
+                foreach (var wUid in wnd.Wounds)
+                {
+                    if (TerminatingOrDeleted(wUid))
+                        continue;
+
+                    if (TryComp<WoundEffectsComponent>(wUid, out var effects))
+                    {
+                        var embedded = effects.GetEffect("Embedded", _prototype);
+                        if (embedded is { StringListParams: { Count: > 0 } })
+                            hasEmbedded = true;
+                    }
+                }
+            }
+        }
+
+        return (brute, burn, woundCount, hasEmbedded);
+    }
+
+    private static PanelContainer FindOrCreateOverlay(TextureButton button)
+    {
+        foreach (var child in button.Children)
+        {
+            if (child is PanelContainer panel && panel.Name == "WoundOverlay")
+                return panel;
+        }
+
+        var overlay = new PanelContainer
+        {
+            Name = "WoundOverlay",
+            MouseFilter = Control.MouseFilterMode.Ignore,
+            HorizontalAlignment = Control.HAlignment.Stretch,
+            VerticalAlignment = Control.VAlignment.Stretch,
+            Visible = false
+        };
+
+        overlay.AddChild(new TextureRect
+        {
+            Stretch = TextureRect.StretchMode.KeepAspectCentered,
+            HorizontalAlignment = Control.HAlignment.Stretch,
+            VerticalAlignment = Control.VAlignment.Stretch,
+            ShaderOverride = null
+        });
+
+        button.AddChild(overlay);
+        return overlay;
+    }
 }
-// Baystation end

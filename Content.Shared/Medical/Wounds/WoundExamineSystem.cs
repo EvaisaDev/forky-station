@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Organs;
 using Content.Shared.Examine;
@@ -97,4 +96,3 @@ public sealed partial class WoundExamineSystem : EntitySystem
             args.PushMarkup(Loc.GetString("wound-examine-bleeding", ("limb", Name(ent))));
     }
 }
-// Baystation end

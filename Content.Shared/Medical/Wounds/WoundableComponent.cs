@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Robust.Shared.GameStates;
@@ -21,4 +20,3 @@ public sealed partial class WoundableComponent : Component
     [DataField, AutoNetworkedField]
     public float Pain;
 }
-// Baystation end

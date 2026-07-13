@@ -297,15 +297,29 @@
   components:
   - type: Sprite
     sprite: Mobs/Species/Vox/parts.rsi
+  - type: Woundable
 
 - type: entity
   parent: [ OrganBaseTorso, OrganVoxExternal ]
   id: OrganVoxTorso
+  components:
+  - type: ExternalOrgan
+    maxDamage: 180
+    minBrokenDamage: 130
+    flags:
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHead, OrganVoxExternal ]
   id: OrganVoxHead
   components:
+  - type: ExternalOrgan
+    maxDamage: 90
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
   - type: VisualOrganMarkings
     hideableLayers:
     - enum.HumanoidVisualLayers.Snout
@@ -324,34 +338,106 @@
 - type: entity
   parent: [ OrganBaseArmLeft, OrganVoxExternal ]
   id: OrganVoxArmLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 45
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmRight, OrganVoxExternal ]
   id: OrganVoxArmRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 45
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandLeft, OrganVoxExternal ]
   id: OrganVoxHandLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 45
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandRight, OrganVoxExternal ]
   id: OrganVoxHandRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 45
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegLeft, OrganVoxExternal ]
   id: OrganVoxLegLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 45
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegRight, OrganVoxExternal ]
   id: OrganVoxLegRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 70
+    minBrokenDamage: 45
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootLeft, OrganVoxExternal ]
   id: OrganVoxFootLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 45
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootRight, OrganVoxExternal ]
   id: OrganVoxFootRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 45
+    minBrokenDamage: 25
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseBrain, OrganSpriteHumanInternal, OrganVoxInternal ]
@@ -376,10 +462,17 @@
 - type: entity
   parent: [ OrganBaseLungs, OrganVoxInternal, OrganVoxMetabolizer ]
   id: OrganVoxLungs
+  components:
+  - type: LungCondition
+    efficiency: 1.0
 
 - type: entity
   parent: [ OrganBaseHeart, OrganVoxInternal, OrganVoxMetabolizer ]
   id: OrganVoxHeart
+  components:
+  - type: HeartCondition
+    efficiency: 1.0
+    beating: true
 
 - type: entity
   parent: [ OrganBaseStomach, OrganVoxInternal, OrganVoxMetabolizer ]

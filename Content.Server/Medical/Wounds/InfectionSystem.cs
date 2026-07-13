@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Body;
 using Content.Shared.Body.Organs;
 using Content.Shared.Damage;
@@ -43,7 +42,7 @@ public sealed partial class InfectionSystem : EntitySystem
             if (germInstance == null)
                 continue;
 
-// Baystation: disinfected wounds are immune to infection
+            // Baystation: disinfected wounds are immune to infection
             var disinfected = germInstance.GetFloat("disinfected") > 0;
             if (disinfected)
                 continue;
@@ -55,7 +54,7 @@ public sealed partial class InfectionSystem : EntitySystem
 
             if (!tended && !salved)
             {
-// Baystation probabilistic infection
+                // Baystation probabilistic infection
                 var totalDmg = wound.Damage.GetTotal().Float();
                 if (totalDmg >= 10)
                 {
@@ -110,4 +109,3 @@ public sealed partial class InfectionSystem : EntitySystem
         }
     }
 }
-// Baystation end

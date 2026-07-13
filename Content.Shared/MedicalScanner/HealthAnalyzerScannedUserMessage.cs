@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.FixedPoint;
 using Robust.Shared.Serialization;
 
@@ -42,7 +41,7 @@ public struct HealthAnalyzerUiState
     public bool? Bleeding;
     public bool? Unrevivable;
 
-// Baystation fields
+    // Baystation fields
     public string BrainActivity; // "Normal", "Fading", "None"
     public float PulseRate;
     public float BloodOxygenation;
@@ -81,4 +80,3 @@ public struct HealthAnalyzerUiState
         Reagents = new();
     }
 }
-// Baystation end

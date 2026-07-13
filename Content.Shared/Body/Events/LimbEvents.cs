@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Organs;
 using Content.Shared.FixedPoint;
@@ -45,4 +44,3 @@ public readonly record struct LimbAmputateEvent(Entity<ExternalOrganComponent> L
 /// </summary>
 [ByRefEvent]
 public readonly record struct BrainDeathEvent(EntityUid Body, Entity<BrainComponent> Brain);
-// Baystation end

@@ -1,4 +1,3 @@
-// Baystation start
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.Body.Components;
@@ -16,4 +15,3 @@ public sealed partial class LungConditionComponent : Component
     [DataField, AutoNetworkedField]
     public float Efficiency = 1.0f;
 }
-// Baystation end

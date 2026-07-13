@@ -1,0 +1,39 @@
+- type: entity
+  parent: BaseItem
+  id: StasisBag
+  name: stasis bag
+  description: A thick, insulated body bag with built-in stasis technology. Slows the occupant's metabolism by a factor of 20x, degrading over 40 minutes.
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/Morgue/bodybags.rsi
+    state: bag
+  - type: Item
+    size: Normal
+  - type: Foldable
+  - type: StasisBag
+  - type: ContainerContainer
+    containers:
+      stasis_bag_body: !type:ContainerSlot
+        showEnts: False
+        occludes: False
+  - type: EntityStorage
+    isCollidableWhenOpen: true
+    openOnMove: false
+    closeSound:
+      path: /Audio/Effects/body_bag.ogg
+    openSound:
+      path: /Audio/Effects/body_bag.ogg
+  - type: Tag
+    tags:
+    - StasisBag
+  - type: Damageable
+    damageContainer: Inorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTypeTrigger
+        damageType: Heat
+        damage: 30
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]

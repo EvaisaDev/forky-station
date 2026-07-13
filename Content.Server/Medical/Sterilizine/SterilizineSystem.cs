@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Interaction;
@@ -63,4 +62,3 @@ public sealed partial class SterilizineSystem : EntitySystem
             _popup.PopupEntity(Loc.GetString("sterilizine-no-effect"), args.Target.Value, args.User);
     }
 }
-// Baystation end

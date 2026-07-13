@@ -1,0 +1,326 @@
+# Baystation-style medical reagents (new additions).
+# Reagents that already exist in medicine.yml are NOT redefined here.
+
+- type: reagent
+  id: Paracetamol
+  name: reagent-name-paracetamol
+  group: Medicine
+  desc: reagent-desc-paracetamol
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#bababa"
+  bioavailability: 0.6
+  metabolismRate: 0.02
+  overdoseThreshold: 60
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:GenericStatusEffect
+        key: Jitter
+        time: 3.0
+        type: Remove
+      - !type:PopupMessage
+        type: Local
+        visualType: Medium
+        messages: [ "generic-reagent-effect-feel-painkiller" ]
+
+- type: reagent
+  id: Tramadol
+  name: reagent-name-tramadol
+  group: Medicine
+  desc: reagent-desc-tramadol
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#cbccfc"
+  bioavailability: 0.6
+  metabolismRate: 0.05
+  overdoseThreshold: 30
+  activeMetabolite: Opiates
+  metabolitePotency: 2.0
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:GenericStatusEffect
+        key: Jitter
+        time: 5.0
+        type: Remove
+
+- type: reagent
+  id: Oxycodone
+  name: reagent-name-oxycodone
+  group: Medicine
+  desc: reagent-desc-oxycodone
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#e09fa0"
+  bioavailability: 0.6
+  metabolismRate: 0.02
+  overdoseThreshold: 20
+  activeMetabolite: Opiates
+  metabolitePotency: 5.0
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:GenericStatusEffect
+        key: Jitter
+        time: 10.0
+        type: Remove
+      - !type:GenericStatusEffect
+        key: Stutter
+        time: 5.0
+        type: Add
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: 0.5
+
+- type: reagent
+  id: Opiates
+  name: reagent-name-opiates
+  group: Medicine
+  desc: reagent-desc-opiates
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#cbccfc"
+  bioavailability: 0.6
+  metabolismRate: 0.02
+  overdoseThreshold: 30
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        conditions:
+        - !type:ReagentCondition
+          reagent: Opiates
+          min: 30
+        damage:
+          types:
+            Poison: 2
+
+- type: reagent
+  id: Peridaxon
+  name: reagent-name-peridaxon
+  group: Medicine
+  desc: reagent-desc-peridaxon
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#adc8d6"
+  bioavailability: 0.6
+  metabolismRate: 0.1
+  overdoseThreshold: 10
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Cellular: -3
+      - !type:GenericStatusEffect
+        key: Stutter
+        time: 3.0
+        type: Add
+
+- type: reagent
+  id: Alkysine
+  name: reagent-name-alkysine
+  group: Medicine
+  desc: reagent-desc-alkysine
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#6b0052"
+  bioavailability: 0.6
+  metabolismRate: 0.05
+  overdoseThreshold: 30
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Cellular: -2
+      - !type:GenericStatusEffect
+        key: BlurredVision
+        time: 2.0
+        type: Add
+
+- type: reagent
+  id: Spaceacillin
+  name: reagent-name-spaceacillin
+  group: Medicine
+  desc: reagent-desc-spaceacillin
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#d2e1f0"
+  bioavailability: 0.6
+  metabolismRate: 0.02
+  overdoseThreshold: 15
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: -0.5
+
+- type: reagent
+  id: Rezadone
+  name: reagent-name-rezadone
+  group: Medicine
+  desc: reagent-desc-rezadone
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#ff66ff"
+  bioavailability: 0.6
+  metabolismRate: 0.2
+  overdoseThreshold: 30
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Cellular: -5
+            Blunt: -2
+            Heat: -2
+      - !type:GenericStatusEffect
+        key: Stutter
+        time: 5.0
+        type: Add
+
+- type: reagent
+  id: Clonexadone
+  name: reagent-name-clonexadone
+  group: Medicine
+  desc: reagent-desc-clonexadone
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#80bfff"
+  bioavailability: 0.6
+  metabolismRate: 0.1
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Blunt: -50
+            Heat: -50
+            Cellular: -300
+      - !type:GenericStatusEffect
+        key: Muted
+        time: 2.0
+        type: Add
+
+- type: reagent
+  id: Imidazoline
+  name: reagent-name-imidazoline
+  group: Medicine
+  desc: reagent-desc-imidazoline
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#c8a5dc"
+  bioavailability: 0.6
+  metabolismRate: 0.2
+  overdoseThreshold: 30
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:GenericStatusEffect
+        key: BlurredVision
+        time: 5.0
+        type: Remove
+
+- type: reagent
+  id: Ryetalyn
+  name: reagent-name-ryetalyn
+  group: Medicine
+  desc: reagent-desc-ryetalyn
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#ffffff"
+  bioavailability: 0.6
+  metabolismRate: 0.2
+  overdoseThreshold: 30
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Cellular: -3
+
+- type: reagent
+  id: Venaxilin
+  name: reagent-name-venaxilin
+  group: Medicine
+  desc: reagent-desc-venaxilin
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#a8e6cf"
+  bioavailability: 0.6
+  metabolismRate: 0.2
+  overdoseThreshold: 30
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: -1
+
+- type: reagent
+  id: Noexcutite
+  name: reagent-name-noexcutite
+  group: Medicine
+  desc: reagent-desc-noexcutite
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#ffcc80"
+  bioavailability: 0.6
+  metabolismRate: 0.1
+  overdoseThreshold: 30
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:GenericStatusEffect
+        key: Stutter
+        time: 5.0
+        type: Remove
+
+- type: reagent
+  id: Antidexafen
+  name: reagent-name-antidexafen
+  group: Medicine
+  desc: reagent-desc-antidexafen
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#a8d8ea"
+  bioavailability: 0.6
+  metabolismRate: 0.2
+  overdoseThreshold: 30
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: -1
+
+- type: reagent
+  id: Coagulant
+  name: reagent-name-coagulant
+  group: Medicine
+  desc: reagent-desc-coagulant
+  physicalDesc: reagent-physical-desc-translucent
+  flavor: medicine
+  color: "#ff4444"
+  bioavailability: 0.6
+  metabolismRate: 0.1
+  overdoseThreshold: 15
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: 1

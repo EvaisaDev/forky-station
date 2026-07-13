@@ -1,4 +1,3 @@
-# Baystation start
 # Wound effect prototypes for the entity-based wound system.
 # Each effect defines a behavior type and its default config values.
 # Wound entities reference these by ID in their WoundEffects component.
@@ -306,4 +305,3 @@
   id: Embedded
   effectType: Embedded
   config: {}
-# Baystation end

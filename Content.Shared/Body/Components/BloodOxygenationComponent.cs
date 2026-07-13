@@ -1,4 +1,3 @@
-// Baystation start
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
@@ -28,4 +27,3 @@ public sealed partial class BloodOxygenationComponent : Component
     [DataField, AutoNetworkedField]
     public float AccumulatedBrainDamage;
 }
-// Baystation end

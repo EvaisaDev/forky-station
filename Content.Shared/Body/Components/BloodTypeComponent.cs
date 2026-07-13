@@ -1,4 +1,3 @@
-// Baystation start
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
@@ -87,4 +86,3 @@ public enum BloodGroup : byte
     AB,
     O
 }
-// Baystation end

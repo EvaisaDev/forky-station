@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Systems;
 using Content.Shared.DoAfter;
@@ -107,4 +106,3 @@ public sealed partial class CPRSystem : EntitySystem
 
 [Serializable, NetSerializable]
 public sealed partial class CPRDoAfterEvent : SimpleDoAfterEvent;
-// Baystation end

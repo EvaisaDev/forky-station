@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.FixedPoint;
 using Content.Shared.Medical.Wounds;
 using Robust.Shared.Prototypes;
@@ -53,7 +52,7 @@ public sealed partial class WoundRegenerationSystem : EntitySystem
                 continue;
             }
 
-// Baystation-style autoheal cutoff: wounds above this damage don't heal unless treated
+            // Baystation-style autoheal cutoff: wounds above this damage don't heal unless treated
             var autohealCutoff = healable.GetFloatOrConfig("autohealCutoff", _prototype);
             var currentDmg = (float)totalDamage.Float();
             if (autohealCutoff > 0 && currentDmg > autohealCutoff)
@@ -125,4 +124,3 @@ public sealed partial class WoundRegenerationSystem : EntitySystem
         }
     }
 }
-// Baystation end

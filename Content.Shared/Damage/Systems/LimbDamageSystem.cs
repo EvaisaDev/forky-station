@@ -1,4 +1,3 @@
-// Baystation start
 using System.Linq;
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
@@ -63,8 +62,6 @@ public sealed partial class LimbDamageSystem : EntitySystem
         {
             _processingMelee = true;
 
-            var processedAny = false;
-
             foreach (var target in ev.HitEntities)
             {
                 if (!TryComp<BodyComponent>(target, out var body) || body.Organs == null)
@@ -72,21 +69,16 @@ public sealed partial class LimbDamageSystem : EntitySystem
 
                 var limbs = GetLimbs(target);
                 if (limbs.Count == 0)
-                {
-                    // No limbs to distribute to — let normal damage processing handle it
                     continue;
-                }
 
                 var (brute, burn) = SplitDamage(ev.BaseDamage);
                 var limb = limbs[_random.Next(limbs.Count)];
                 ApplyToLimbComponent(limb, brute, burn);
 
                 _damageable.TryChangeDamage(target, ev.BaseDamage, origin: ev.User);
-                processedAny = true;
             }
 
-            if (processedAny)
-                ev.Handled = true;
+            ev.Handled = true;
         }
         finally
         {
@@ -284,4 +276,3 @@ public sealed partial class LimbDamageSystem : EntitySystem
         }
     }
 }
-// Baystation end

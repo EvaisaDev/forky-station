@@ -1,4 +1,3 @@
-// Baystation start
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.Body.Components;
@@ -22,4 +21,3 @@ public sealed partial class HeartConditionComponent : Component
     [DataField, AutoNetworkedField]
     public bool Beating = true;
 }
-// Baystation end

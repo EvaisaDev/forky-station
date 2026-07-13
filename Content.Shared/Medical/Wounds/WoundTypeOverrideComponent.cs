@@ -1,4 +1,3 @@
-// Baystation start
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
@@ -10,4 +9,3 @@ public sealed partial class WoundTypeOverrideComponent : Component
     [DataField, AutoNetworkedField]
     public EntProtoId? WoundType;
 }
-// Baystation end

@@ -238,15 +238,29 @@
   components:
   - type: Sprite
     sprite: Mobs/Species/Moth/parts.rsi
+  - type: Woundable
 
 - type: entity
   parent: [ OrganBaseTorsoSexed, OrganBaseTorso, OrganMothExternal ]
   id: OrganMothTorso
+  components:
+  - type: ExternalOrgan
+    maxDamage: 160
+    minBrokenDamage: 110
+    flags:
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHead, OrganMothExternal ]
   id: OrganMothHead
   components:
+  - type: ExternalOrgan
+    maxDamage: 80
+    minBrokenDamage: 30
+    flags:
+    - CanAmputate
+    - CanBreak
+    - HasTendon
   - type: VisualOrganMarkings
     hideableLayers:
     - enum.HumanoidVisualLayers.HeadTop
@@ -254,34 +268,106 @@
 - type: entity
   parent: [ OrganBaseArmLeft, OrganMothExternal ]
   id: OrganMothArmLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseArmRight, OrganMothExternal ]
   id: OrganMothArmRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandLeft, OrganMothExternal ]
   id: OrganMothHandLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseHandRight, OrganMothExternal ]
   id: OrganMothHandRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanGrasp
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegLeft, OrganMothExternal ]
   id: OrganMothLegLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseLegRight, OrganMothExternal ]
   id: OrganMothLegRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 60
+    minBrokenDamage: 35
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootLeft, OrganMothExternal ]
   id: OrganMothFootLeft
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseFootRight, OrganMothExternal ]
   id: OrganMothFootRight
+  components:
+  - type: ExternalOrgan
+    maxDamage: 40
+    minBrokenDamage: 20
+    flags:
+    - CanAmputate
+    - CanBreak
+    - CanStand
+    - HasTendon
 
 - type: entity
   parent: [ OrganBaseBrain, OrganSpriteHumanInternal, OrganMothInternal ]
@@ -306,10 +392,17 @@
 - type: entity
   parent: [ OrganBaseLungs, OrganMothInternal, OrganMothMetabolizer ]
   id: OrganMothLungs
+  components:
+  - type: LungCondition
+    efficiency: 1.0
 
 - type: entity
   parent: [ OrganBaseHeart, OrganMothInternal, OrganAnimalMetabolizer ]
   id: OrganMothHeart
+  components:
+  - type: HeartCondition
+    efficiency: 1.0
+    beating: true
 
 - type: entity
   parent: [ OrganBaseStomach, OrganMothInternal, OrganMothMetabolizer ]

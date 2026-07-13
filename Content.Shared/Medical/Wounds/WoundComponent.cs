@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Robust.Shared.GameStates;
@@ -36,4 +35,3 @@ public sealed partial class WoundComponent : Component
     [DataField, AutoNetworkedField]
     public string Group = string.Empty;
 }
-// Baystation end

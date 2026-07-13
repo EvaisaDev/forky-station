@@ -1,4 +1,3 @@
-// Baystation start
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
 using Content.Shared.FixedPoint;
@@ -92,4 +91,3 @@ public sealed partial class BrainSystem
 }
 
 
-// Baystation end
