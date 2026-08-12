@@ -1,0 +1,23 @@
+- type: entity
+  parent: Jug
+  suffix: icecream ingredient
+  id: JugIcecreamBase
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Tag
+    tags:
+    - IcecreamIngredientJug
+
+- type: entity
+  parent: JugIcecreamBase
+  suffix: unflavoured icecream
+  id: JugIcecream
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Label
+    currentLabel: reagent-name-unflavoured-icecream
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: IceCream
+        Quantity: 240

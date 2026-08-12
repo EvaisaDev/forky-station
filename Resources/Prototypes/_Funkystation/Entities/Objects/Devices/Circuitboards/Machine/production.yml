@@ -83,7 +83,7 @@
       Steel: 1
       Manipulator: 1
       Cable: 1
-      
+
 # Funky, Pager Server Board
 - type: entity
   id: PagerServerCircuitboard
@@ -98,3 +98,21 @@
     stackRequirements:
       Steel: 1
       Cable: 2
+
+# Funky, Icecream Machine Board
+- type: entity
+  id: IcecreamMachineCircuitboard
+  parent: BaseMachineCircuitboard
+  name: icecream machine machine board
+  description: A machine printed circuit board for an icecream machine.
+  components:
+    - type: Sprite
+      state: service
+    - type: MachineBoard
+      prototype: IcecreamMachineEmpty
+      stackRequirements:
+        Steel: 5
+      tagRequirements:
+          GlassBeaker:
+            amount: 1
+            defaultPrototype: Beaker
