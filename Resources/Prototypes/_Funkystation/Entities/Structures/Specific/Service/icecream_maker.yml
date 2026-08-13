@@ -1,0 +1,58 @@
+- type: entity
+  parent: [ BaseMachinePowered, SmallConstructibleMachine ]
+  id: IcecreamMaker
+  name: icecream maker
+  description: Churns a tub of chilled ingredients into icecream.
+  components:
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.3,-0.16,0.3,0.16"
+        density: 190
+        mask:
+        - TabletopMachineMask
+        layer:
+        - TabletopMachineLayer
+  - type: Sprite
+    sprite: _Funkystation/Structures/Machines/icecream_maker.rsi
+    drawdepth: SmallObjects
+    snapCardinals: true
+    layers:
+    - state: base
+    - state: churning
+      visible: false
+      map: [ "enum.SolutionContainerMixerVisuals.Mixing" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.SolutionContainerMixerVisuals.Mixing:
+        enum.SolutionContainerMixerVisuals.Mixing:
+          True: { visible: true }
+          False: { visible: false}
+  - type: ApcPowerReceiver
+    powerLoad: 5
+  - type: Machine
+    board: IcecreamMakerCircuitboard
+  - type:  ContainerContainer
+    containers:
+      mixer: !type:ContainerSlot
+      machine_board: !type:Container
+      machine_parts: !type:Container
+  - type: EmptyOnMachineDeconstruct
+    containers:
+    - mixer
+  - type: ItemSlots
+    slots:
+      mixer:
+        whitelist:
+          tags:
+          - IcecreamTub
+  - type: SolutionContainerMixer
+    mixDuration: 5
+    mixingSound:
+      path: /Audio/Machines/blender.ogg
+  - type: ReactionMixer
+    reactionTypes:
+    - IcecreamChurn

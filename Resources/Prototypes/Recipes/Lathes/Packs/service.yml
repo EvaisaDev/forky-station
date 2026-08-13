@@ -34,7 +34,8 @@
   - ReagentGrinderMachineCircuitboard
   - ElectricGrillMachineCircuitboard
   - BoozeDispenserMachineCircuitboard
-  - IcecreamMachineCircuitboard # Forky - Icecream Machine
+  - ToppingDispenserCircuitboard # Funky - Topping Dispenser
+  - IcecreamMakerCircuitboard # Funky - Icecream Maker
   - SodaDispenserMachineCircuitboard
   - SmartFridgeCircuitboard
 

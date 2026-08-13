@@ -1,0 +1,37 @@
+- type: reaction
+  id: BerryIcecream
+  requiredMixerCategories:
+    - IcecreamChurn
+  reactants:
+    IceCream:
+      amount: 2
+    JuiceBerry:
+      amount: 1
+  products:
+    BerryIceCream: 3
+
+- type: reaction
+  id: BerrySorbet
+  requiredMixerCategories:
+    - IcecreamChurn
+  reactants:
+    Ice:
+      amount: 1
+    Sugar:
+      amount: 1
+    JuiceBerry:
+      amount: 1
+  products:
+    BerrySorbet: 3
+
+- type: reaction
+  id: ChocolateIcecream
+  requiredMixerCategories:
+    - IcecreamChurn
+  reactants:
+    IceCream:
+      amount: 2
+    ChocolateSauce:
+      amount: 1
+  products:
+    ChocolateIceCream: 3

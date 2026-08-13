@@ -229,7 +229,8 @@
     - id: ReagentGrinderMachineCircuitboard
     - id: ReagentGrinderIndustrialMachineCircuitboard
     - id: BoozeDispenserMachineCircuitboard
-    - id: IcecreamMachineCircuitboard # Funky - Icecream Machine
+    - id: ToppingDispenserCircuitboard # Funky - Topping Dispenser
+    - id: IcecreamMakerCircuitboard # Funky - Icecream Machine
     - id: MiniGravityGeneratorCircuitboard
     - id: AmmoTechFabCircuitboard
     - id: CryoPodMachineCircuitboard

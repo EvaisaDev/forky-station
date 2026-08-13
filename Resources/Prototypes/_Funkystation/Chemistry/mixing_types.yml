@@ -1,0 +1,6 @@
+- type: mixingCategory
+  id: IcecreamChurn
+  verbText: mixing-verb-churn
+  icon:
+    sprite: Objects/Misc/utensils.rsi
+    state: spoon

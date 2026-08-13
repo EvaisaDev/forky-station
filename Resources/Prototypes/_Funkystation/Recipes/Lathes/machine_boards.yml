@@ -32,8 +32,13 @@
   id: PagerServerCircuitboard
   result: PagerServerCircuitboard
 
-# Icecream Machine
+# Topping Dispenser
 - type: latheRecipe
   parent: [ BaseCircuitboardRecipe, BaseServiceMachineRecipeCategory ]
-  id: IcecreamMachineCircuitboard
-  result: IcecreamMachineCircuitboard
+  id: ToppingDispenserCircuitboard
+  result: ToppingDispenserCircuitboard
+
+- type: latheRecipe
+  parent: [ BaseCircuitboardRecipe, BaseServiceMachineRecipeCategory ]
+  id: IcecreamMakerCircuitboard
+  result: IcecreamMakerCircuitboard

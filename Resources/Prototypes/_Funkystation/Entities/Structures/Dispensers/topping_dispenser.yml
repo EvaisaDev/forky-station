@@ -1,36 +1,42 @@
 - type: entity
-  id: IcecreamMachineEmpty
-  name: Icecream Machine
+  id: ToppingDispenserEmpty
+  name: Topping Dispenser
   suffix: Empty
-  description: An Icecream Machine with a single slot for a container to be filled.
+  description: A Topping Dispenser with a single slot for a container to be filled.
   parent: ReagentDispenserBase
   components:
   - type: Rotatable
   - type: Sprite
-    sprite: Structures/smalldispensers.rsi
+    sprite: _Funkystation/Structures/Dispensers/toppingdispenser.rsi
     drawdepth: SmallObjects
-    state: booze
+    state: icecream
   - type: Storage
     openOnActivate: false
     whitelist:
       tags:
       - IcecreamIngredientJug
+      - DrinkBottle
   - type: Transform
     noRot: false
   - type: Machine
-    board: IcecreamMachineCircuitboard
+    board: ToppingDispenserCircuitboard
   - type: GuideHelp
     guides:
     - Bartender
     - Drinks
 
 - type: entity
-  id: IcecreamMachine
+  id: ToppingDispenser
   suffix: Filled
-  parent: IcecreamMachineEmpty
+  parent: ToppingDispenserEmpty
   components:
   - type: EntityTableContainerFill
     containers:
       storagebase: !type:AllSelector
         children:
-        - id: JugIcecream
+        - id: DrinkSugarJug
+        - id: DrinkIceJug
+        - id: DrinkCreamCartonXL
+        - id: JugBerryJuice
+        - id: JugChocolateSauce
+

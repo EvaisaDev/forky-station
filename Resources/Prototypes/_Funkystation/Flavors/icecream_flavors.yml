@@ -1,0 +1,14 @@
+- type: flavor
+  id: berryicecream
+  flavorType: Complex
+  description: flavor-complex-berry-icecream
+
+- type: flavor
+  id: chocolateicecream
+  flavorType: Complex
+  description: flavor-complex-chocolate-icecream
+
+- type: flavor
+  id: berrysorbet
+  flavorType: Complex
+  description: flavor-complex-berry-sorbet

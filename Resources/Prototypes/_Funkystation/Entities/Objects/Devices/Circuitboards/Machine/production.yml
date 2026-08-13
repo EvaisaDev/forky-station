@@ -99,19 +99,39 @@
       Steel: 1
       Cable: 2
 
-# Funky, Icecream Machine Board
+# Funky, Topping Dispenser Board
 - type: entity
-  id: IcecreamMachineCircuitboard
+  id: ToppingDispenserCircuitboard
   parent: BaseMachineCircuitboard
-  name: icecream machine machine board
-  description: A machine printed circuit board for an icecream machine.
+  name: topping dispenser machine board
+  description: A machine printed circuit board for a topping dispenser.
   components:
     - type: Sprite
       state: service
     - type: MachineBoard
-      prototype: IcecreamMachineEmpty
+      prototype: ToppingDispenserEmpty
       stackRequirements:
         Steel: 5
+      tagRequirements:
+          GlassBeaker:
+            amount: 1
+            defaultPrototype: Beaker
+
+# Funky, Icecream Maker Board
+- type: entity
+  id: IcecreamMakerCircuitboard
+  parent: BaseMachineCircuitboard
+  name: icecream maker machine board
+  description: A machine printed circuit board for an icecream maker.
+  components:
+    - type: Sprite
+      state: service
+    - type: MachineBoard
+      prototype: IcecreamMaker
+      stackRequirements:
+        Steel: 2
+        Cable: 2
+        Manipulator: 1
       tagRequirements:
           GlassBeaker:
             amount: 1

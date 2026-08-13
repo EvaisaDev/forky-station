@@ -45,15 +45,19 @@
     - id: PaperShredderCircuitboard
     - id: ShredderBin
 
-# Icecream Machine
+# Topping Dispenser
 - type: entity
   parent: CrateFreezer
-  id: CrateServiceIcecreamMachine
-  name: icecream machine refill crate
-  description: Contains refills for icecream machines.
+  id: CrateServiceToppingDispenser
+  name: topping dispenser refill crate
+  description: Contains refills for topping dispensers.
   components:
   - type: EntityTableContainerFill
     containers:
       entity_storage: !type:AllSelector
         children:
-        - id: JugIcecream
+        - id: DrinkSugarJug
+        - id: DrinkIceJug
+        - id: DrinkCreamCartonXL
+        - id: JugBerryJuice
+        - id: JugChocolateSauce

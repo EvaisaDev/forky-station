@@ -1,0 +1,25 @@
+- type: entity
+  id: IcecreamTub
+  parent: DrinkBase
+  name: icecream tub
+  description: A large metal tub, used for churning and storing icecream.
+  components:
+  - type: Item
+    size: Normal
+  - type: SolutionContainerManager
+  - type: Solution
+    id: drink
+    solution:
+      maxVol: 300
+  - type: FitsInDispenser
+    solution: drink
+  - type: Tag
+    tags:
+    - IcecreamTub
+  - type: Sprite
+    sprite: _Funkystation/Objects/Specific/Service/icecream_tub.rsi
+    layers:
+    - state: empty
+      map: ["base"]
+  - type: Appearance
+

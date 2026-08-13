@@ -568,6 +568,8 @@
 
 - type: reaction
   id: IceCream
+  requiredMixerCategories:
+    - IcecreamChurn # Funky - Icecream Maker
   reactants:
     Cream:
       amount: 1

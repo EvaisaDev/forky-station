@@ -1,0 +1,50 @@
+- type: reagent
+  id: BerryIceCream
+  name: reagent-name-berry-icecream
+  parent: BaseSoda
+  desc: reagent-desc-berry-icecream
+  physicalDesc: reagent-physical-desc-creamy
+  flavor: berryicecream
+  color: "#d188b1"
+  recognizable: true
+  metamorphicSprite:
+    sprite: Objects/Consumable/Drinks/icecreamglass.rsi
+    state: icon_empty
+  metamorphicMaxFillLevels: 5
+  metamorphicFillBaseName: fill-
+  metamorphicChangeColor: true
+  fizziness: 0
+
+- type: reagent
+  id: ChocolateIceCream
+  name: reagent-name-chocolate-icecream
+  parent: BaseSoda
+  desc: reagent-desc-chocolate-icecream
+  physicalDesc: reagent-physical-desc-creamy
+  flavor: chocolateicecream
+  color: "#42331b"
+  recognizable: true
+  metamorphicSprite:
+    sprite: Objects/Consumable/Drinks/icecreamglass.rsi
+    state: icon_empty
+  metamorphicMaxFillLevels: 5
+  metamorphicFillBaseName: fill-
+  metamorphicChangeColor: true
+  fizziness: 0
+
+- type: reagent
+  id: BerrySorbet
+  name: reagent-name-berry-sorbet
+  parent: BaseSoda
+  desc: reagent-desc-berry-sorbet
+  physicalDesc: reagent-physical-desc-sweet
+  flavor: berrysorbet
+  color: "#57234b"
+  recognizable: true
+  metamorphicSprite:
+    sprite: Objects/Consumable/Drinks/icecreamglass.rsi
+    state: icon_empty
+  metamorphicMaxFillLevels: 5
+  metamorphicFillBaseName: fill-
+  metamorphicChangeColor: true
+  fizziness: 0
